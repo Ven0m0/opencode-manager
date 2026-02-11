@@ -34,6 +34,7 @@ import {
   getWorkspacePath, 
   getReposPath, 
   getConfigPath,
+  getOpenCodeConfigDir,
   getOpenCodeConfigFilePath,
   getAgentsMdPath,
   getDatabasePath,
@@ -178,6 +179,9 @@ try {
   await ensureDirectoryExists(getWorkspacePath())
   await ensureDirectoryExists(getReposPath())
   await ensureDirectoryExists(getConfigPath())
+  await ensureDirectoryExists(getOpenCodeConfigDir())
+  await ensureDirectoryExists(path.join(getOpenCodeConfigDir(), 'skills'))
+  await ensureDirectoryExists(path.join(getWorkspacePath(), '.opencode', 'skills'))
   logger.info('Workspace directories initialized')
 
   await cleanupOrphanedDirectories(db)

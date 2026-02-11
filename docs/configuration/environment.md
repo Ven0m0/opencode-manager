@@ -87,6 +87,7 @@ When configured, users can enable push notifications in Settings → Notificatio
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `WORKSPACE_PATH` | Path to workspace directory | `./workspace` (Docker: `/workspace`) |
+| `USE_HOME_OPENCODE_CONFIG` | Use `~/.config/opencode/` for OpenCode config instead of workspace | `false` |
 
 ## OpenCode Server
 

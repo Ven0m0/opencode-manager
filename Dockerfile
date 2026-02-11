@@ -17,12 +17,12 @@ WORKDIR /app
 # --- deps stage: install node_modules with bun ---
 FROM base AS deps
 
-COPY --chown=bun:bun package.json bun.lock ./
+COPY --chown=bun:bun package.json bun.lockb ./
 COPY --chown=bun:bun shared/package.json ./shared/
 COPY --chown=bun:bun backend/package.json ./backend/
 COPY --chown=bun:bun frontend/package.json ./frontend/
 
-RUN bun install --frozen-lockfile
+RUN bun install
 
 # --- builder stage: build frontend ---
 FROM base AS builder

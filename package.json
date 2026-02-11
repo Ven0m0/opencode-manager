@@ -31,7 +31,8 @@
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down -v",
     "docker:logs": "docker-compose logs -f",
-    "docker:restart": "docker-compose restart"
+    "docker:restart": "docker-compose restart",
+    "setup:docker": "bash scripts/setup-docker.sh"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

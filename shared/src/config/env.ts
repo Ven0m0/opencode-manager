@@ -68,6 +68,7 @@ export const ENV = {
     REPOS_DIR: DEFAULTS.WORKSPACE.REPOS_DIR,
     CONFIG_DIR: DEFAULTS.WORKSPACE.CONFIG_DIR,
     AUTH_FILE: DEFAULTS.WORKSPACE.AUTH_FILE,
+    USE_HOME_OPENCODE_CONFIG: getEnvBoolean('USE_HOME_OPENCODE_CONFIG', false),
   },
 
   TIMEOUTS: {
@@ -112,11 +113,16 @@ export const ENV = {
   },
 } as const
 
+const homeOpenCodeConfigDir = () => path.join(os.homedir(), '.config', 'opencode')
+const workspaceOpenCodeConfigDir = () => path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.CONFIG_DIR)
+
 export const getWorkspacePath = () => ENV.WORKSPACE.BASE_PATH
 export const getReposPath = () => path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.REPOS_DIR)
 export const getConfigPath = () => path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.CONFIG_DIR)
-export const getOpenCodeConfigFilePath = () => path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.CONFIG_DIR, 'opencode.json')
-export const getAgentsMdPath = () => path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.CONFIG_DIR, 'AGENTS.md')
+export const getOpenCodeConfigDir = () =>
+  ENV.WORKSPACE.USE_HOME_OPENCODE_CONFIG ? homeOpenCodeConfigDir() : workspaceOpenCodeConfigDir()
+export const getOpenCodeConfigFilePath = () => path.join(getOpenCodeConfigDir(), 'opencode.json')
+export const getAgentsMdPath = () => path.join(getOpenCodeConfigDir(), 'AGENTS.md')
 export const getAuthPath = () => path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.AUTH_FILE)
 export const getDatabasePath = () => ENV.DATABASE.PATH
 

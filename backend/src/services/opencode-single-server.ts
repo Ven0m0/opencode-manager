@@ -120,8 +120,9 @@ class OpenCodeServerManager {
       }
     }
 
+    const useHomeConfig = ENV.WORKSPACE.USE_HOME_OPENCODE_CONFIG
     logger.info(`OpenCode server working directory: ${OPENCODE_SERVER_DIRECTORY}`)
-    logger.info(`OpenCode XDG_CONFIG_HOME: ${path.join(OPENCODE_SERVER_DIRECTORY, '.config')}`)
+    logger.info(`OpenCode config: ${useHomeConfig ? '~/.config/opencode (home)' : 'workspace .config/opencode'}`)
     logger.info(`OpenCode will use ?directory= parameter for session isolation`)
 
     const gitEnv = createGitEnv(gitCredentials)
@@ -173,6 +174,18 @@ class OpenCodeServerManager {
 
     let stderrOutput = ''
 
+    const spawnEnv: Record<string, string> = {
+      ...process.env,
+      ...gitEnv,
+      ...gitIdentityEnv,
+      GIT_SSH_COMMAND: gitSshCommand,
+      XDG_DATA_HOME: path.join(OPENCODE_SERVER_DIRECTORY, '.opencode/state'),
+    }
+    if (!useHomeConfig) {
+      spawnEnv.XDG_CONFIG_HOME = path.join(OPENCODE_SERVER_DIRECTORY, '.config')
+      spawnEnv.OPENCODE_CONFIG = OPENCODE_CONFIG_PATH
+    }
+
     this.serverProcess = spawn(
       'opencode',
       ['serve', '--port', OPENCODE_SERVER_PORT.toString(), '--hostname', OPENCODE_SERVER_HOST],
@@ -180,15 +193,7 @@ class OpenCodeServerManager {
         cwd: OPENCODE_SERVER_DIRECTORY,
         detached: !isDevelopment,
         stdio: isDevelopment ? 'inherit' : ['ignore', 'pipe', 'pipe'],
-        env: {
-          ...process.env,
-          ...gitEnv,
-          ...gitIdentityEnv,
-          GIT_SSH_COMMAND: gitSshCommand,
-          XDG_DATA_HOME: path.join(OPENCODE_SERVER_DIRECTORY, '.opencode/state'),
-          XDG_CONFIG_HOME: path.join(OPENCODE_SERVER_DIRECTORY, '.config'),
-          OPENCODE_CONFIG: OPENCODE_CONFIG_PATH,
-        }
+        env: spawnEnv,
       }
     )
 
