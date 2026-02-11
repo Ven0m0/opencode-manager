@@ -4,6 +4,11 @@
   "private": false,
   "type": "module",
   "packageManager": "bun@1.2.0",
+  "workspaces": [
+    "shared",
+    "backend",
+    "frontend"
+  ],
   "scripts": {
     "predev": "bash scripts/setup-dev.sh",
     "dev": "concurrently \"bun:dev:backend\" \"bun:dev:frontend\"",
