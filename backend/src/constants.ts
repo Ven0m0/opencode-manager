@@ -19,10 +19,9 @@ Always bind to \`0.0.0.0\` to allow external access from the Docker host.
 ## Package Management
 
 ### Node.js Packages
-Prefer **pnpm** or **bun** over npm for installing dependencies to save disk space:
-- Use \`pnpm install\` instead of \`npm install\`
-- Use \`bun install\` as an alternative
-- Both are pre-installed in the container
+Use **bun** for installing dependencies:
+- Use \`bun install\` for package installation
+- Bun is pre-installed in the container
 
  ### Python Packages
  Always create a virtual environment in the repository directory before installing packages:

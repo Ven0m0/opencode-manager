@@ -77,9 +77,9 @@ Guidelines:
 
 ### Before Submitting
 
-1. **Run linting**: `pnpm lint`
-2. **Run tests**: `pnpm test`
-3. **Check types**: `pnpm typecheck`
+1. **Run linting**: `bun lint`
+2. **Run tests**: `bun test`
+3. **Check types**: `bun typecheck`
 4. **Test manually**: Verify your changes work
 
 ### PR Guidelines
@@ -139,7 +139,7 @@ describe('featureName', () => {
 
 ```bash
 # All tests
-pnpm test
+bun test
 
 # With coverage
 cd backend && vitest --coverage

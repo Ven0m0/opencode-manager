@@ -2,17 +2,17 @@
 
 ## Commands
 
-- `pnpm dev` - Start both backend (5003) and frontend (5173)
-- `pnpm dev:backend` - Backend only: `bun --watch backend/src/index.ts`
-- `pnpm dev:frontend` - Frontend only: `cd frontend && vite`
-- `pnpm build` - Build both backend and frontend
-- `pnpm test` - Run backend tests: `cd backend && bun test`
+- `bun dev` - Start both backend (5003) and frontend (5173)
+- `bun dev:backend` - Backend only: `bun --watch backend/src/index.ts`
+- `bun dev:frontend` - Frontend only: `cd frontend && vite`
+- `bun build` - Build both backend and frontend
+- `bun test` - Run backend tests: `cd backend && bun test`
 - `cd backend && bun test <filename>` - Run single test file
 - `cd backend && vitest --ui` - Test UI with coverage
 - `cd backend && vitest --coverage` - Coverage report (80% threshold)
-- `pnpm lint` - Lint both backend and frontend
-- `pnpm lint:backend` - Backend linting
-- `pnpm lint:frontend` - Frontend linting
+- `bun lint` - Lint both backend and frontend
+- `bun lint:backend` - Backend linting
+- `bun lint:frontend` - Frontend linting
 
 ## Code Style
 
@@ -51,5 +51,5 @@
 - ./temp/opencode is reference only, never commit has opencode src
 - Use shared types from workspace package (@opencode-manager/shared)
 - OpenCode server runs on port 5551, backend API on port 5003
-- Prefer pnpm over npm for all package management
-- Run `pnpm lint` after completing tasks to ensure code quality
+- Prefer bun over npm/pnpm for all package management
+- Run `bun lint` after completing tasks to ensure code quality

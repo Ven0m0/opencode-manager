@@ -108,13 +108,13 @@ docker-compose restart    # Restart
 For contributors who want to develop locally:
 
 ```bash
-# Prerequisites: pnpm, Bun, OpenCode TUI (npm i -g @opencode/tui)
+# Prerequisites: Bun, OpenCode TUI (npm i -g @opencode/tui)
 
 git clone https://github.com/chriswritescode-dev/opencode-manager.git
 cd opencode-manager
-pnpm install
+bun install
 cp .env.example .env
-pnpm dev
+bun dev
 ```
 
 ## Configuration

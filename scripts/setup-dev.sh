@@ -4,18 +4,10 @@ set -e
 
 echo "🔍 Checking prerequisites..."
 
-# Check if pnpm is installed (required for workspaces)
-if ! command -v pnpm &> /dev/null; then
-  echo "❌ pnpm is not installed. Please install it with:"
-  echo "   npm install -g pnpm"
-  exit 1
-fi
-
-echo "✅ pnpm is installed"
-
-# Check if Bun is installed (required for backend)
+# Check if bun is installed
 if ! command -v bun &> /dev/null; then
-  echo "❌ Bun is not installed. Please install it from https://bun.sh"
+  echo "❌ Bun is not installed. Please install it with:"
+  echo "   curl -fsSL https://bun.sh/install | bash"
   exit 1
 fi
 
@@ -51,9 +43,9 @@ else
   echo "✅ Workspace directory exists"
 fi
 
-# Install dependencies using pnpm (handles workspaces)
+# Install dependencies using bun (handles workspaces)
 echo "📦 Installing dependencies..."
-pnpm install
+bun install
 
 echo "✅ Dependencies installed"
 
@@ -69,6 +61,6 @@ fi
 echo "✅ Dev environment ready!"
 echo ""
 echo "🚀 To start development:"
-echo "   pnpm dev              # Start both backend and frontend"
-echo "   pnpm dev:backend      # Start backend only"
-echo "   pnpm dev:frontend     # Start frontend only"
+echo "   bun dev              # Start both backend and frontend"
+echo "   bun dev:backend      # Start backend only"
+echo "   bun dev:frontend     # Start frontend only"

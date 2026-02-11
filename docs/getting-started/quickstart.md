@@ -19,9 +19,9 @@ Get up and running with OpenCode Manager in minutes.
     ```bash
     git clone https://github.com/chriswritescode-dev/opencode-manager.git
     cd opencode-manager
-    pnpm install
+    bun install
     cp .env.example .env
-    pnpm dev
+    bun dev
     ```
     
     Open [http://localhost:5173](http://localhost:5173)

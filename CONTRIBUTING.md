@@ -72,14 +72,14 @@ Each item is tagged with a theme to help you find work in your area of interest:
 ### Running Tests
 
 ```bash
-pnpm test              # Run all backend tests
+bun test              # Run all backend tests
 cd backend && bun test <filename>  # Run single test file
 ```
 
 ### Linting
 
 ```bash
-pnpm lint              # Lint both backend and frontend
+bun lint              # Lint both backend and frontend
 ```
 
 Run linting before submitting a PR.

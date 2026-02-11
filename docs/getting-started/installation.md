@@ -58,10 +58,8 @@ For contributors who want to develop locally instead of using Docker.
 
 ### Prerequisites
 
-- [pnpm](https://pnpm.io/installation) - Package manager (required for workspaces)
-- [Bun](https://bun.sh) - Backend runtime
+- [Bun](https://bun.sh) - Package manager and runtime
 - [OpenCode TUI](https://opencode.ai) - `curl -fsSL https://opencode.ai/install | bash`
-- [Node.js 24+](https://nodejs.org/en/about/previous-releases)
 
 ### Setup
 
@@ -71,13 +69,13 @@ git clone https://github.com/chriswritescode-dev/opencode-manager.git
 cd opencode-manager
 
 # Install dependencies
-pnpm install
+bun install
 
 # Copy environment configuration
 cp .env.example .env
 
 # Start development servers
-pnpm dev
+bun dev
 ```
 
 This starts:
