@@ -1,10 +1,14 @@
 node_modules
+__pycache__
 *.log
+*.tmp
 .env
 .env.local
 dist
+target
 build
 coverage
+test
 .DS_Store
 *.db
 *.db-shm
@@ -25,6 +29,7 @@ temp
 
 *.md
 !README.md
+LICENCE
 
 backend/data
 frontend/dist
@@ -37,3 +42,4 @@ backend/dist
 *~
 .npm
 .yarn
+.bun
