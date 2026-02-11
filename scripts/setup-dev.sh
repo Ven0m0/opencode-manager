@@ -13,14 +13,6 @@ fi
 
 echo "✅ Bun is installed"
 
-# Check if Bun is installed (required for backend)
-if ! command -v bun &> /dev/null; then
-  echo "❌ Bun is not installed. Please install it from https://bun.sh"
-  exit 1
-fi
-
-echo "✅ Bun is installed"
-
 # Check if Git is installed
 if ! git --version &> /dev/null; then
   echo "❌ Git is not installed. Please install Git and try again."

@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "predev": "bash scripts/setup-dev.sh",
-    "dev": "concurrently \"bun:dev:backend\" \"bun:dev:frontend\"",
+    "dev": "concurrently \"npm:dev:backend\" \"npm:dev:frontend\"",
     "dev:backend": "bun --watch backend/src/index.ts",
     "dev:frontend": "bun --filter frontend dev",
     "build": "bun run build:backend && bun run build:frontend",
