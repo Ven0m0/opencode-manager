@@ -1,98 +1,98 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from "vitest";
 
-describe('Process Helper Functions', () => {
-  describe('mapProcessState', () => {
+describe("Process Helper Functions", () => {
+  describe("mapProcessState", () => {
     it('should map "running" state correctly', () => {
-      const mapped = 'running' as const
+      const mapped = "running" as const;
 
-      expect(mapped).toBe('running')
-    })
+      expect(mapped).toBe("running");
+    });
 
     it('should map "stopped" state to "stopped"', () => {
-      const mapped = 'stopped' as const
+      const mapped = "stopped" as const;
 
-      expect(mapped).toBe('stopped')
-    })
+      expect(mapped).toBe("stopped");
+    });
 
     it('should map "starting" state to "starting"', () => {
-      const mapped = 'starting' as const
+      const mapped = "starting" as const;
 
-      expect(mapped).toBe('starting')
-    })
+      expect(mapped).toBe("starting");
+    });
 
     it('should map unknown states to "error"', () => {
-      const mapped = 'error' as const
+      const mapped = "error" as const;
 
-      expect(mapped).toBe('error')
-    })
+      expect(mapped).toBe("error");
+    });
 
-    it('should handle all valid process states', () => {
+    it("should handle all valid process states", () => {
       const stateMap = {
-        'running': 'running',
-        'stopped': 'stopped',
-        'starting': 'starting',
-        'error': 'error',
-        'timeout': 'error'
-      }
+        running: "running",
+        stopped: "stopped",
+        starting: "starting",
+        error: "error",
+        timeout: "error",
+      };
 
-      expect(Object.keys(stateMap).length).toBeGreaterThan(0)
-    })
-  })
+      expect(Object.keys(stateMap).length).toBeGreaterThan(0);
+    });
+  });
 
-  describe('generateSessionId', () => {
-    it('should generate unique session IDs', () => {
-      const id1 = 'session-abc123'
-      const id2 = 'session-def456'
+  describe("generateSessionId", () => {
+    it("should generate unique session IDs", () => {
+      const id1 = "session-abc123";
+      const id2 = "session-def456";
 
-      expect(id1).not.toBe(id2)
-      expect(id1).toMatch(/^session-/)
-      expect(id2).toMatch(/^session-/)
-    })
+      expect(id1).not.toBe(id2);
+      expect(id1).toMatch(/^session-/);
+      expect(id2).toMatch(/^session-/);
+    });
 
-    it('should use consistent prefix', () => {
-      const id = 'session-xyz789'
+    it("should use consistent prefix", () => {
+      const id = "session-xyz789";
 
-      expect(id.startsWith('session-')).toBe(true)
-    })
-  })
+      expect(id.startsWith("session-")).toBe(true);
+    });
+  });
 
-  describe('validateRepoUrl', () => {
-    it('should accept valid GitHub HTTPS URLs', () => {
-      const isValid = true
+  describe("validateRepoUrl", () => {
+    it("should accept valid GitHub HTTPS URLs", () => {
+      const isValid = true;
 
-      expect(isValid).toBe(true)
-    })
+      expect(isValid).toBe(true);
+    });
 
-    it('should accept valid GitHub SSH URLs', () => {
-      const isValid = true
+    it("should accept valid GitHub SSH URLs", () => {
+      const isValid = true;
 
-      expect(isValid).toBe(true)
-    })
+      expect(isValid).toBe(true);
+    });
 
-    it('should reject invalid URLs', () => {
-      const isValid = false
+    it("should reject invalid URLs", () => {
+      const isValid = false;
 
-      expect(isValid).toBe(false)
-    })
+      expect(isValid).toBe(false);
+    });
 
-    it('should accept GitLab URLs', () => {
-      const isValid = true
+    it("should accept GitLab URLs", () => {
+      const isValid = true;
 
-      expect(isValid).toBe(true)
-    })
-  })
+      expect(isValid).toBe(true);
+    });
+  });
 
-  describe('sanitizeEnvVars', () => {
-    it('should filter out undefined values', () => {
-      const sanitized = ['DEFINED=value']
+  describe("sanitizeEnvVars", () => {
+    it("should filter out undefined values", () => {
+      const sanitized = ["DEFINED=value"];
 
-      expect(sanitized).not.toContain('UNDEFINED')
-    })
+      expect(sanitized).not.toContain("UNDEFINED");
+    });
 
-    it('should preserve all defined values', () => {
-      const env = ['KEY1=value1', 'KEY2=value2', 'KEY3=value3']
+    it("should preserve all defined values", () => {
+      const env = ["KEY1=value1", "KEY2=value2", "KEY3=value3"];
 
-      expect(env.length).toBe(3)
-    })
-  })
-})
+      expect(env.length).toBe(3);
+    });
+  });
+});

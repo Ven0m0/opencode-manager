@@ -1,11 +1,11 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef } from "react";
 
 interface FileSuggestionsProps {
-  isOpen: boolean
-  files: string[]
-  onSelect: (file: string) => void
-  onClose: () => void
-  selectedIndex?: number
+  isOpen: boolean;
+  files: string[];
+  onSelect: (file: string) => void;
+  onClose: () => void;
+  selectedIndex?: number;
 }
 
 export function FileSuggestions({
@@ -13,39 +13,39 @@ export function FileSuggestions({
   files,
   onSelect,
   onClose,
-  selectedIndex = 0
+  selectedIndex = 0,
 }: FileSuggestionsProps) {
-  const listRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen) return;
 
     const handleClickOutside = (e: MouseEvent) => {
       if (listRef.current && !listRef.current.contains(e.target as Node)) {
-        onClose()
+        onClose();
       }
-    }
+    };
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isOpen, onClose])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen, onClose]);
 
   useEffect(() => {
-    if (!isOpen || !listRef.current) return
-    
-    const selectedItem = listRef.current.children[selectedIndex] as HTMLElement
+    if (!isOpen || !listRef.current) return;
+
+    const selectedItem = listRef.current.children[selectedIndex] as HTMLElement;
     if (selectedItem) {
-      selectedItem.scrollIntoView({ block: 'nearest' })
+      selectedItem.scrollIntoView({ block: "nearest" });
     }
-  }, [selectedIndex, isOpen])
+  }, [selectedIndex, isOpen]);
 
-  if (!isOpen || files.length === 0) return null
+  if (!isOpen || files.length === 0) return null;
 
-  const getFilename = (path: string) => path.split('/').pop() || path
+  const getFilename = (path: string) => path.split("/").pop() || path;
   const getDirectory = (path: string) => {
-    const parts = path.split('/')
-    return parts.slice(0, -1).join('/') || '.'
-  }
+    const parts = path.split("/");
+    return parts.slice(0, -1).join("/") || ".";
+  };
 
   return (
     <div
@@ -58,18 +58,16 @@ export function FileSuggestions({
           onClick={() => onSelect(file)}
           className={`w-full px-3 py-2 text-left transition-colors ${
             idx === selectedIndex
-              ? 'bg-primary text-primary-foreground'
-              : 'hover:bg-muted text-foreground'
+              ? "bg-primary text-primary-foreground"
+              : "hover:bg-muted text-foreground"
           }`}
         >
           <div className="font-mono text-sm font-medium">
             {getFilename(file)}
           </div>
-          <div className="text-xs opacity-70 mt-0.5">
-            {getDirectory(file)}
-          </div>
+          <div className="text-xs opacity-70 mt-0.5">{getDirectory(file)}</div>
         </button>
       ))}
     </div>
-  )
+  );
 }

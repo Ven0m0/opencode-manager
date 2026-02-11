@@ -1,5 +1,5 @@
-import { TTSSettings } from './TTSSettings'
-import { STTSettings } from './STTSettings'
+import { STTSettings } from "./STTSettings";
+import { TTSSettings } from "./TTSSettings";
 
 export function VoiceSettings() {
   return (
@@ -7,5 +7,5 @@ export function VoiceSettings() {
       <TTSSettings />
       <STTSettings />
     </div>
-  )
+  );
 }

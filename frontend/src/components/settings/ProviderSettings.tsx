@@ -1,257 +1,301 @@
-import { useState, useMemo, useCallback } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Loader2, Check, X, Shield, ChevronDown, ChevronRight, Key, Search, Pencil, Trash2 } from 'lucide-react'
-import { providerCredentialsApi, getProviders } from '@/api/providers'
-import type { Provider } from '@/api/providers'
-import { oauthApi, type OAuthAuthorizeResponse } from '@/api/oauth'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { OAuthAuthorizeDialog } from './OAuthAuthorizeDialog'
-import { OAuthCallbackDialog } from './OAuthCallbackDialog'
-import { ApiKeyDialog } from '@/components/model/ApiKeyDialog'
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Key,
+  Loader2,
+  Pencil,
+  Search,
+  Shield,
+  Trash2,
+  X,
+} from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { type OAuthAuthorizeResponse, oauthApi } from "@/api/oauth";
+import type { Provider } from "@/api/providers";
+import { getProviders, providerCredentialsApi } from "@/api/providers";
+import { ApiKeyDialog } from "@/components/model/ApiKeyDialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { OAuthAuthorizeDialog } from "./OAuthAuthorizeDialog";
+import { OAuthCallbackDialog } from "./OAuthCallbackDialog";
 
 export function ProviderSettings() {
-  const [selectedProvider, setSelectedProvider] = useState<string | null>(null)
-  const [oauthDialogOpen, setOauthDialogOpen] = useState(false)
-  const [oauthCallbackDialogOpen, setOauthCallbackDialogOpen] = useState(false)
-  const [oauthResponse, setOauthResponse] = useState<OAuthAuthorizeResponse | null>(null)
-  const [connectedExpanded, setConnectedExpanded] = useState(false)
-  const [availableExpanded, setAvailableExpanded] = useState(false)
-  const [availableSearch, setAvailableSearch] = useState('')
-  const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false)
-  const [apiKeyProvider, setApiKeyProvider] = useState<Provider | null>(null)
-  const [apiKeyMode, setApiKeyMode] = useState<'add' | 'edit'>('add')
-  const queryClient = useQueryClient()
+  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
+  const [oauthDialogOpen, setOauthDialogOpen] = useState(false);
+  const [oauthCallbackDialogOpen, setOauthCallbackDialogOpen] = useState(false);
+  const [oauthResponse, setOauthResponse] =
+    useState<OAuthAuthorizeResponse | null>(null);
+  const [connectedExpanded, setConnectedExpanded] = useState(false);
+  const [availableExpanded, setAvailableExpanded] = useState(false);
+  const [availableSearch, setAvailableSearch] = useState("");
+  const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false);
+  const [apiKeyProvider, setApiKeyProvider] = useState<Provider | null>(null);
+  const [apiKeyMode, setApiKeyMode] = useState<"add" | "edit">("add");
+  const queryClient = useQueryClient();
 
   const { data: providersData, isLoading: providersLoading } = useQuery({
-    queryKey: ['providers'],
+    queryKey: ["providers"],
     queryFn: () => getProviders(),
     staleTime: 300000,
-  })
+  });
 
-  const providers = providersData?.providers
+  const providers = providersData?.providers;
 
   const { data: credentialsList, isLoading: credentialsLoading } = useQuery({
-    queryKey: ['provider-credentials'],
+    queryKey: ["provider-credentials"],
     queryFn: () => providerCredentialsApi.list(),
-  })
+  });
 
   const { data: authMethods } = useQuery({
-    queryKey: ['provider-auth-methods'],
+    queryKey: ["provider-auth-methods"],
     queryFn: () => oauthApi.getAuthMethods(),
-  })
+  });
 
   const deleteCredentialMutation = useMutation({
-    mutationFn: (providerId: string) => providerCredentialsApi.delete(providerId),
+    mutationFn: (providerId: string) =>
+      providerCredentialsApi.delete(providerId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['provider-credentials'] })
-      queryClient.invalidateQueries({ queryKey: ['providers'] })
-      queryClient.invalidateQueries({ queryKey: ['providers-with-models'] })
+      queryClient.invalidateQueries({ queryKey: ["provider-credentials"] });
+      queryClient.invalidateQueries({ queryKey: ["providers"] });
+      queryClient.invalidateQueries({ queryKey: ["providers-with-models"] });
     },
-  })
+  });
 
   const handleDeleteCredential = (providerId: string) => {
     if (confirm(`Remove credentials for ${providerId}?`)) {
-      deleteCredentialMutation.mutate(providerId)
+      deleteCredentialMutation.mutate(providerId);
     }
-  }
+  };
 
   const handleOAuthAuthorize = (response: OAuthAuthorizeResponse) => {
-    setOauthResponse(response)
-    setOauthDialogOpen(false)
-    setOauthCallbackDialogOpen(true)
-  }
+    setOauthResponse(response);
+    setOauthDialogOpen(false);
+    setOauthCallbackDialogOpen(true);
+  };
 
   const handleOAuthDialogClose = () => {
-    setOauthDialogOpen(false)
-    setSelectedProvider(null)
-  }
+    setOauthDialogOpen(false);
+    setSelectedProvider(null);
+  };
 
   const handleOAuthSuccess = () => {
-    queryClient.invalidateQueries({ queryKey: ['provider-credentials'] })
-    setOauthCallbackDialogOpen(false)
-    setOauthResponse(null)
-    setSelectedProvider(null)
-  }
+    queryClient.invalidateQueries({ queryKey: ["provider-credentials"] });
+    setOauthCallbackDialogOpen(false);
+    setOauthResponse(null);
+    setSelectedProvider(null);
+  };
 
-  const supportsOAuth = useCallback((providerId: string) => {
-    const methods = authMethods?.[providerId] || []
-    return methods.some(method => method.type === 'oauth')
-  }, [authMethods])
+  const supportsOAuth = useCallback(
+    (providerId: string) => {
+      const methods = authMethods?.[providerId] || [];
+      return methods.some((method) => method.type === "oauth");
+    },
+    [authMethods],
+  );
 
-  const hasCredentials = useCallback((providerId: string) => {
-    return credentialsList?.includes(providerId) || false
-  }, [credentialsList])
+  const hasCredentials = useCallback(
+    (providerId: string) => {
+      return credentialsList?.includes(providerId) || false;
+    },
+    [credentialsList],
+  );
 
   const oauthProviders = useMemo(() => {
-    if (!providers || !authMethods) return []
-    return providers.filter(provider => supportsOAuth(provider.id))
-  }, [providers, authMethods, supportsOAuth])
+    if (!providers || !authMethods) return [];
+    return providers.filter((provider) => supportsOAuth(provider.id));
+  }, [providers, authMethods, supportsOAuth]);
 
   const apiKeyProviders = useMemo(() => {
-    if (!providers || !authMethods) return { connected: [], available: [] }
-    const nonOAuthProviders = providers.filter(provider => !supportsOAuth(provider.id))
-    const connected = nonOAuthProviders.filter(provider => hasCredentials(provider.id))
-    const available = nonOAuthProviders.filter(provider => !hasCredentials(provider.id))
-    return { connected, available }
-  }, [providers, authMethods, supportsOAuth, hasCredentials])
+    if (!providers || !authMethods) return { connected: [], available: [] };
+    const nonOAuthProviders = providers.filter(
+      (provider) => !supportsOAuth(provider.id),
+    );
+    const connected = nonOAuthProviders.filter((provider) =>
+      hasCredentials(provider.id),
+    );
+    const available = nonOAuthProviders.filter(
+      (provider) => !hasCredentials(provider.id),
+    );
+    return { connected, available };
+  }, [providers, authMethods, supportsOAuth, hasCredentials]);
 
   const filteredAvailableProviders = useMemo(() => {
-    if (!availableSearch.trim()) return apiKeyProviders.available
-    const search = availableSearch.toLowerCase()
-    return apiKeyProviders.available.filter(provider => 
-      provider.name.toLowerCase().includes(search) || 
-      provider.id.toLowerCase().includes(search)
-    )
-  }, [apiKeyProviders.available, availableSearch])
+    if (!availableSearch.trim()) return apiKeyProviders.available;
+    const search = availableSearch.toLowerCase();
+    return apiKeyProviders.available.filter(
+      (provider) =>
+        provider.name.toLowerCase().includes(search) ||
+        provider.id.toLowerCase().includes(search),
+    );
+  }, [apiKeyProviders.available, availableSearch]);
 
   const selectedProviderName = useMemo(() => {
-    if (!selectedProvider) return ''
-    return providers?.find(p => p.id === selectedProvider)?.name || selectedProvider
-  }, [selectedProvider, providers])
+    if (!selectedProvider) return "";
+    return (
+      providers?.find((p) => p.id === selectedProvider)?.name ||
+      selectedProvider
+    );
+  }, [selectedProvider, providers]);
 
   const handleAddApiKey = useCallback((provider: Provider) => {
-    setApiKeyProvider(provider)
-    setApiKeyMode('add')
-    setApiKeyDialogOpen(true)
-  }, [])
+    setApiKeyProvider(provider);
+    setApiKeyMode("add");
+    setApiKeyDialogOpen(true);
+  }, []);
 
   const handleEditApiKey = useCallback((provider: Provider) => {
-    setApiKeyProvider(provider)
-    setApiKeyMode('edit')
-    setApiKeyDialogOpen(true)
-  }, [])
+    setApiKeyProvider(provider);
+    setApiKeyMode("edit");
+    setApiKeyDialogOpen(true);
+  }, []);
 
   const handleApiKeySuccess = useCallback(() => {
-    setApiKeyDialogOpen(false)
-    setApiKeyProvider(null)
-    queryClient.invalidateQueries({ queryKey: ['provider-credentials'] })
-    queryClient.invalidateQueries({ queryKey: ['providers'] })
-    queryClient.invalidateQueries({ queryKey: ['providers-with-models'] })
-  }, [queryClient])
+    setApiKeyDialogOpen(false);
+    setApiKeyProvider(null);
+    queryClient.invalidateQueries({ queryKey: ["provider-credentials"] });
+    queryClient.invalidateQueries({ queryKey: ["providers"] });
+    queryClient.invalidateQueries({ queryKey: ["providers-with-models"] });
+  }, [queryClient]);
 
   const handleApiKeyDialogClose = useCallback((open: boolean) => {
-    setApiKeyDialogOpen(open)
+    setApiKeyDialogOpen(open);
     if (!open) {
-      setApiKeyProvider(null)
+      setApiKeyProvider(null);
     }
-  }, [])
+  }, []);
 
   if (providersLoading || credentialsLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   return (
     <div className="space-y-8">
       <div className="space-y-4">
         <div>
-          <h2 className="text-lg font-semibold text-foreground mb-2">OAuth Providers</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-2">
+            OAuth Providers
+          </h2>
           <p className="text-sm text-muted-foreground">
             Connect to AI providers using OAuth authentication.
           </p>
         </div>
 
-      {oauthProviders.length === 0 ? (
-        <Card className="bg-card border-border">
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground text-center">
-              No OAuth-capable providers available.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4">
-          {oauthProviders.map((provider) => {
-            const hasKey = hasCredentials(provider.id)
-            const modelCount = Object.keys(provider.models || {}).length
+        {oauthProviders.length === 0 ? (
+          <Card className="bg-card border-border">
+            <CardContent className="pt-6">
+              <p className="text-sm text-muted-foreground text-center">
+                No OAuth-capable providers available.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4">
+            {oauthProviders.map((provider) => {
+              const hasKey = hasCredentials(provider.id);
+              const modelCount = Object.keys(provider.models || {}).length;
 
-            return (
-              <Card key={provider.id} className="bg-card border-border">
-                <CardHeader className="p-2">
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-base">
-                        {provider.name || provider.id}
-                      </CardTitle>
-                      {hasKey ? (
-                        <Badge variant="default" className="bg-green-600 hover:bg-green-700 shrink-0">
-                          <Check className="h-3 w-3 mr-1" />
-                          Connected
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="shrink-0">
-                          <X className="h-3 w-3 mr-1" />
-                          Not Connected
-                        </Badge>
-                      )}
-                    </div>
-                    <CardDescription>
-                      {modelCount > 0 && (
-                        <span className="text-xs">{modelCount} model{modelCount !== 1 ? 's' : ''}</span>
-                      )}
-                    </CardDescription>
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        size="sm"
-                        variant={hasKey ? 'outline' : 'default'}
-                        onClick={() => {
-                          setSelectedProvider(provider.id)
-                          setOauthDialogOpen(true)
-                        }}
-                      >
-                        <Shield className="h-4 w-4 mr-1" />
-                        {hasKey ? 'Reconnect' : 'Connect'}
-                      </Button>
-                      {hasKey && (
+              return (
+                <Card key={provider.id} className="bg-card border-border">
+                  <CardHeader className="p-2">
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <CardTitle className="text-base">
+                          {provider.name || provider.id}
+                        </CardTitle>
+                        {hasKey ? (
+                          <Badge
+                            variant="default"
+                            className="bg-green-600 hover:bg-green-700 shrink-0"
+                          >
+                            <Check className="h-3 w-3 mr-1" />
+                            Connected
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="shrink-0">
+                            <X className="h-3 w-3 mr-1" />
+                            Not Connected
+                          </Badge>
+                        )}
+                      </div>
+                      <CardDescription>
+                        {modelCount > 0 && (
+                          <span className="text-xs">
+                            {modelCount} model{modelCount !== 1 ? "s" : ""}
+                          </span>
+                        )}
+                      </CardDescription>
+                      <div className="flex flex-wrap gap-2">
                         <Button
                           size="sm"
-                          variant="destructive"
-                          onClick={() => handleDeleteCredential(provider.id)}
-                          disabled={deleteCredentialMutation.isPending}
+                          variant={hasKey ? "outline" : "default"}
+                          onClick={() => {
+                            setSelectedProvider(provider.id);
+                            setOauthDialogOpen(true);
+                          }}
                         >
-                          Disconnect
+                          <Shield className="h-4 w-4 mr-1" />
+                          {hasKey ? "Reconnect" : "Connect"}
                         </Button>
-                      )}
+                        {hasKey && (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeleteCredential(provider.id)}
+                            disabled={deleteCredentialMutation.isPending}
+                          >
+                            Disconnect
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </CardHeader>
-              </Card>
-            )
-          })}
-        </div>
-      )}
+                  </CardHeader>
+                </Card>
+              );
+            })}
+          </div>
+        )}
 
-      {selectedProvider && (
-        <OAuthAuthorizeDialog
-          providerId={selectedProvider}
-          providerName={selectedProviderName}
-          open={oauthDialogOpen}
-          onOpenChange={handleOAuthDialogClose}
-          onSuccess={handleOAuthAuthorize}
-        />
-      )}
+        {selectedProvider && (
+          <OAuthAuthorizeDialog
+            providerId={selectedProvider}
+            providerName={selectedProviderName}
+            open={oauthDialogOpen}
+            onOpenChange={handleOAuthDialogClose}
+            onSuccess={handleOAuthAuthorize}
+          />
+        )}
 
-      {selectedProvider && oauthResponse && (
-        <OAuthCallbackDialog
-          providerId={selectedProvider}
-          providerName={selectedProviderName}
-          authResponse={oauthResponse}
-          open={oauthCallbackDialogOpen}
-          onOpenChange={setOauthCallbackDialogOpen}
-          onSuccess={handleOAuthSuccess}
-        />
-      )}
+        {selectedProvider && oauthResponse && (
+          <OAuthCallbackDialog
+            providerId={selectedProvider}
+            providerName={selectedProviderName}
+            authResponse={oauthResponse}
+            open={oauthCallbackDialogOpen}
+            onOpenChange={setOauthCallbackDialogOpen}
+            onSuccess={handleOAuthSuccess}
+          />
+        )}
       </div>
 
       <div className="space-y-4">
         <div>
-          <h2 className="text-lg font-semibold text-foreground mb-2">API Keys</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-2">
+            API Keys
+          </h2>
           <p className="text-sm text-muted-foreground">
             Manage API keys for AI providers.
           </p>
@@ -281,7 +325,7 @@ export function ProviderSettings() {
                 </p>
               ) : (
                 apiKeyProviders.connected.map((provider) => {
-                  const modelCount = Object.keys(provider.models || {}).length
+                  const modelCount = Object.keys(provider.models || {}).length;
                   return (
                     <Card key={provider.id} className="bg-card border-border">
                       <CardHeader className="p-3">
@@ -292,12 +336,15 @@ export function ProviderSettings() {
                             </CardTitle>
                             {modelCount > 0 && (
                               <CardDescription className="text-xs">
-                                {modelCount} model{modelCount !== 1 ? 's' : ''}
+                                {modelCount} model{modelCount !== 1 ? "s" : ""}
                               </CardDescription>
                             )}
                           </div>
                           <div className="flex items-center gap-1">
-                            <Badge variant="default" className="bg-green-600 hover:bg-green-700 shrink-0 text-xs">
+                            <Badge
+                              variant="default"
+                              className="bg-green-600 hover:bg-green-700 shrink-0 text-xs"
+                            >
                               <Check className="h-3 w-3 mr-1" />
                               Connected
                             </Badge>
@@ -312,7 +359,9 @@ export function ProviderSettings() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => handleDeleteCredential(provider.id)}
+                              onClick={() =>
+                                handleDeleteCredential(provider.id)
+                              }
                               disabled={deleteCredentialMutation.isPending}
                               className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                             >
@@ -322,7 +371,7 @@ export function ProviderSettings() {
                         </div>
                       </CardHeader>
                     </Card>
-                  )
+                  );
                 })
               )}
             </div>
@@ -361,20 +410,27 @@ export function ProviderSettings() {
               <div className="space-y-2 max-h-64 overflow-y-auto scrollbar-thin pt-4 pb-1 pr-1 [mask-image:linear-gradient(to_bottom,transparent,black_16px,black)]">
                 {filteredAvailableProviders.length === 0 ? (
                   <p className="text-sm text-muted-foreground py-2">
-                    {availableSearch ? 'No providers match your search.' : 'No available providers.'}
+                    {availableSearch
+                      ? "No providers match your search."
+                      : "No available providers."}
                   </p>
                 ) : (
                   filteredAvailableProviders.map((provider, index) => {
-                    const modelCount = Object.keys(provider.models || {}).length
+                    const modelCount = Object.keys(
+                      provider.models || {},
+                    ).length;
                     return (
-                      <div key={provider.id} className={`flex items-center justify-between gap-2 py-1.5 px-2 rounded-md hover:bg-accent/80 transition-colors ${index % 2 === 1 ? 'bg-accent/30' : ''}`}>
+                      <div
+                        key={provider.id}
+                        className={`flex items-center justify-between gap-2 py-1.5 px-2 rounded-md hover:bg-accent/80 transition-colors ${index % 2 === 1 ? "bg-accent/30" : ""}`}
+                      >
                         <div className="flex-1 min-w-0">
                           <span className="text-sm truncate block">
                             {provider.name || provider.id}
                           </span>
                           {modelCount > 0 && (
                             <span className="text-xs text-muted-foreground">
-                              {modelCount} model{modelCount !== 1 ? 's' : ''}
+                              {modelCount} model{modelCount !== 1 ? "s" : ""}
                             </span>
                           )}
                         </div>
@@ -388,7 +444,7 @@ export function ProviderSettings() {
                           Add Key
                         </Button>
                       </div>
-                    )
+                    );
                   })
                 )}
               </div>
@@ -407,11 +463,13 @@ export function ProviderSettings() {
             api: apiKeyProvider.api,
             env: apiKeyProvider.env || [],
             npm: apiKeyProvider.npm,
-            models: Object.entries(apiKeyProvider.models || {}).map(([id, model]) => ({
-              id,
-              name: model.name || id,
-            })),
-            source: 'builtin',
+            models: Object.entries(apiKeyProvider.models || {}).map(
+              ([id, model]) => ({
+                id,
+                name: model.name || id,
+              }),
+            ),
+            source: "builtin",
             isConnected: hasCredentials(apiKeyProvider.id),
           }}
           onSuccess={handleApiKeySuccess}
@@ -419,5 +477,5 @@ export function ProviderSettings() {
         />
       )}
     </div>
-  )
+  );
 }

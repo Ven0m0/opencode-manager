@@ -1,9 +1,9 @@
+import { formatDistanceToNow } from "date-fns";
+import { Clock, Trash2 } from "lucide-react";
+import type { Session } from "@/api/types";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MiniScanner } from "@/components/ui/mini-scanner";
-import { Trash2, Clock } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import type { Session } from "@/api/types";
 
 interface SessionCardProps {
   session: Session;
@@ -22,7 +22,6 @@ export const SessionCard = ({
   onToggleSelection,
   onDelete,
 }: SessionCardProps) => {
-
   return (
     <Card
       className={`p-3 cursor-pointer transition-all ${

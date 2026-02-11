@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
-import { useSessions, useDeleteSession } from "@/hooks/useOpenCode";
+import { useMemo, useState } from "react";
 import { ListToolbar } from "@/components/ui/list-toolbar";
+import { useDeleteSession, useSessions } from "@/hooks/useOpenCode";
 import { DeleteSessionDialog } from "./DeleteSessionDialog";
 import { SessionCard } from "./SessionCard";
 
@@ -33,7 +33,8 @@ export const SessionList = ({
 
     let filtered = sessions.filter((session) => {
       if (session.parentID) return false;
-      if (directory && session.directory && session.directory !== directory) return false;
+      if (directory && session.directory && session.directory !== directory)
+        return false;
       return true;
     });
 
@@ -51,18 +52,26 @@ export const SessionList = ({
     if (!filteredSessions) return [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return filteredSessions.filter((session) => new Date(session.time.updated) >= today);
+    return filteredSessions.filter(
+      (session) => new Date(session.time.updated) >= today,
+    );
   }, [filteredSessions]);
 
   const olderSessions = useMemo(() => {
     if (!filteredSessions) return [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return filteredSessions.filter((session) => new Date(session.time.updated) < today);
+    return filteredSessions.filter(
+      (session) => new Date(session.time.updated) < today,
+    );
   }, [filteredSessions]);
 
   if (isLoading) {
-    return <div className="p-4 text-sm text-muted-foreground">Loading sessions...</div>;
+    return (
+      <div className="p-4 text-sm text-muted-foreground">
+        Loading sessions...
+      </div>
+    );
   }
 
   if (!sessions || sessions.length === 0) {
@@ -109,7 +118,7 @@ export const SessionList = ({
 
   const toggleSelectAll = () => {
     if (!filteredSessions || filteredSessions.length === 0) return;
-    
+
     const allFilteredSelected = filteredSessions.every((session) =>
       selectedSessions.has(session.id),
     );
@@ -145,7 +154,9 @@ export const SessionList = ({
           totalCount={filteredSessions.length}
           allSelected={
             filteredSessions.length > 0 &&
-            filteredSessions.every((session) => selectedSessions.has(session.id))
+            filteredSessions.every((session) =>
+              selectedSessions.has(session.id),
+            )
           }
           onToggleSelectAll={toggleSelectAll}
           onDelete={handleBulkDelete}

@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from "zod";
 
 export const SSHHostKeyRequestSchema = z.object({
   id: z.string(),
@@ -7,10 +7,10 @@ export const SSHHostKeyRequestSchema = z.object({
   keyType: z.string(),
   fingerprint: z.string(),
   timestamp: z.number(),
-  isKeyChanged: z.boolean()
-})
+  isKeyChanged: z.boolean(),
+});
 
-export const SSHHostKeyResponseSchema = z.enum(['accept', 'reject'])
+export const SSHHostKeyResponseSchema = z.enum(["accept", "reject"]);
 
 export const TrustedSSHHostSchema = z.object({
   id: z.number(),
@@ -18,9 +18,9 @@ export const TrustedSSHHostSchema = z.object({
   key_type: z.string(),
   fingerprint: z.string(),
   created_at: z.number(),
-  updated_at: z.number()
-})
+  updated_at: z.number(),
+});
 
-export type SSHHostKeyRequest = z.infer<typeof SSHHostKeyRequestSchema>
-export type SSHHostKeyResponse = z.infer<typeof SSHHostKeyResponseSchema>
-export type TrustedSSHHost = z.infer<typeof TrustedSSHHostSchema>
+export type SSHHostKeyRequest = z.infer<typeof SSHHostKeyRequestSchema>;
+export type SSHHostKeyResponse = z.infer<typeof SSHHostKeyResponseSchema>;
+export type TrustedSSHHost = z.infer<typeof TrustedSSHHostSchema>;

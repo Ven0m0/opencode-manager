@@ -1,47 +1,67 @@
-import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { createRepo } from '@/api/repos'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Loader2 } from 'lucide-react'
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
+import { createRepo } from "@/api/repos";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface AddRepoDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function AddRepoDialog({ open, onOpenChange }: AddRepoDialogProps) {
-  const [repoType, setRepoType] = useState<'remote' | 'local'>('remote')
-  const [repoUrl, setRepoUrl] = useState('')
-  const [localPath, setLocalPath] = useState('')
-  const [branch, setBranch] = useState('')
-  const queryClient = useQueryClient()
+  const [repoType, setRepoType] = useState<"remote" | "local">("remote");
+  const [repoUrl, setRepoUrl] = useState("");
+  const [localPath, setLocalPath] = useState("");
+  const [branch, setBranch] = useState("");
+  const queryClient = useQueryClient();
 
   const mutation = useMutation({
     mutationFn: () => {
-      if (repoType === 'local') {
-        return createRepo(undefined, localPath, branch || undefined, undefined, false)
+      if (repoType === "local") {
+        return createRepo(
+          undefined,
+          localPath,
+          branch || undefined,
+          undefined,
+          false,
+        );
       } else {
-        return createRepo(repoUrl, undefined, branch || undefined, undefined, false)
+        return createRepo(
+          repoUrl,
+          undefined,
+          branch || undefined,
+          undefined,
+          false,
+        );
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['repos'] })
-      setRepoUrl('')
-      setLocalPath('')
-      setBranch('')
-      setRepoType('remote')
-      onOpenChange(false)
+      queryClient.invalidateQueries({ queryKey: ["repos"] });
+      setRepoUrl("");
+      setLocalPath("");
+      setBranch("");
+      setRepoType("remote");
+      onOpenChange(false);
     },
-  })
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if ((repoType === 'remote' && repoUrl) || (repoType === 'local' && localPath)) {
-      mutation.mutate()
+    e.preventDefault();
+    if (
+      (repoType === "remote" && repoUrl) ||
+      (repoType === "local" && localPath)
+    ) {
+      mutation.mutate();
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -60,8 +80,8 @@ export function AddRepoDialog({ open, onOpenChange }: AddRepoDialogProps) {
                   type="radio"
                   name="repoType"
                   value="remote"
-                  checked={repoType === 'remote'}
-                  onChange={(e) => setRepoType(e.target.value as 'remote')}
+                  checked={repoType === "remote"}
+                  onChange={(e) => setRepoType(e.target.value as "remote")}
                   disabled={mutation.isPending}
                   className="text-blue-600 bg-[#1a1a1a] border-[#2a2a2a]"
                 />
@@ -72,8 +92,8 @@ export function AddRepoDialog({ open, onOpenChange }: AddRepoDialogProps) {
                   type="radio"
                   name="repoType"
                   value="local"
-                  checked={repoType === 'local'}
-                  onChange={(e) => setRepoType(e.target.value as 'local')}
+                  checked={repoType === "local"}
+                  onChange={(e) => setRepoType(e.target.value as "local")}
                   disabled={mutation.isPending}
                   className="text-blue-600 bg-[#1a1a1a] border-[#2a2a2a]"
                 />
@@ -82,7 +102,7 @@ export function AddRepoDialog({ open, onOpenChange }: AddRepoDialogProps) {
             </div>
           </div>
 
-          {repoType === 'remote' ? (
+          {repoType === "remote" ? (
             <div className="space-y-2">
               <label className="text-sm text-zinc-400">Repository URL</label>
               <Input
@@ -107,11 +127,12 @@ export function AddRepoDialog({ open, onOpenChange }: AddRepoDialogProps) {
                 className="bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder:text-zinc-500"
               />
               <p className="text-xs text-zinc-500">
-                Directory name for new repo, OR absolute path to existing Git repo (will be copied to workspace)
+                Directory name for new repo, OR absolute path to existing Git
+                repo (will be copied to workspace)
               </p>
             </div>
           )}
-          
+
           <div className="space-y-2">
             <label className="text-sm text-zinc-400">Branch</label>
             <Input
@@ -122,42 +143,43 @@ export function AddRepoDialog({ open, onOpenChange }: AddRepoDialogProps) {
               className="bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder:text-zinc-500"
             />
             <p className="text-xs text-zinc-500">
-              {branch 
-                ? repoType === 'remote' 
+              {branch
+                ? repoType === "remote"
                   ? `Clones repository directly to '${branch}' branch`
-                  : localPath?.startsWith('/') 
+                  : localPath?.startsWith("/")
                     ? `Copies repo and checks out '${branch}' branch (creates if needed)`
                     : `Initializes repository with '${branch}' branch`
-                : repoType === 'remote'
+                : repoType === "remote"
                   ? "Clones repository to default branch"
-                  : localPath?.startsWith('/')
+                  : localPath?.startsWith("/")
                     ? "Copies repo and checks out current branch"
-                    : "Initializes repository with 'main' branch"
-              }
+                    : "Initializes repository with 'main' branch"}
             </p>
           </div>
-          
-          <Button 
-            type="submit" 
-            disabled={(!repoUrl && repoType === 'remote') || (!localPath && repoType === 'local') || mutation.isPending}
+
+          <Button
+            type="submit"
+            disabled={
+              (!repoUrl && repoType === "remote") ||
+              (!localPath && repoType === "local") ||
+              mutation.isPending
+            }
             className="w-full bg-blue-600 hover:bg-blue-700 text-white"
           >
             {mutation.isPending ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                {repoType === 'local' ? 'Initializing...' : 'Cloning...'}
+                {repoType === "local" ? "Initializing..." : "Cloning..."}
               </>
             ) : (
-              'Add Repository'
+              "Add Repository"
             )}
           </Button>
           {mutation.isError && (
-            <p className="text-sm text-red-400">
-              {mutation.error.message}
-            </p>
+            <p className="text-sm text-red-400">{mutation.error.message}</p>
           )}
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

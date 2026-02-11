@@ -1,155 +1,181 @@
-import * as path from 'path'
-import { fileURLToPath } from 'url'
-import type { IPCServer, IPCHandler } from './ipcServer'
-import type { Database } from 'bun:sqlite'
-import { SettingsService } from '../services/settings'
-import type { GitCredential } from '../utils/git-auth'
-import { logger } from '../utils/logger'
+import type { Database } from "bun:sqlite";
+import * as path from "node:path";
+import { fileURLToPath } from "node:url";
+import { SettingsService } from "../services/settings";
+import type { GitCredential } from "../utils/git-auth";
+import { logger } from "../utils/logger";
+import type { IPCHandler, IPCServer } from "./ipcServer";
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 interface Credentials {
-  username: string
-  password: string
+  username: string;
+  password: string;
 }
 
 interface AskpassRequest {
-  askpassType: 'https' | 'ssh'
-  argv: string[]
+  askpassType: "https" | "ssh";
+  argv: string[];
 }
 
 export class AskpassHandler implements IPCHandler {
-  private cache = new Map<string, Credentials>()
-  private env: Record<string, string>
+  private cache = new Map<string, Credentials>();
+  private env: Record<string, string>;
 
   constructor(
     private ipcServer: IPCServer | undefined,
-    private database: Database
+    private database: Database,
   ) {
-    const scriptsDir = path.join(__dirname, '../../scripts')
+    const scriptsDir = path.join(__dirname, "../../scripts");
 
     this.env = {
-      GIT_ASKPASS: path.join(scriptsDir, this.ipcServer ? 'askpass.sh' : 'askpass-empty.sh'),
+      GIT_ASKPASS: path.join(
+        scriptsDir,
+        this.ipcServer ? "askpass.sh" : "askpass-empty.sh",
+      ),
       VSCODE_GIT_ASKPASS_NODE: process.execPath,
-      VSCODE_GIT_ASKPASS_EXTRA_ARGS: '',
-      VSCODE_GIT_ASKPASS_MAIN: path.join(scriptsDir, 'askpass-main.ts'),
-    }
+      VSCODE_GIT_ASKPASS_EXTRA_ARGS: "",
+      VSCODE_GIT_ASKPASS_MAIN: path.join(scriptsDir, "askpass-main.ts"),
+    };
 
-    logger.info(`AskpassHandler initialized: execPath=${process.execPath}, GIT_ASKPASS=${this.env.GIT_ASKPASS}, VSCODE_GIT_ASKPASS_NODE=${this.env.VSCODE_GIT_ASKPASS_NODE}, VSCODE_GIT_ASKPASS_MAIN=${this.env.VSCODE_GIT_ASKPASS_MAIN}`)
+    logger.info(
+      `AskpassHandler initialized: execPath=${process.execPath}, GIT_ASKPASS=${this.env.GIT_ASKPASS}, VSCODE_GIT_ASKPASS_NODE=${this.env.VSCODE_GIT_ASKPASS_NODE}, VSCODE_GIT_ASKPASS_MAIN=${this.env.VSCODE_GIT_ASKPASS_MAIN}`,
+    );
 
     if (this.ipcServer) {
-      this.ipcServer.registerHandler('askpass', this)
-      logger.info('AskpassHandler registered with IPC server')
+      this.ipcServer.registerHandler("askpass", this);
+      logger.info("AskpassHandler registered with IPC server");
     } else {
-      logger.warn('AskpassHandler: No IPC server provided, using empty askpass')
+      logger.warn(
+        "AskpassHandler: No IPC server provided, using empty askpass",
+      );
     }
   }
 
   async handle(request: AskpassRequest): Promise<string> {
-    logger.info(`Askpass request received: type=${request.askpassType}, argv=${JSON.stringify(request.argv)}`)
-    if (request.askpassType === 'https') {
-      return this.handleHttpsAskpass(request.argv)
+    logger.info(
+      `Askpass request received: type=${request.askpassType}, argv=${JSON.stringify(request.argv)}`,
+    );
+    if (request.askpassType === "https") {
+      return this.handleHttpsAskpass(request.argv);
     }
-    return this.handleSshAskpass()
+    return this.handleSshAskpass();
   }
 
   private async handleHttpsAskpass(argv: string[]): Promise<string> {
-    const request = argv[2] || ''
-    const host = argv[4]?.replace(/^["']+|["':]+$/g, '') || ''
+    const request = argv[2] || "";
+    const host = argv[4]?.replace(/^["']+|["':]+$/g, "") || "";
 
-    let authority = ''
+    let authority = "";
     try {
-      const uri = new URL(host)
-      authority = uri.hostname
+      const uri = new URL(host);
+      authority = uri.hostname;
     } catch {
-      authority = host
+      authority = host;
     }
 
-    const isPassword = /password/i.test(request)
+    const isPassword = /password/i.test(request);
 
-    const cached = this.cache.get(authority)
+    const cached = this.cache.get(authority);
     if (cached && isPassword) {
-      this.cache.delete(authority)
-      return cached.password
+      this.cache.delete(authority);
+      return cached.password;
     }
 
-    const credentials = await this.getCredentialsForHost(authority)
+    const credentials = await this.getCredentialsForHost(authority);
     if (credentials) {
-      this.cache.set(authority, credentials)
-      setTimeout(() => this.cache.delete(authority), 60_000)
-      return isPassword ? credentials.password : credentials.username
+      this.cache.set(authority, credentials);
+      setTimeout(() => this.cache.delete(authority), 60_000);
+      return isPassword ? credentials.password : credentials.username;
     }
 
-    return ''
+    return "";
   }
 
   private async handleSshAskpass(): Promise<string> {
-    return ''
+    return "";
   }
 
   private normalizeHostname(host: string): string {
-    let normalized = host.toLowerCase().trim()
-    normalized = normalized.replace(/\/+$/, '')
-    
-    if (!normalized.includes('://')) {
-      normalized = 'https://' + normalized
+    let normalized = host.toLowerCase().trim();
+    normalized = normalized.replace(/\/+$/, "");
+
+    if (!normalized.includes("://")) {
+      normalized = `https://${normalized}`;
     }
-    
+
     try {
-      const parsed = new URL(normalized)
-      return parsed.hostname
+      const parsed = new URL(normalized);
+      return parsed.hostname;
     } catch {
-      const stripped = normalized.replace(/^https?:\/\//, '')
-      return stripped.split('/')[0] || stripped
+      const stripped = normalized.replace(/^https?:\/\//, "");
+      return stripped.split("/")[0] || stripped;
     }
   }
 
-  private async getCredentialsForHost(hostname: string): Promise<Credentials | null> {
-    const normalizedRequest = this.normalizeHostname(hostname)
-    logger.info(`Looking up credentials for host: ${hostname} (normalized: ${normalizedRequest})`)
-    
-    const settingsService = new SettingsService(this.database)
-    const settings = settingsService.getSettings('default')
-    const allCredentials = (settings.preferences.gitCredentials || []) as GitCredential[]
-    const gitCredentials = allCredentials.filter(cred => !cred.type || cred.type === 'pat')
-    logger.info(`Found ${gitCredentials.length} configured PAT credentials (${allCredentials.length} total)`)
+  private async getCredentialsForHost(
+    hostname: string,
+  ): Promise<Credentials | null> {
+    const normalizedRequest = this.normalizeHostname(hostname);
+    logger.info(
+      `Looking up credentials for host: ${hostname} (normalized: ${normalizedRequest})`,
+    );
+
+    const settingsService = new SettingsService(this.database);
+    const settings = settingsService.getSettings("default");
+    const allCredentials = (settings.preferences.gitCredentials ||
+      []) as GitCredential[];
+    const gitCredentials = allCredentials.filter(
+      (cred) => !cred.type || cred.type === "pat",
+    );
+    logger.info(
+      `Found ${gitCredentials.length} configured PAT credentials (${allCredentials.length} total)`,
+    );
 
     for (const cred of gitCredentials) {
-      const normalizedCred = this.normalizeHostname(cred.host)
-      logger.debug(`Comparing: request='${normalizedRequest}' vs stored='${normalizedCred}' (raw: ${cred.host})`)
-      
+      const normalizedCred = this.normalizeHostname(cred.host);
+      logger.debug(
+        `Comparing: request='${normalizedRequest}' vs stored='${normalizedCred}' (raw: ${cred.host})`,
+      );
+
       if (normalizedCred === normalizedRequest) {
-        logger.info(`Found matching PAT credential '${cred.name}' for ${hostname}`)
+        logger.info(
+          `Found matching PAT credential '${cred.name}' for ${hostname}`,
+        );
         return {
           username: cred.username || this.getDefaultUsername(cred.host),
-          password: cred.token || '',
-        }
+          password: cred.token || "",
+        };
       }
     }
-    
+
     if (gitCredentials.length > 0) {
-      logger.warn(`No credentials found for host: ${hostname}. Configured hosts: ${gitCredentials.map(c => c.host).join(', ')}`)
+      logger.warn(
+        `No credentials found for host: ${hostname}. Configured hosts: ${gitCredentials.map((c) => c.host).join(", ")}`,
+      );
     } else {
-      logger.warn(`No credentials found for host: ${hostname}. No git credentials configured.`)
+      logger.warn(
+        `No credentials found for host: ${hostname}. No git credentials configured.`,
+      );
     }
-    return null
+    return null;
   }
 
   private getDefaultUsername(host: string): string {
     try {
-      const parsed = new URL(host)
-      const hostname = parsed.hostname.toLowerCase()
+      const parsed = new URL(host);
+      const hostname = parsed.hostname.toLowerCase();
 
-      if (hostname === 'github.com') {
-        return 'x-access-token'
+      if (hostname === "github.com") {
+        return "x-access-token";
       }
-      if (hostname === 'gitlab.com' || hostname.includes('gitlab')) {
-        return 'oauth2'
+      if (hostname === "gitlab.com" || hostname.includes("gitlab")) {
+        return "oauth2";
       }
-      return 'oauth2'
+      return "oauth2";
     } catch {
-      return 'oauth2'
+      return "oauth2";
     }
   }
 
@@ -157,6 +183,6 @@ export class AskpassHandler implements IPCHandler {
     return {
       ...this.env,
       ...(this.ipcServer?.getEnv() || {}),
-    }
+    };
   }
 }

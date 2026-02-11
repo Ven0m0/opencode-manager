@@ -1,18 +1,30 @@
-import { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { AlertCircle, Loader2 } from 'lucide-react'
-import { settingsApi } from '@/api/settings'
-import * as reposApi from '@/api/repos'
-import type { OpenCodeConfig } from '@/api/types/settings'
+import { AlertCircle, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import * as reposApi from "@/api/repos";
+import { settingsApi } from "@/api/settings";
+import type { OpenCodeConfig } from "@/api/types/settings";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface SwitchConfigDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  repoId: number
-  currentConfigName?: string
-  onConfigSwitched: (configName: string) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  repoId: number;
+  currentConfigName?: string;
+  onConfigSwitched: (configName: string) => void;
 }
 
 export function SwitchConfigDialog({
@@ -22,55 +34,55 @@ export function SwitchConfigDialog({
   currentConfigName,
   onConfigSwitched,
 }: SwitchConfigDialogProps) {
-  const [configs, setConfigs] = useState<OpenCodeConfig[]>([])
-  const [selectedConfig, setSelectedConfig] = useState<string>('')
-  const [loading, setLoading] = useState(true)
-  const [switching, setSwitching] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [configs, setConfigs] = useState<OpenCodeConfig[]>([]);
+  const [selectedConfig, setSelectedConfig] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [switching, setSwitching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!open) return
+    if (!open) return;
 
     const fetchConfigs = async () => {
       try {
-        setLoading(true)
-        setError(null)
-        const response = await settingsApi.getOpenCodeConfigs()
-        setConfigs(response.configs || [])
-        setSelectedConfig(currentConfigName || '')
+        setLoading(true);
+        setError(null);
+        const response = await settingsApi.getOpenCodeConfigs();
+        setConfigs(response.configs || []);
+        setSelectedConfig(currentConfigName || "");
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load configs')
+        setError(err instanceof Error ? err.message : "Failed to load configs");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchConfigs()
-  }, [open, currentConfigName])
+    fetchConfigs();
+  }, [open, currentConfigName]);
 
   const handleSwitch = async () => {
     if (!selectedConfig) {
-      setError('Please select a config')
-      return
+      setError("Please select a config");
+      return;
     }
 
     if (selectedConfig === currentConfigName) {
-      onOpenChange(false)
-      return
+      onOpenChange(false);
+      return;
     }
 
     try {
-      setSwitching(true)
-      setError(null)
-      await reposApi.switchRepoConfig(repoId, selectedConfig)
-      onConfigSwitched(selectedConfig)
-      onOpenChange(false)
+      setSwitching(true);
+      setError(null);
+      await reposApi.switchRepoConfig(repoId, selectedConfig);
+      onConfigSwitched(selectedConfig);
+      onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to switch config')
+      setError(err instanceof Error ? err.message : "Failed to switch config");
     } finally {
-      setSwitching(false)
+      setSwitching(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -85,17 +97,24 @@ export function SwitchConfigDialog({
         <div className="space-y-4">
           {currentConfigName && (
             <div className="text-sm text-muted-foreground">
-              Current config: <span className="text-foreground font-semibold">{currentConfigName}</span>
+              Current config:{" "}
+              <span className="text-foreground font-semibold">
+                {currentConfigName}
+              </span>
             </div>
           )}
 
           {loading ? (
             <div className="flex items-center justify-center py-6">
               <Loader2 className="w-4 h-4 animate-spin text-blue-600 dark:text-blue-400" />
-              <span className="ml-2 text-sm text-muted-foreground">Loading configs...</span>
+              <span className="ml-2 text-sm text-muted-foreground">
+                Loading configs...
+              </span>
             </div>
           ) : configs.length === 0 ? (
-            <div className="text-sm text-muted-foreground">No configs available</div>
+            <div className="text-sm text-muted-foreground">
+              No configs available
+            </div>
           ) : (
             <Select value={selectedConfig} onValueChange={setSelectedConfig}>
               <SelectTrigger className="bg-background border-border text-foreground">
@@ -107,7 +126,9 @@ export function SwitchConfigDialog({
                     <div className="flex items-center gap-2">
                       {config.name}
                       {config.isDefault && (
-                        <span className="text-xs text-blue-600 dark:text-blue-400 ml-2">(default)</span>
+                        <span className="text-xs text-blue-600 dark:text-blue-400 ml-2">
+                          (default)
+                        </span>
                       )}
                     </div>
                   </SelectItem>
@@ -133,7 +154,11 @@ export function SwitchConfigDialog({
             </Button>
             <Button
               onClick={handleSwitch}
-              disabled={!selectedConfig || switching || selectedConfig === currentConfigName}
+              disabled={
+                !selectedConfig ||
+                switching ||
+                selectedConfig === currentConfigName
+              }
               className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
             >
               {switching ? (
@@ -142,12 +167,12 @@ export function SwitchConfigDialog({
                   Switching...
                 </>
               ) : (
-                'Switch Config'
+                "Switch Config"
               )}
             </Button>
           </div>
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

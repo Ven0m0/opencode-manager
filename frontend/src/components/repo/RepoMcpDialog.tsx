@@ -1,168 +1,236 @@
-import { useState, useEffect, useCallback } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
-import { Switch } from '@/components/ui/switch'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { DeleteDialog } from '@/components/ui/delete-dialog'
-import { DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
-import { Loader2, XCircle, AlertCircle, Plug, Shield, MoreVertical, Key, RefreshCw } from 'lucide-react'
-import { McpOAuthDialog } from '@/components/settings/McpOAuthDialog'
-import { mcpApi, type McpStatus, type McpServerConfig, type McpAuthStartResponse } from '@/api/mcp'
-import { useMutation } from '@tanstack/react-query'
-import { showToast } from '@/lib/toast'
+import { useMutation } from "@tanstack/react-query";
+import {
+  AlertCircle,
+  Key,
+  Loader2,
+  MoreVertical,
+  Plug,
+  RefreshCw,
+  Shield,
+  XCircle,
+} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  type McpAuthStartResponse,
+  type McpServerConfig,
+  type McpStatus,
+  mcpApi,
+} from "@/api/mcp";
+import { McpOAuthDialog } from "@/components/settings/McpOAuthDialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { DeleteDialog } from "@/components/ui/delete-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Switch } from "@/components/ui/switch";
+import { showToast } from "@/lib/toast";
 
 interface RepoMcpDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   config: {
-    content: Record<string, unknown>
-  } | null
-  directory: string | undefined
+    content: Record<string, unknown>;
+  } | null;
+  directory: string | undefined;
 }
 
-export function RepoMcpDialog({ open, onOpenChange, config, directory }: RepoMcpDialogProps) {
-  const [localStatus, setLocalStatus] = useState<Record<string, McpStatus>>({})
-  const [isLoadingStatus, setIsLoadingStatus] = useState(false)
-  const [removeAuthConfirmServer, setRemoveAuthConfirmServer] = useState<string | null>(null)
-  const [authDialogServerId, setAuthDialogServerId] = useState<string | null>(null)
-  
-  const mcpServers = config?.content?.mcp as Record<string, McpServerConfig> | undefined || {}
-  const serverIds = Object.keys(mcpServers)
-  
+export function RepoMcpDialog({
+  open,
+  onOpenChange,
+  config,
+  directory,
+}: RepoMcpDialogProps) {
+  const [localStatus, setLocalStatus] = useState<Record<string, McpStatus>>({});
+  const [isLoadingStatus, setIsLoadingStatus] = useState(false);
+  const [removeAuthConfirmServer, setRemoveAuthConfirmServer] = useState<
+    string | null
+  >(null);
+  const [authDialogServerId, setAuthDialogServerId] = useState<string | null>(
+    null,
+  );
+
+  const mcpServers =
+    (config?.content?.mcp as Record<string, McpServerConfig> | undefined) || {};
+  const serverIds = Object.keys(mcpServers);
+
   const fetchStatus = useCallback(async () => {
-    if (!directory || serverIds.length === 0) return
-    
-    setIsLoadingStatus(true)
+    if (!directory || serverIds.length === 0) return;
+
+    setIsLoadingStatus(true);
     try {
-      const status = await mcpApi.getStatusFor(directory)
-      setLocalStatus(status)
+      const status = await mcpApi.getStatusFor(directory);
+      setLocalStatus(status);
     } finally {
-      setIsLoadingStatus(false)
+      setIsLoadingStatus(false);
     }
-  }, [directory, serverIds.length])
-  
+  }, [directory, serverIds.length]);
+
   const toggleMutation = useMutation({
-    mutationFn: async ({ serverId, enable }: { serverId: string; enable: boolean }) => {
-      if (!directory) throw new Error('No directory provided')
-      
-      const currentStatus = localStatus[serverId]
-      
+    mutationFn: async ({
+      serverId,
+      enable,
+    }: {
+      serverId: string;
+      enable: boolean;
+    }) => {
+      if (!directory) throw new Error("No directory provided");
+
+      const currentStatus = localStatus[serverId];
+
       if (enable) {
-        if (currentStatus?.status === 'needs_auth') {
-          await mcpApi.authenticateDirectory(serverId, directory)
+        if (currentStatus?.status === "needs_auth") {
+          await mcpApi.authenticateDirectory(serverId, directory);
         } else {
-          await mcpApi.connectDirectory(serverId, directory)
+          await mcpApi.connectDirectory(serverId, directory);
         }
       } else {
-        await mcpApi.disconnectDirectory(serverId, directory)
+        await mcpApi.disconnectDirectory(serverId, directory);
       }
     },
     onSuccess: async () => {
-      showToast.success('MCP server updated for this location')
-      await fetchStatus()
+      showToast.success("MCP server updated for this location");
+      await fetchStatus();
     },
     onError: (error) => {
-      showToast.error(error instanceof Error ? error.message : 'Failed to update MCP server')
+      showToast.error(
+        error instanceof Error ? error.message : "Failed to update MCP server",
+      );
     },
-  })
+  });
 
   const removeAuthMutation = useMutation({
     mutationFn: async (serverId: string) => {
-      if (!directory) throw new Error('No directory provided')
-      await mcpApi.removeAuthDirectory(serverId, directory)
+      if (!directory) throw new Error("No directory provided");
+      await mcpApi.removeAuthDirectory(serverId, directory);
     },
     onSuccess: async () => {
-      showToast.success('Authentication removed for this location')
-      setRemoveAuthConfirmServer(null)
-      await fetchStatus()
+      showToast.success("Authentication removed for this location");
+      setRemoveAuthConfirmServer(null);
+      await fetchStatus();
     },
     onError: (error) => {
-      showToast.error(error instanceof Error ? error.message : 'Failed to remove authentication')
+      showToast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to remove authentication",
+      );
     },
-  })
+  });
 
   const handleOAuthAutoAuth = async () => {
-    if (!authDialogServerId || !directory) return
-    await mcpApi.authenticateDirectory(authDialogServerId, directory)
-    await fetchStatus()
-    setAuthDialogServerId(null)
-  }
+    if (!authDialogServerId || !directory) return;
+    await mcpApi.authenticateDirectory(authDialogServerId, directory);
+    await fetchStatus();
+    setAuthDialogServerId(null);
+  };
 
   const handleOAuthStartAuth = async (): Promise<McpAuthStartResponse> => {
-    if (!authDialogServerId) throw new Error('No server ID')
-    return await mcpApi.startAuth(authDialogServerId)
-  }
+    if (!authDialogServerId) throw new Error("No server ID");
+    return await mcpApi.startAuth(authDialogServerId);
+  };
 
   const handleOAuthCompleteAuth = async (code: string) => {
-    if (!authDialogServerId) return
-    await mcpApi.completeAuth(authDialogServerId, code)
-    await fetchStatus()
-    setAuthDialogServerId(null)
-  }
-  
+    if (!authDialogServerId) return;
+    await mcpApi.completeAuth(authDialogServerId, code);
+    await fetchStatus();
+    setAuthDialogServerId(null);
+  };
+
   useEffect(() => {
     if (open && directory) {
-      fetchStatus()
+      fetchStatus();
     }
-  }, [open, directory, fetchStatus])
-  
+  }, [open, directory, fetchStatus]);
+
   const getDisplayName = (serverId: string): string => {
-    const name = serverId.replace(/[-_]/g, ' ')
-    return name.charAt(0).toUpperCase() + name.slice(1)
-  }
-  
+    const name = serverId.replace(/[-_]/g, " ");
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  };
+
   const getDescription = (serverConfig: McpServerConfig): string => {
-    if (serverConfig.type === 'local' && serverConfig.command) {
-      const command = serverConfig.command.join(' ')
-      if (command.includes('filesystem')) return 'File system access'
-      if (command.includes('git')) return 'Git repository operations'
-      if (command.includes('sqlite')) return 'SQLite database access'
-      if (command.includes('postgres')) return 'PostgreSQL database access'
-      if (command.includes('brave-search')) return 'Web search via Brave'
-      if (command.includes('github')) return 'GitHub repository access'
-      if (command.includes('slack')) return 'Slack integration'
-      if (command.includes('puppeteer')) return 'Web automation'
-      if (command.includes('fetch')) return 'HTTP requests'
-      if (command.includes('memory')) return 'Persistent memory'
-      return `Local: ${command}`
-    } else if (serverConfig.type === 'remote' && serverConfig.url) {
-      return serverConfig.url
+    if (serverConfig.type === "local" && serverConfig.command) {
+      const command = serverConfig.command.join(" ");
+      if (command.includes("filesystem")) return "File system access";
+      if (command.includes("git")) return "Git repository operations";
+      if (command.includes("sqlite")) return "SQLite database access";
+      if (command.includes("postgres")) return "PostgreSQL database access";
+      if (command.includes("brave-search")) return "Web search via Brave";
+      if (command.includes("github")) return "GitHub repository access";
+      if (command.includes("slack")) return "Slack integration";
+      if (command.includes("puppeteer")) return "Web automation";
+      if (command.includes("fetch")) return "HTTP requests";
+      if (command.includes("memory")) return "Persistent memory";
+      return `Local: ${command}`;
+    } else if (serverConfig.type === "remote" && serverConfig.url) {
+      return serverConfig.url;
     }
-    return 'MCP server'
-  }
-  
+    return "MCP server";
+  };
+
   const getStatusBadge = (status?: McpStatus) => {
-    if (!status) return null
-    
+    if (!status) return null;
+
     switch (status.status) {
-      case 'connected':
-        return <Badge variant="default" className="text-xs bg-green-600">Connected</Badge>
-      case 'disabled':
-        return <Badge className="text-xs bg-gray-700 text-gray-300 border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">Disabled</Badge>
-      case 'failed':
+      case "connected":
         return (
-          <Badge variant="destructive" className="text-xs flex items-center gap-1">
+          <Badge variant="default" className="text-xs bg-green-600">
+            Connected
+          </Badge>
+        );
+      case "disabled":
+        return (
+          <Badge className="text-xs bg-gray-700 text-gray-300 border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">
+            Disabled
+          </Badge>
+        );
+      case "failed":
+        return (
+          <Badge
+            variant="destructive"
+            className="text-xs flex items-center gap-1"
+          >
             <AlertCircle className="h-3 w-3" />
             Failed
           </Badge>
-        )
-      case 'needs_auth':
+        );
+      case "needs_auth":
         return (
-          <Badge variant="outline" className="text-xs border-yellow-500 text-yellow-600">
+          <Badge
+            variant="outline"
+            className="text-xs border-yellow-500 text-yellow-600"
+          >
             Needs Auth
           </Badge>
-        )
+        );
       default:
-        return <Badge variant="outline" className="text-xs">Unknown</Badge>
+        return (
+          <Badge variant="outline" className="text-xs">
+            Unknown
+          </Badge>
+        );
     }
-  }
-  
-  if (!directory) return null
-  
+  };
+
+  if (!directory) return null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-         <DialogContent mobileFullscreen className="sm:fixed sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[400px] sm:max-w-[400px] sm:h-auto sm:max-h-[80vh] flex flex-col gap-0 pb-safe">
+      <DialogContent
+        mobileFullscreen
+        className="sm:fixed sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[400px] sm:max-w-[400px] sm:h-auto sm:max-h-[80vh] flex flex-col gap-0 pb-safe"
+      >
         <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2 sm:pb-3 shrink-0 ">
           <DialogTitle>MCP for This Location</DialogTitle>
           <DialogDescription>
@@ -180,23 +248,27 @@ export function RepoMcpDialog({ open, onOpenChange, config, directory }: RepoMcp
           ) : isLoadingStatus ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-4 h-4 animate-spin text-blue-600 dark:text-blue-400" />
-              <span className="ml-2 text-sm text-muted-foreground">Loading...</span>
+              <span className="ml-2 text-sm text-muted-foreground">
+                Loading...
+              </span>
             </div>
           ) : (
             <div className="space-y-3">
               {serverIds.map((serverId) => {
-                const serverConfig = mcpServers[serverId]
-                const status = localStatus[serverId]
-                const isConnected = status?.status === 'connected'
-                const needsAuth = status?.status === 'needs_auth'
-                const failed = status?.status === 'failed'
-                const isRemote = serverConfig.type === 'remote'
-                const hasOAuthConfig = isRemote && !!serverConfig.oauth
-                const hasOAuthError = failed && isRemote && /oauth|auth.*state/i.test(status.error)
-                const isOAuthServer = hasOAuthConfig || hasOAuthError || (needsAuth && isRemote)
-                const connectedWithOAuth = isOAuthServer && isConnected
-                const showAuthButton = needsAuth || (isOAuthServer && failed)
-                
+                const serverConfig = mcpServers[serverId];
+                const status = localStatus[serverId];
+                const isConnected = status?.status === "connected";
+                const needsAuth = status?.status === "needs_auth";
+                const failed = status?.status === "failed";
+                const isRemote = serverConfig.type === "remote";
+                const hasOAuthConfig = isRemote && !!serverConfig.oauth;
+                const hasOAuthError =
+                  failed && isRemote && /oauth|auth.*state/i.test(status.error);
+                const isOAuthServer =
+                  hasOAuthConfig || hasOAuthError || (needsAuth && isRemote);
+                const connectedWithOAuth = isOAuthServer && isConnected;
+                const showAuthButton = needsAuth || (isOAuthServer && failed);
+
                 return (
                   <div
                     key={serverId}
@@ -217,14 +289,14 @@ export function RepoMcpDialog({ open, onOpenChange, config, directory }: RepoMcp
                       <p className="text-xs text-muted-foreground truncate">
                         {getDescription(serverConfig)}
                       </p>
-                      {failed && status.status === 'failed' && (
+                      {failed && status.status === "failed" && (
                         <div className="flex items-center gap-1 mt-1 text-xs text-red-500">
                           <XCircle className="w-3 h-3 flex-shrink-0" />
                           <span className="truncate">{status.error}</span>
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       {showAuthButton ? (
                         <Button
@@ -239,9 +311,15 @@ export function RepoMcpDialog({ open, onOpenChange, config, directory }: RepoMcp
                       ) : (
                         <Switch
                           checked={isConnected}
-                          disabled={toggleMutation.isPending || removeAuthMutation.isPending}
+                          disabled={
+                            toggleMutation.isPending ||
+                            removeAuthMutation.isPending
+                          }
                           onCheckedChange={(enabled) => {
-                            toggleMutation.mutate({ serverId, enable: enabled })
+                            toggleMutation.mutate({
+                              serverId,
+                              enable: enabled,
+                            });
                           }}
                           onClick={(e) => e.stopPropagation()}
                         />
@@ -249,19 +327,27 @@ export function RepoMcpDialog({ open, onOpenChange, config, directory }: RepoMcp
                       {(isOAuthServer || needsAuth) && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            >
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             {showAuthButton && (
-                              <DropdownMenuItem onClick={() => setAuthDialogServerId(serverId)}>
+                              <DropdownMenuItem
+                                onClick={() => setAuthDialogServerId(serverId)}
+                              >
                                 <Key className="h-4 w-4 mr-2" />
                                 Authenticate
                               </DropdownMenuItem>
                             )}
                             {connectedWithOAuth && (
-                              <DropdownMenuItem onClick={() => setAuthDialogServerId(serverId)}>
+                              <DropdownMenuItem
+                                onClick={() => setAuthDialogServerId(serverId)}
+                              >
                                 <RefreshCw className="h-4 w-4 mr-2" />
                                 Re-authenticate
                               </DropdownMenuItem>
@@ -270,11 +356,15 @@ export function RepoMcpDialog({ open, onOpenChange, config, directory }: RepoMcp
                               <>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                  onClick={() => setRemoveAuthConfirmServer(serverId)}
+                                  onClick={() =>
+                                    setRemoveAuthConfirmServer(serverId)
+                                  }
                                   disabled={removeAuthMutation.isPending}
                                 >
                                   <Shield className="h-4 w-4 mr-2" />
-                                  {removeAuthMutation.isPending ? 'Removing...' : 'Remove Auth'}
+                                  {removeAuthMutation.isPending
+                                    ? "Removing..."
+                                    : "Remove Auth"}
                                 </DropdownMenuItem>
                               </>
                             )}
@@ -283,7 +373,7 @@ export function RepoMcpDialog({ open, onOpenChange, config, directory }: RepoMcp
                       )}
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
           )}
@@ -294,20 +384,24 @@ export function RepoMcpDialog({ open, onOpenChange, config, directory }: RepoMcp
           onOpenChange={() => setRemoveAuthConfirmServer(null)}
           onConfirm={() => {
             if (removeAuthConfirmServer) {
-              removeAuthMutation.mutate(removeAuthConfirmServer)
+              removeAuthMutation.mutate(removeAuthConfirmServer);
             }
           }}
           onCancel={() => setRemoveAuthConfirmServer(null)}
           title="Remove Authentication"
           description="This will remove the OAuth credentials for this MCP server at this location. You will need to re-authenticate to use this server here again."
-          itemName={removeAuthConfirmServer ? getDisplayName(removeAuthConfirmServer) : ''}
+          itemName={
+            removeAuthConfirmServer
+              ? getDisplayName(removeAuthConfirmServer)
+              : ""
+          }
           isDeleting={removeAuthMutation.isPending}
         />
 
         <McpOAuthDialog
           open={!!authDialogServerId}
           onOpenChange={(o) => !o && setAuthDialogServerId(null)}
-          serverName={authDialogServerId || ''}
+          serverName={authDialogServerId || ""}
           onAutoAuth={handleOAuthAutoAuth}
           onStartAuth={handleOAuthStartAuth}
           onCompleteAuth={handleOAuthCompleteAuth}
@@ -315,5 +409,5 @@ export function RepoMcpDialog({ open, onOpenChange, config, directory }: RepoMcp
         />
       </DialogContent>
     </Dialog>
-  )
+  );
 }

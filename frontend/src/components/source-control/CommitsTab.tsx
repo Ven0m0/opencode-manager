@@ -1,42 +1,42 @@
-import { useGitLog } from '@/api/git'
-import { Loader2, GitCommit, AlertCircle, ArrowUp } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { GIT_UI_COLORS } from '@/lib/git-status-styles'
+import { AlertCircle, ArrowUp, GitCommit, Loader2 } from "lucide-react";
+import { useGitLog } from "@/api/git";
+import { GIT_UI_COLORS } from "@/lib/git-status-styles";
+import { cn } from "@/lib/utils";
 
 interface CommitsTabProps {
-  repoId: number
-  onSelectCommit?: (hash: string) => void
+  repoId: number;
+  onSelectCommit?: (hash: string) => void;
 }
 
 function formatRelativeTime(timestamp: string): string {
-  const date = new Date(parseInt(timestamp, 10) * 1000)
+  const date = new Date(parseInt(timestamp, 10) * 1000);
 
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffSeconds = Math.floor(diffMs / 1000)
-  const diffMinutes = Math.floor(diffSeconds / 60)
-  const diffHours = Math.floor(diffMinutes / 60)
-  const diffDays = Math.floor(diffHours / 24)
-  const diffWeeks = Math.floor(diffDays / 7)
-  const diffMonths = Math.floor(diffDays / 30)
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  const diffWeeks = Math.floor(diffDays / 7);
+  const diffMonths = Math.floor(diffDays / 30);
 
-  if (diffSeconds < 60) return 'just now'
-  if (diffMinutes < 60) return `${diffMinutes}m ago`
-  if (diffHours < 24) return `${diffHours}h ago`
-  if (diffDays < 7) return `${diffDays}d ago`
-  if (diffWeeks < 4) return `${diffWeeks}w ago`
-  return `${diffMonths}mo ago`
+  if (diffSeconds < 60) return "just now";
+  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffWeeks < 4) return `${diffWeeks}w ago`;
+  return `${diffMonths}mo ago`;
 }
 
 export function CommitsTab({ repoId, onSelectCommit }: CommitsTabProps) {
-  const { data, isLoading, error } = useGitLog(repoId, 50)
+  const { data, isLoading, error } = useGitLog(repoId, 50);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -46,7 +46,7 @@ export function CommitsTab({ repoId, onSelectCommit }: CommitsTabProps) {
         <p className="text-sm">Failed to load commits</p>
         <p className="text-xs mt-1">{error.message}</p>
       </div>
-    )
+    );
   }
 
   if (!data?.commits || data.commits.length === 0) {
@@ -55,7 +55,7 @@ export function CommitsTab({ repoId, onSelectCommit }: CommitsTabProps) {
         <GitCommit className="w-8 h-8 mx-auto mb-2 opacity-50" />
         <p className="text-sm">No commits found</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -76,9 +76,16 @@ export function CommitsTab({ repoId, onSelectCommit }: CommitsTabProps) {
               <span>·</span>
               <span className="truncate">{commit.authorName}</span>
               <span>·</span>
-              <span className="flex-shrink-0">{formatRelativeTime(commit.date)}</span>
+              <span className="flex-shrink-0">
+                {formatRelativeTime(commit.date)}
+              </span>
               {commit.unpushed && (
-                <span className={cn('flex items-center gap-0.5 px-1 rounded', GIT_UI_COLORS.unpushed)}>
+                <span
+                  className={cn(
+                    "flex items-center gap-0.5 px-1 rounded",
+                    GIT_UI_COLORS.unpushed,
+                  )}
+                >
                   <ArrowUp className="w-3 h-3" />
                   Local
                 </span>
@@ -88,5 +95,5 @@ export function CommitsTab({ repoId, onSelectCommit }: CommitsTabProps) {
         </button>
       ))}
     </div>
-  )
+  );
 }

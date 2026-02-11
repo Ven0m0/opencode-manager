@@ -1,23 +1,49 @@
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { useMemo, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { Textarea } from '@/components/ui/textarea'
-import { Switch } from '@/components/ui/switch'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Combobox, type ComboboxOption } from '@/components/ui/combobox'
-import { getProvidersWithModels } from '@/api/providers'
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { getProvidersWithModels } from "@/api/providers";
+import { Button } from "@/components/ui/button";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 
 const agentFormSchema = z.object({
-  name: z.string().min(1, 'Agent name is required').regex(/^[a-z0-9-]+$/, 'Must be lowercase letters, numbers, and hyphens only'),
+  name: z
+    .string()
+    .min(1, "Agent name is required")
+    .regex(
+      /^[a-z0-9-]+$/,
+      "Must be lowercase letters, numbers, and hyphens only",
+    ),
   description: z.string().optional(),
-  prompt: z.string().min(1, 'Prompt is required'),
-  mode: z.enum(['subagent', 'primary', 'all']),
+  prompt: z.string().min(1, "Prompt is required"),
+  mode: z.enum(["subagent", "primary", "all"]),
   temperature: z.number().min(0).max(2),
   topP: z.number().min(0).max(1),
   modelId: z.string().optional(),
@@ -26,74 +52,85 @@ const agentFormSchema = z.object({
   edit: z.boolean(),
   bash: z.boolean(),
   webfetch: z.boolean(),
-  editPermission: z.enum(['ask', 'allow', 'deny']),
-  bashPermission: z.enum(['ask', 'allow', 'deny']),
-  webfetchPermission: z.enum(['ask', 'allow', 'deny']),
-  disable: z.boolean()
-})
+  editPermission: z.enum(["ask", "allow", "deny"]),
+  bashPermission: z.enum(["ask", "allow", "deny"]),
+  webfetchPermission: z.enum(["ask", "allow", "deny"]),
+  disable: z.boolean(),
+});
 
-type AgentFormValues = z.infer<typeof agentFormSchema>
+type AgentFormValues = z.infer<typeof agentFormSchema>;
 
 interface Agent {
-  prompt?: string
-  description?: string
-  mode?: 'subagent' | 'primary' | 'all'
-  temperature?: number
-  topP?: number
-  top_p?: number
-  model?: string
-  tools?: Record<string, boolean>
+  prompt?: string;
+  description?: string;
+  mode?: "subagent" | "primary" | "all";
+  temperature?: number;
+  topP?: number;
+  top_p?: number;
+  model?: string;
+  tools?: Record<string, boolean>;
   permission?: {
-    edit?: 'ask' | 'allow' | 'deny'
-    bash?: 'ask' | 'allow' | 'deny' | Record<string, 'ask' | 'allow' | 'deny'>
-    webfetch?: 'ask' | 'allow' | 'deny'
-  }
-  disable?: boolean
-  [key: string]: unknown
+    edit?: "ask" | "allow" | "deny";
+    bash?: "ask" | "allow" | "deny" | Record<string, "ask" | "allow" | "deny">;
+    webfetch?: "ask" | "allow" | "deny";
+  };
+  disable?: boolean;
+  [key: string]: unknown;
 }
 
-function parseModelString(model?: string): { providerId: string; modelId: string } {
-  if (!model) return { providerId: '', modelId: '' }
-  const [providerId, ...rest] = model.split('/')
-  return { providerId: providerId || '', modelId: rest.join('/') || '' }
+function parseModelString(model?: string): {
+  providerId: string;
+  modelId: string;
+} {
+  if (!model) return { providerId: "", modelId: "" };
+  const [providerId, ...rest] = model.split("/");
+  return { providerId: providerId || "", modelId: rest.join("/") || "" };
 }
 
 interface AgentDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSubmit: (name: string, agent: Agent) => void
-  editingAgent?: { name: string; agent: Agent } | null
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (name: string, agent: Agent) => void;
+  editingAgent?: { name: string; agent: Agent } | null;
 }
 
-export function AgentDialog({ open, onOpenChange, onSubmit, editingAgent }: AgentDialogProps) {
+export function AgentDialog({
+  open,
+  onOpenChange,
+  onSubmit,
+  editingAgent,
+}: AgentDialogProps) {
   const { data: providers = [] } = useQuery({
-    queryKey: ['providers-with-models'],
+    queryKey: ["providers-with-models"],
     queryFn: () => getProvidersWithModels(),
     enabled: open,
     staleTime: 5 * 60 * 1000,
-  })
+  });
 
   const providerOptions: ComboboxOption[] = useMemo(() => {
     const sourceLabels: Record<string, string> = {
-      configured: 'Custom',
-      local: 'Local',
-      builtin: 'Built-in',
-    }
-    return providers.map(p => ({
+      configured: "Custom",
+      local: "Local",
+      builtin: "Built-in",
+    };
+    return providers.map((p) => ({
       value: p.id,
       label: p.name || p.id,
-      description: p.models.length > 0 ? `${p.models.length} models` : undefined,
-      group: sourceLabels[p.source] || 'Other',
-    }))
-  }, [providers])
+      description:
+        p.models.length > 0 ? `${p.models.length} models` : undefined,
+      group: sourceLabels[p.source] || "Other",
+    }));
+  }, [providers]);
 
-  const getDefaultValues = (agent?: { name: string; agent: Agent } | null): AgentFormValues => {
-    const parsed = parseModelString(agent?.agent.model)
+  const getDefaultValues = (
+    agent?: { name: string; agent: Agent } | null,
+  ): AgentFormValues => {
+    const parsed = parseModelString(agent?.agent.model);
     return {
-      name: agent?.name || '',
-      description: agent?.agent.description || '',
-      prompt: agent?.agent.prompt || '',
-      mode: agent?.agent.mode || 'subagent',
+      name: agent?.name || "",
+      description: agent?.agent.description || "",
+      prompt: agent?.agent.prompt || "",
+      mode: agent?.agent.mode || "subagent",
       temperature: agent?.agent.temperature ?? 0.7,
       topP: agent?.agent.topP ?? agent?.agent.top_p ?? 1,
       modelId: parsed.modelId,
@@ -102,40 +139,45 @@ export function AgentDialog({ open, onOpenChange, onSubmit, editingAgent }: Agen
       edit: agent?.agent.tools?.edit ?? true,
       bash: agent?.agent.tools?.bash ?? true,
       webfetch: agent?.agent.tools?.webfetch ?? true,
-      editPermission: agent?.agent.permission?.edit ?? 'allow',
-      bashPermission: typeof agent?.agent.permission?.bash === 'string' ? agent.agent.permission.bash : 'allow',
-      webfetchPermission: agent?.agent.permission?.webfetch ?? 'allow',
-      disable: agent?.agent.disable ?? false
-    }
-  }
+      editPermission: agent?.agent.permission?.edit ?? "allow",
+      bashPermission:
+        typeof agent?.agent.permission?.bash === "string"
+          ? agent.agent.permission.bash
+          : "allow",
+      webfetchPermission: agent?.agent.permission?.webfetch ?? "allow",
+      disable: agent?.agent.disable ?? false,
+    };
+  };
 
   const form = useForm<AgentFormValues>({
     resolver: zodResolver(agentFormSchema),
-    defaultValues: getDefaultValues(editingAgent)
-  })
+    defaultValues: getDefaultValues(editingAgent),
+  });
 
   useEffect(() => {
     if (open) {
-      form.reset(getDefaultValues(editingAgent))
+      form.reset(getDefaultValues(editingAgent));
     }
-  }, [open, editingAgent, form])
+  }, [open, editingAgent, form, getDefaultValues]);
 
-  const selectedProviderId = form.watch('providerId')
+  const selectedProviderId = form.watch("providerId");
 
   const modelOptions: ComboboxOption[] = useMemo(() => {
-    const selectedProvider = providers.find(p => p.id === selectedProviderId)
+    const selectedProvider = providers.find((p) => p.id === selectedProviderId);
     if (selectedProvider && selectedProvider.models.length > 0) {
-      return selectedProvider.models.map(m => ({
+      return selectedProvider.models.map((m) => ({
         value: m.id,
         label: m.name || m.id,
-      }))
+      }));
     }
-    return providers.flatMap(p => p.models.map(m => ({
-      value: m.id,
-      label: m.name || m.id,
-      group: p.name || p.id,
-    })))
-  }, [providers, selectedProviderId])
+    return providers.flatMap((p) =>
+      p.models.map((m) => ({
+        value: m.id,
+        label: m.name || m.id,
+        group: p.name || p.id,
+      })),
+    );
+  }, [providers, selectedProviderId]);
 
   const handleSubmit = (values: AgentFormValues) => {
     const agent: Agent = {
@@ -149,36 +191,41 @@ export function AgentDialog({ open, onOpenChange, onSubmit, editingAgent }: Agen
         write: values.write,
         edit: values.edit,
         bash: values.bash,
-        webfetch: values.webfetch
+        webfetch: values.webfetch,
       },
       permission: {
         edit: values.editPermission,
         bash: values.bashPermission,
-        webfetch: values.webfetchPermission
-      }
-    }
+        webfetch: values.webfetchPermission,
+      },
+    };
 
     if (values.modelId && values.providerId) {
-      agent.model = `${values.providerId}/${values.modelId}`
+      agent.model = `${values.providerId}/${values.modelId}`;
     }
 
-    onSubmit(values.name, agent)
-    form.reset()
-    onOpenChange(false)
-  }
+    onSubmit(values.name, agent);
+    form.reset();
+    onOpenChange(false);
+  };
 
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
-      form.reset()
+      form.reset();
     }
-    onOpenChange(isOpen)
-  }
+    onOpenChange(isOpen);
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] sm:max-h-[85vh] gap-0 flex flex-col p-0 md:p-6 z-[200]" overlayClassName="z-[200]">
+      <DialogContent
+        className="max-w-2xl max-h-[90vh] sm:max-h-[85vh] gap-0 flex flex-col p-0 md:p-6 z-[200]"
+        overlayClassName="z-[200]"
+      >
         <DialogHeader className="p-4 sm:p-6 border-b flex flex-row items-center justify-between space-y-0">
-          <DialogTitle>{editingAgent ? 'Edit Agent' : 'Create Agent'}</DialogTitle>
+          <DialogTitle>
+            {editingAgent ? "Edit Agent" : "Create Agent"}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-2 sm:p-4">
@@ -195,7 +242,7 @@ export function AgentDialog({ open, onOpenChange, onSubmit, editingAgent }: Agen
                         {...field}
                         placeholder="my-agent"
                         disabled={!!editingAgent}
-                        className={editingAgent ? 'bg-muted' : ''}
+                        className={editingAgent ? "bg-muted" : ""}
                       />
                     </FormControl>
                     <FormDescription>
@@ -249,7 +296,10 @@ export function AgentDialog({ open, onOpenChange, onSubmit, editingAgent }: Agen
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Mode</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select mode" />
@@ -279,7 +329,9 @@ export function AgentDialog({ open, onOpenChange, onSubmit, editingAgent }: Agen
                           min="0"
                           max="2"
                           step="0.1"
-                          onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                          onChange={(e) =>
+                            field.onChange(parseFloat(e.target.value))
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -300,7 +352,9 @@ export function AgentDialog({ open, onOpenChange, onSubmit, editingAgent }: Agen
                           min="0"
                           max="1"
                           step="0.1"
-                          onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                          onChange={(e) =>
+                            field.onChange(parseFloat(e.target.value))
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -320,7 +374,7 @@ export function AgentDialog({ open, onOpenChange, onSubmit, editingAgent }: Agen
                         <FormLabel>Provider ID</FormLabel>
                         <FormControl>
                           <Combobox
-                            value={field.value || ''}
+                            value={field.value || ""}
                             onChange={field.onChange}
                             options={providerOptions}
                             placeholder="Select or type provider..."
@@ -340,7 +394,7 @@ export function AgentDialog({ open, onOpenChange, onSubmit, editingAgent }: Agen
                         <FormLabel>Model ID</FormLabel>
                         <FormControl>
                           <Combobox
-                            value={field.value || ''}
+                            value={field.value || ""}
                             onChange={field.onChange}
                             options={modelOptions}
                             placeholder="Select or type model..."
@@ -432,7 +486,10 @@ export function AgentDialog({ open, onOpenChange, onSubmit, editingAgent }: Agen
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs">Edit</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue />
@@ -455,7 +512,10 @@ export function AgentDialog({ open, onOpenChange, onSubmit, editingAgent }: Agen
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs">Bash</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue />
@@ -478,7 +538,10 @@ export function AgentDialog({ open, onOpenChange, onSubmit, editingAgent }: Agen
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs">Web Fetch</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue />
@@ -529,10 +592,10 @@ export function AgentDialog({ open, onOpenChange, onSubmit, editingAgent }: Agen
             onClick={() => form.handleSubmit(handleSubmit)()}
             disabled={!form.formState.isValid}
           >
-            {editingAgent ? 'Update' : 'Create'}
+            {editingAgent ? "Update" : "Create"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -1,15 +1,15 @@
-import { memo } from 'react'
-import { X, Loader2 } from 'lucide-react'
-import { useUndoMessage } from '@/hooks/useUndoMessage'
-import { useMobile } from '@/hooks/useMobile'
+import { Loader2, X } from "lucide-react";
+import { memo } from "react";
+import { useMobile } from "@/hooks/useMobile";
+import { useUndoMessage } from "@/hooks/useUndoMessage";
 
 interface UserMessageActionButtonsProps {
-  opcodeUrl: string
-  sessionId: string
-  directory?: string
-  userMessageId: string
-  userMessageContent: string
-  onUndo: (restoredPrompt: string) => void
+  opcodeUrl: string;
+  sessionId: string;
+  directory?: string;
+  userMessageId: string;
+  userMessageContent: string;
+  onUndo: (restoredPrompt: string) => void;
 }
 
 export const UserMessageActionButtons = memo(function UserMessageActionButtons({
@@ -18,26 +18,28 @@ export const UserMessageActionButtons = memo(function UserMessageActionButtons({
   directory,
   userMessageId,
   userMessageContent,
-  onUndo
+  onUndo,
 }: UserMessageActionButtonsProps) {
-  const isMobile = useMobile()
-  const undoMessage = useUndoMessage({ 
-    opcodeUrl, 
-    sessionId, 
+  const isMobile = useMobile();
+  const undoMessage = useUndoMessage({
+    opcodeUrl,
+    sessionId,
     directory,
-    onSuccess: onUndo
-  })
+    onSuccess: onUndo,
+  });
 
   const handleUndo = () => {
-    if (undoMessage.isPending) return
-    undoMessage.mutate({ 
-      messageID: userMessageId, 
-      messageContent: userMessageContent 
-    })
-  }
+    if (undoMessage.isPending) return;
+    undoMessage.mutate({
+      messageID: userMessageId,
+      messageContent: userMessageContent,
+    });
+  };
 
   return (
-    <div className={`flex items-center gap-1 ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
+    <div
+      className={`flex items-center gap-1 ${isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
+    >
       <button
         onClick={handleUndo}
         disabled={undoMessage.isPending}
@@ -51,5 +53,5 @@ export const UserMessageActionButtons = memo(function UserMessageActionButtons({
         )}
       </button>
     </div>
-  )
-})
+  );
+});

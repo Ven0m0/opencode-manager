@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import { PageHeader } from "./page-header";
 
 describe("PageHeader", () => {
@@ -20,7 +20,7 @@ describe("PageHeader", () => {
     render(
       <PageHeader>
         <span>Test Child</span>
-      </PageHeader>
+      </PageHeader>,
     );
     expect(screen.getByText("Test Child")).toBeInTheDocument();
   });
@@ -29,7 +29,7 @@ describe("PageHeader", () => {
     render(
       <PageHeader data-testid="header" className="custom-class">
         Content
-      </PageHeader>
+      </PageHeader>,
     );
     const header = screen.getByTestId("header");
     expect(header).toHaveClass("custom-class");
@@ -40,7 +40,7 @@ describe("PageHeader", () => {
     render(
       <PageHeader data-testid="header" aria-label="Page header">
         Content
-      </PageHeader>
+      </PageHeader>,
     );
     const header = screen.getByTestId("header");
     expect(header).toHaveAttribute("aria-label", "Page header");

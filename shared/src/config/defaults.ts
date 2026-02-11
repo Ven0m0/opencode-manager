@@ -1,29 +1,29 @@
 export const DEFAULTS = {
   SERVER: {
     PORT: 5003,
-    HOST: '0.0.0.0',
-    CORS_ORIGIN: 'http://localhost:5173',
+    HOST: "0.0.0.0",
+    CORS_ORIGIN: "http://localhost:5173",
   },
 
   FRONTEND: {
     PORT: 5173,
-    HOST: '0.0.0.0',
+    HOST: "0.0.0.0",
   },
 
   OPENCODE: {
     PORT: 5551,
-    HOST: '127.0.0.1',
+    HOST: "127.0.0.1",
   },
 
   DATABASE: {
-    PATH: './data/opencode.db',
+    PATH: "./data/opencode.db",
   },
 
   WORKSPACE: {
-    BASE_PATH: './workspace',
-    REPOS_DIR: 'repos',
-    CONFIG_DIR: '.config/opencode',
-    AUTH_FILE: '.opencode/state/opencode/auth.json',
+    BASE_PATH: "./workspace",
+    REPOS_DIR: "repos",
+    CONFIG_DIR: ".config/opencode",
+    AUTH_FILE: ".opencode/state/opencode/auth.json",
   },
 
   TIMEOUTS: {
@@ -40,7 +40,7 @@ export const DEFAULTS = {
 
   LOGGING: {
     DEBUG: false,
-    LOG_LEVEL: 'info',
+    LOG_LEVEL: "info",
   },
 
   SSE: {
@@ -49,31 +49,31 @@ export const DEFAULTS = {
     IDLE_GRACE_PERIOD_MS: 5000,
     HEARTBEAT_INTERVAL_MS: 60000,
   },
-} as const
+} as const;
 
 export const ALLOWED_MIME_TYPES = [
-  'text/plain',
-  'text/html',
-  'text/css',
-  'text/javascript',
-  'text/typescript',
-  'application/json',
-  'application/xml',
-  'image/png',
-  'image/jpeg',
-  'image/gif',
-  'image/svg+xml',
-  'application/pdf',
-  'application/zip',
-  'text/markdown',
-] as const
+  "text/plain",
+  "text/html",
+  "text/css",
+  "text/javascript",
+  "text/typescript",
+  "application/json",
+  "application/xml",
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/svg+xml",
+  "application/pdf",
+  "application/zip",
+  "text/markdown",
+] as const;
 
 export const GIT_PROVIDERS = {
-  GITHUB: 'github.com',
-  GITLAB: 'gitlab.com',
-  BITBUCKET: 'bitbucket.org',
-} as const
+  GITHUB: "github.com",
+  GITLAB: "gitlab.com",
+  BITBUCKET: "bitbucket.org",
+} as const;
 
-export type Config = typeof DEFAULTS
-export type AllowedMimeType = (typeof ALLOWED_MIME_TYPES)[number]
-export type GitProvider = (typeof GIT_PROVIDERS)[keyof typeof GIT_PROVIDERS]
+export type Config = typeof DEFAULTS;
+export type AllowedMimeType = (typeof ALLOWED_MIME_TYPES)[number];
+export type GitProvider = (typeof GIT_PROVIDERS)[keyof typeof GIT_PROVIDERS];

@@ -1,39 +1,50 @@
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogTrigger } from '@/components/ui/dialog'
-import { Plus, Loader2, RefreshCw } from 'lucide-react'
-import { DeleteDialog } from '@/components/ui/delete-dialog'
-import { AddMcpServerDialog } from './AddMcpServerDialog'
-import { McpServerCard } from './McpServerCard'
-import { McpOAuthDialog } from './McpOAuthDialog'
-import { useMcpServers } from '@/hooks/useMcpServers'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { invalidateConfigCaches } from '@/lib/queryInvalidation'
-import type { McpServerConfig } from '@/api/mcp'
-import { mcpApi } from '@/api/mcp'
-import type { McpAuthStartResponse } from '@/api/mcp'
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Loader2, Plus, RefreshCw } from "lucide-react";
+import { useState } from "react";
+import type { McpAuthStartResponse, McpServerConfig } from "@/api/mcp";
+import { mcpApi } from "@/api/mcp";
+import { Button } from "@/components/ui/button";
+import { DeleteDialog } from "@/components/ui/delete-dialog";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { useMcpServers } from "@/hooks/useMcpServers";
+import { invalidateConfigCaches } from "@/lib/queryInvalidation";
+import { AddMcpServerDialog } from "./AddMcpServerDialog";
+import { McpOAuthDialog } from "./McpOAuthDialog";
+import { McpServerCard } from "./McpServerCard";
 
 interface McpManagerProps {
   config: {
-    name: string
-    content: Record<string, unknown>
-  } | null
-  onUpdate: (content: Record<string, unknown>) => Promise<void>
-  onConfigUpdate?: (configName: string, content: Record<string, unknown>) => Promise<void>
+    name: string;
+    content: Record<string, unknown>;
+  } | null;
+  onUpdate: (content: Record<string, unknown>) => Promise<void>;
+  onConfigUpdate?: (
+    configName: string,
+    content: Record<string, unknown>,
+  ) => Promise<void>;
 }
 
+export function McpManager({
+  config,
+  onUpdate,
+  onConfigUpdate,
+}: McpManagerProps) {
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [deleteConfirmServer, setDeleteConfirmServer] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [togglingServerId, setTogglingServerId] = useState<string | null>(null);
+  const [authDialogServerId, setAuthDialogServerId] = useState<string | null>(
+    null,
+  );
+  const [removeAuthConfirmServer, setRemoveAuthConfirmServer] = useState<
+    string | null
+  >(null);
 
-
-export function McpManager({ config, onUpdate, onConfigUpdate }: McpManagerProps) {
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [deleteConfirmServer, setDeleteConfirmServer] = useState<{ id: string; name: string } | null>(null)
-  const [togglingServerId, setTogglingServerId] = useState<string | null>(null)
-  const [authDialogServerId, setAuthDialogServerId] = useState<string | null>(null)
-  const [removeAuthConfirmServer, setRemoveAuthConfirmServer] = useState<string | null>(null)
-  
-  const queryClient = useQueryClient()
-  const { 
-    status: mcpStatus, 
+  const queryClient = useQueryClient();
+  const {
+    status: mcpStatus,
     isLoading: isLoadingStatus,
     refetch: refetchStatus,
     connect,
@@ -41,120 +52,132 @@ export function McpManager({ config, onUpdate, onConfigUpdate }: McpManagerProps
     authenticate,
     removeAuth,
     isRemovingAuth,
-    isToggling
-  } = useMcpServers()
+    isToggling,
+  } = useMcpServers();
 
   const deleteServerMutation = useMutation({
     mutationFn: async (serverId: string) => {
-      if (!config) return
-      
-      const currentMcp = (config.content?.mcp as Record<string, McpServerConfig>) || {}
-      const { [serverId]: _, ...rest } = currentMcp
-      void _
-      
+      if (!config) return;
+
+      const currentMcp =
+        (config.content?.mcp as Record<string, McpServerConfig>) || {};
+      const { [serverId]: _, ...rest } = currentMcp;
+      void _;
+
       const updatedConfig = {
         ...config.content,
         mcp: rest,
-      }
-      
-      await onUpdate(updatedConfig)
+      };
+
+      await onUpdate(updatedConfig);
     },
     onSuccess: () => {
-      invalidateConfigCaches(queryClient)
-      setDeleteConfirmServer(null)
+      invalidateConfigCaches(queryClient);
+      setDeleteConfirmServer(null);
     },
-  })
+  });
 
-  const mcpServers = config?.content?.mcp as Record<string, McpServerConfig> || {}
-  
-  const isAnyOperationPending = deleteServerMutation.isPending || togglingServerId !== null || isToggling
+  const mcpServers =
+    (config?.content?.mcp as Record<string, McpServerConfig>) || {};
+
+  const isAnyOperationPending =
+    deleteServerMutation.isPending || togglingServerId !== null || isToggling;
 
   const handleToggleServer = async (serverId: string) => {
-    const currentStatus = mcpStatus?.[serverId]
-    if (!currentStatus) return
+    const currentStatus = mcpStatus?.[serverId];
+    if (!currentStatus) return;
 
-    const serverConfig = mcpServers[serverId]
-    const isRemote = serverConfig?.type === 'remote'
-    const hasOAuthConfig = isRemote && !!serverConfig?.oauth
-    const hasOAuthError = currentStatus.status === 'failed' && isRemote && /oauth|auth.*state/i.test(currentStatus.error)
-    const isOAuthServer = hasOAuthConfig || hasOAuthError || (currentStatus.status === 'needs_auth' && isRemote)
-    
-    if (currentStatus.status === 'needs_auth' || (currentStatus.status === 'failed' && isOAuthServer)) {
-      setAuthDialogServerId(serverId)
-      return
+    const serverConfig = mcpServers[serverId];
+    const isRemote = serverConfig?.type === "remote";
+    const hasOAuthConfig = isRemote && !!serverConfig?.oauth;
+    const hasOAuthError =
+      currentStatus.status === "failed" &&
+      isRemote &&
+      /oauth|auth.*state/i.test(currentStatus.error);
+    const isOAuthServer =
+      hasOAuthConfig ||
+      hasOAuthError ||
+      (currentStatus.status === "needs_auth" && isRemote);
+
+    if (
+      currentStatus.status === "needs_auth" ||
+      (currentStatus.status === "failed" && isOAuthServer)
+    ) {
+      setAuthDialogServerId(serverId);
+      return;
     }
 
-    setTogglingServerId(serverId)
+    setTogglingServerId(serverId);
     try {
-      if (currentStatus.status === 'connected') {
-        await disconnect(serverId)
-      } else if (currentStatus.status === 'disabled') {
-        await connect(serverId)
-      } else if (currentStatus.status === 'failed') {
-        await connect(serverId)
+      if (currentStatus.status === "connected") {
+        await disconnect(serverId);
+      } else if (currentStatus.status === "disabled") {
+        await connect(serverId);
+      } else if (currentStatus.status === "failed") {
+        await connect(serverId);
       }
     } finally {
-      setTogglingServerId(null)
-      refetchStatus()
+      setTogglingServerId(null);
+      refetchStatus();
     }
-  }
+  };
 
   const handleAuthenticate = (serverId: string) => {
-    setAuthDialogServerId(serverId)
-  }
+    setAuthDialogServerId(serverId);
+  };
 
   const handleOAuthAutoAuth = async () => {
-    if (!authDialogServerId) return
-    await authenticate(authDialogServerId)
-    refetchStatus()
-    setAuthDialogServerId(null)
-  }
+    if (!authDialogServerId) return;
+    await authenticate(authDialogServerId);
+    refetchStatus();
+    setAuthDialogServerId(null);
+  };
 
   const handleOAuthStartAuth = async (): Promise<McpAuthStartResponse> => {
-    if (!authDialogServerId) throw new Error('No server ID')
-    return await mcpApi.startAuth(authDialogServerId)
-  }
+    if (!authDialogServerId) throw new Error("No server ID");
+    return await mcpApi.startAuth(authDialogServerId);
+  };
 
   const handleOAuthCompleteAuth = async (code: string) => {
-    if (!authDialogServerId) return
-    await mcpApi.completeAuth(authDialogServerId, code)
-    refetchStatus()
-    setAuthDialogServerId(null)
-  }
+    if (!authDialogServerId) return;
+    await mcpApi.completeAuth(authDialogServerId, code);
+    refetchStatus();
+    setAuthDialogServerId(null);
+  };
 
   const handleRemoveAuth = (serverId: string) => {
-    setRemoveAuthConfirmServer(serverId)
-  }
+    setRemoveAuthConfirmServer(serverId);
+  };
 
   const handleConfirmRemoveAuth = () => {
     if (removeAuthConfirmServer) {
-      removeAuth(removeAuthConfirmServer)
-      setRemoveAuthConfirmServer(null)
+      removeAuth(removeAuthConfirmServer);
+      setRemoveAuthConfirmServer(null);
     }
-  }
+  };
 
   const handleDeleteServer = () => {
     if (deleteConfirmServer) {
-      deleteServerMutation.mutate(deleteConfirmServer.id)
+      deleteServerMutation.mutate(deleteConfirmServer.id);
     }
-  }
-
-  
+  };
 
   const getErrorMessage = (serverId: string): string | null => {
-    const status = mcpStatus?.[serverId]
-    if (!status) return null
-    if (status.status === 'failed') return status.error
-    if (status.status === 'needs_client_registration') return status.error
-    return null
-  }
+    const status = mcpStatus?.[serverId];
+    if (!status) return null;
+    if (status.status === "failed") return status.error;
+    if (status.status === "needs_client_registration") return status.error;
+    return null;
+  };
 
   if (!config) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground">Select a configuration to manage MCP servers.</p>
+        <p className="text-muted-foreground">
+          Select a configuration to manage MCP servers.
+        </p>
       </div>
-    )
+    );
   }
 
   return (
@@ -164,7 +187,7 @@ export function McpManager({ config, onUpdate, onConfigUpdate }: McpManagerProps
           <div className="flex flex-col items-center gap-3 bg-card border border-border rounded-lg p-6 shadow-lg">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <span className="text-sm font-medium text-foreground">
-              {togglingServerId ? 'Updating MCP server...' : 'Processing...'}
+              {togglingServerId ? "Updating MCP server..." : "Processing..."}
             </span>
             <span className="text-xs text-muted-foreground">
               Please wait while we update your configuration
@@ -187,16 +210,18 @@ export function McpManager({ config, onUpdate, onConfigUpdate }: McpManagerProps
             onClick={() => refetchStatus()}
             disabled={isLoadingStatus}
           >
-            <RefreshCw className={`h-3 w-3 ${isLoadingStatus ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`h-3 w-3 ${isLoadingStatus ? "animate-spin" : ""}`}
+            />
           </Button>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button className='mr-1 h-6'>
+              <Button className="mr-1 h-6">
                 <Plus className="h-4 w-4" />
               </Button>
             </DialogTrigger>
-            <AddMcpServerDialog 
-              open={isAddDialogOpen} 
+            <AddMcpServerDialog
+              open={isAddDialogOpen}
               onOpenChange={setIsAddDialogOpen}
               onUpdate={onConfigUpdate}
             />
@@ -206,15 +231,17 @@ export function McpManager({ config, onUpdate, onConfigUpdate }: McpManagerProps
 
       {Object.keys(mcpServers).length === 0 ? (
         <div className="rounded-lg border border-border p-6 sm:p-8 text-center">
-          <p className="text-muted-foreground">No MCP servers configured. Add your first server to get started.</p>
+          <p className="text-muted-foreground">
+            No MCP servers configured. Add your first server to get started.
+          </p>
         </div>
       ) : (
         <div className="space-y-2">
           {Object.entries(mcpServers).map(([serverId, serverConfig]) => {
-            const status = mcpStatus?.[serverId]
-            const isConnected = status?.status === 'connected'
-            const errorMessage = getErrorMessage(serverId)
-            
+            const status = mcpStatus?.[serverId];
+            const isConnected = status?.status === "connected";
+            const errorMessage = getErrorMessage(serverId);
+
             return (
               <McpServerCard
                 key={serverId}
@@ -229,9 +256,11 @@ export function McpManager({ config, onUpdate, onConfigUpdate }: McpManagerProps
                 onToggleServer={handleToggleServer}
                 onAuthenticate={handleAuthenticate}
                 onRemoveAuth={handleRemoveAuth}
-                onDeleteServer={(id, name) => setDeleteConfirmServer({ id, name })}
+                onDeleteServer={(id, name) =>
+                  setDeleteConfirmServer({ id, name })
+                }
               />
-            )
+            );
           })}
         </div>
       )}
@@ -250,7 +279,7 @@ export function McpManager({ config, onUpdate, onConfigUpdate }: McpManagerProps
       <McpOAuthDialog
         open={!!authDialogServerId}
         onOpenChange={(open) => !open && setAuthDialogServerId(null)}
-        serverName={authDialogServerId || ''}
+        serverName={authDialogServerId || ""}
         onAutoAuth={handleOAuthAutoAuth}
         onStartAuth={handleOAuthStartAuth}
         onCompleteAuth={handleOAuthCompleteAuth}
@@ -263,14 +292,18 @@ export function McpManager({ config, onUpdate, onConfigUpdate }: McpManagerProps
         onCancel={() => setRemoveAuthConfirmServer(null)}
         title="Remove Authentication"
         description="This will remove the OAuth credentials for this MCP server. You will need to re-authenticate to use this server again."
-        itemName={mcpServers[removeAuthConfirmServer || ''] ? getDisplayName(removeAuthConfirmServer || '') : ''}
+        itemName={
+          mcpServers[removeAuthConfirmServer || ""]
+            ? getDisplayName(removeAuthConfirmServer || "")
+            : ""
+        }
         isDeleting={isRemovingAuth}
       />
     </div>
-  )
+  );
 
   function getDisplayName(serverId: string): string {
-    const name = serverId.replace(/[-_]/g, ' ')
-    return name.charAt(0).toUpperCase() + name.slice(1)
+    const name = serverId.replace(/[-_]/g, " ");
+    return name.charAt(0).toUpperCase() + name.slice(1);
   }
 }

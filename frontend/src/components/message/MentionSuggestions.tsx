@@ -1,19 +1,19 @@
-import { useEffect, useRef } from 'react'
-import { Bot, FileText } from 'lucide-react'
+import { Bot, FileText } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 export interface MentionItem {
-  type: 'file' | 'agent'
-  value: string
-  label: string
-  description?: string
+  type: "file" | "agent";
+  value: string;
+  label: string;
+  description?: string;
 }
 
 interface MentionSuggestionsProps {
-  isOpen: boolean
-  items: MentionItem[]
-  onSelect: (item: MentionItem) => void
-  onClose: () => void
-  selectedIndex?: number
+  isOpen: boolean;
+  items: MentionItem[];
+  onSelect: (item: MentionItem) => void;
+  onClose: () => void;
+  selectedIndex?: number;
 }
 
 export function MentionSuggestions({
@@ -21,39 +21,39 @@ export function MentionSuggestions({
   items,
   onSelect,
   onClose,
-  selectedIndex = 0
+  selectedIndex = 0,
 }: MentionSuggestionsProps) {
-  const listRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen) return;
 
     const handleClickOutside = (e: MouseEvent) => {
       if (listRef.current && !listRef.current.contains(e.target as Node)) {
-        onClose()
+        onClose();
       }
-    }
+    };
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isOpen, onClose])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen, onClose]);
 
   useEffect(() => {
-    if (!isOpen || !listRef.current) return
-    
-    const selectedItem = listRef.current.children[selectedIndex] as HTMLElement
+    if (!isOpen || !listRef.current) return;
+
+    const selectedItem = listRef.current.children[selectedIndex] as HTMLElement;
     if (selectedItem) {
-      selectedItem.scrollIntoView({ block: 'nearest' })
+      selectedItem.scrollIntoView({ block: "nearest" });
     }
-  }, [selectedIndex, isOpen])
+  }, [selectedIndex, isOpen]);
 
-  if (!isOpen || items.length === 0) return null
+  if (!isOpen || items.length === 0) return null;
 
-  const getFilename = (path: string) => path.split('/').pop() || path
+  const getFilename = (path: string) => path.split("/").pop() || path;
   const getDirectory = (path: string) => {
-    const parts = path.split('/')
-    return parts.slice(0, -1).join('/') || '.'
-  }
+    const parts = path.split("/");
+    return parts.slice(0, -1).join("/") || ".";
+  };
 
   return (
     <div
@@ -66,25 +66,27 @@ export function MentionSuggestions({
           onClick={() => onSelect(item)}
           className={`w-full px-3 py-2 text-left transition-colors flex items-start gap-2 ${
             idx === selectedIndex
-              ? 'bg-primary text-primary-foreground'
-              : 'hover:bg-muted text-foreground'
+              ? "bg-primary text-primary-foreground"
+              : "hover:bg-muted text-foreground"
           }`}
         >
-          {item.type === 'agent' ? (
+          {item.type === "agent" ? (
             <Bot className="w-4 h-4 mt-0.5 flex-shrink-0" />
           ) : (
             <FileText className="w-4 h-4 mt-0.5 flex-shrink-0" />
           )}
           <div className="flex-1 min-w-0">
             <div className="font-mono text-sm font-medium truncate">
-              {item.type === 'file' ? getFilename(item.value) : item.label}
+              {item.type === "file" ? getFilename(item.value) : item.label}
             </div>
             <div className="text-xs opacity-70 mt-0.5 truncate">
-              {item.type === 'file' ? getDirectory(item.value) : item.description || 'Agent'}
+              {item.type === "file"
+                ? getDirectory(item.value)
+                : item.description || "Agent"}
             </div>
           </div>
         </button>
       ))}
     </div>
-  )
+  );
 }

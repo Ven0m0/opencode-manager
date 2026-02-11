@@ -1,10 +1,10 @@
-import { useNotifications } from "@/hooks/useNotifications";
-import { Loader2, BellOff, Trash2, Send, Monitor } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { BellOff, Loader2, Monitor, Send, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
+import { useNotifications } from "@/hooks/useNotifications";
 import { showToast } from "@/lib/toast";
-import { formatDistanceToNow } from "date-fns";
 
 export function NotificationSettings() {
   const {
@@ -49,8 +49,9 @@ export function NotificationSettings() {
         <div className="flex items-center gap-3 text-muted-foreground">
           <BellOff className="h-5 w-5" />
           <p className="text-sm">
-            Push notifications are not configured on the server. Set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY environment
-            variables to enable.
+            Push notifications are not configured on the server. Set
+            VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY environment variables to
+            enable.
           </p>
         </div>
       </div>
@@ -96,7 +97,7 @@ export function NotificationSettings() {
     sendTest(undefined, {
       onSuccess: (data) => {
         showToast.success(
-          `Test notification sent to ${data.devicesNotified} device(s)`
+          `Test notification sent to ${data.devicesNotified} device(s)`,
         );
       },
       onError: () => {
@@ -141,10 +142,7 @@ export function NotificationSettings() {
 
                 <div className="flex flex-row items-center justify-between rounded-lg border border-border p-4">
                   <div className="space-y-0.5">
-                    <Label
-                      htmlFor="notifPermission"
-                      className="text-base"
-                    >
+                    <Label htmlFor="notifPermission" className="text-base">
                       Permission requests
                     </Label>
                     <p className="text-sm text-muted-foreground">
@@ -260,7 +258,10 @@ export function NotificationSettings() {
                     <Monitor className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">
-                        {sub.deviceName ?? (sub.endpoint.length > 60 ? sub.endpoint.slice(0, 60) + "..." : sub.endpoint)}
+                        {sub.deviceName ??
+                          (sub.endpoint.length > 60
+                            ? `${sub.endpoint.slice(0, 60)}...`
+                            : sub.endpoint)}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {sub.lastUsedAt

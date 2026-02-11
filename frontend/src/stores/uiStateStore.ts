@@ -1,11 +1,12 @@
-import { create } from 'zustand'
+import { create } from "zustand";
 
 interface UIStateStore {
-  isEditingMessage: boolean
-  setIsEditingMessage: (isEditing: boolean) => void
+  isEditingMessage: boolean;
+  setIsEditingMessage: (isEditing: boolean) => void;
 }
 
 export const useUIState = create<UIStateStore>((set) => ({
   isEditingMessage: false,
-  setIsEditingMessage: (isEditing: boolean) => set({ isEditingMessage: isEditing }),
-}))
+  setIsEditingMessage: (isEditing: boolean) =>
+    set({ isEditingMessage: isEditing }),
+}));

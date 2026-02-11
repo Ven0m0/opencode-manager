@@ -1,21 +1,21 @@
-import { useFileDiff } from "@/api/git";
 import {
-  Loader2,
-  FileText,
-  FilePlus,
-  FileX,
-  FileEdit,
-  File,
-  Plus,
-  Minus,
   ArrowLeft,
   ExternalLink,
+  File,
+  FileEdit,
+  FilePlus,
+  FileText,
+  FileX,
+  Loader2,
+  Minus,
+  Plus,
 } from "lucide-react";
+import { useFileDiff } from "@/api/git";
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/ui/copy-button";
+import { GIT_STATUS_COLORS, GIT_STATUS_LABELS } from "@/lib/git-status-styles";
 import { cn } from "@/lib/utils";
 import type { GitFileStatusType } from "@/types/git";
-import { GIT_STATUS_COLORS, GIT_STATUS_LABELS } from "@/lib/git-status-styles";
 
 interface FileDiffViewProps {
   repoId: number;
@@ -182,7 +182,7 @@ function DiffLineComponent({
       }
     >
       {showLineNumbers && (
-          <div className="flex-shrink-0 w-20 flex text-xs text-muted-foreground bg-muted/30 select-none">
+        <div className="flex-shrink-0 w-20 flex text-xs text-muted-foreground bg-muted/30 select-none">
           <span className="w-10 px-2 text-right border-r border-border/50">
             {line.oldLineNumber || ""}
           </span>
@@ -219,7 +219,11 @@ export function FileDiffView({
   onOpenFile,
   isMobile = false,
 }: FileDiffViewProps) {
-  const { data: diffData, isLoading, error } = useFileDiff(repoId, filePath, includeStaged);
+  const {
+    data: diffData,
+    isLoading,
+    error,
+  } = useFileDiff(repoId, filePath, includeStaged);
 
   const fileName = filePath.split("/").pop() || filePath;
   const dirPath = filePath.includes("/")

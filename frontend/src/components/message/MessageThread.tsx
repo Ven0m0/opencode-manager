@@ -1,188 +1,222 @@
-import { memo, useMemo, useState, useCallback, useEffect } from 'react'
-import { Pencil } from 'lucide-react'
-import { MessagePart } from './MessagePart'
-import { UserMessageActionButtons } from './UserMessageActionButtons'
-import { EditableUserMessage, ClickableUserMessage } from './EditableUserMessage'
-import { SessionTodoDisplay } from './SessionTodoDisplay'
-import { MessageError } from './MessageError'
-import type { MessageWithParts } from '@/api/types'
-import { useSessionStatusForSession } from '@/stores/sessionStatusStore'
-import { useSessionTodos } from '@/stores/sessionTodosStore'
-import type { components } from '@/api/opencode-types'
-import type { Todo } from '@/components/message/SessionTodoDisplay'
-import type { OpenCodeError } from '@/lib/opencode-errors'
+import { Pencil } from "lucide-react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import type { components } from "@/api/opencode-types";
+import type { MessageWithParts } from "@/api/types";
+import type { Todo } from "@/components/message/SessionTodoDisplay";
+import type { OpenCodeError } from "@/lib/opencode-errors";
+import { useSessionStatusForSession } from "@/stores/sessionStatusStore";
+import { useSessionTodos } from "@/stores/sessionTodosStore";
+import {
+  ClickableUserMessage,
+  EditableUserMessage,
+} from "./EditableUserMessage";
+import { MessageError } from "./MessageError";
+import { MessagePart } from "./MessagePart";
+import { SessionTodoDisplay } from "./SessionTodoDisplay";
+import { UserMessageActionButtons } from "./UserMessageActionButtons";
 
 function getMessageTextContent(msg: MessageWithParts): string {
   return msg.parts
-    .filter(p => p.type === 'text')
-    .map(p => p.text || '')
-    .join('\n\n')
-    .trim()
+    .filter((p) => p.type === "text")
+    .map((p) => p.text || "")
+    .join("\n\n")
+    .trim();
 }
 
 interface MessageThreadProps {
-  opcodeUrl: string
-  sessionID: string
-  directory?: string
-  messages?: MessageWithParts[]
-  onFileClick?: (filePath: string, lineNumber?: number) => void
-  onChildSessionClick?: (sessionId: string) => void
-  onUndoMessage?: (restoredPrompt: string) => void
-  model?: string
+  opcodeUrl: string;
+  sessionID: string;
+  directory?: string;
+  messages?: MessageWithParts[];
+  onFileClick?: (filePath: string, lineNumber?: number) => void;
+  onChildSessionClick?: (sessionId: string) => void;
+  onUndoMessage?: (restoredPrompt: string) => void;
+  model?: string;
 }
 
 const isMessageStreaming = (msg: MessageWithParts): boolean => {
-  if (msg.info.role !== 'assistant') return false
-  return !('completed' in msg.info.time && msg.info.time.completed)
-}
+  if (msg.info.role !== "assistant") return false;
+  return !("completed" in msg.info.time && msg.info.time.completed);
+};
 
 function isSessionInRetry(sessionStatus: { type?: string }): boolean {
-  return sessionStatus?.type === 'retry'
+  return sessionStatus?.type === "retry";
 }
 
 const compareMessageIds = (id1: string, id2: string): number => {
-  const num1 = parseInt(id1, 10)
-  const num2 = parseInt(id2, 10)
-  if (!isNaN(num1) && !isNaN(num2)) return num1 - num2
-  return id1.localeCompare(id2)
-}
+  const num1 = parseInt(id1, 10);
+  const num2 = parseInt(id2, 10);
+  if (!Number.isNaN(num1) && !Number.isNaN(num2)) return num1 - num2;
+  return id1.localeCompare(id2);
+};
 
 const findLastMessageByRole = (
   messages: MessageWithParts[],
-  role: 'user' | 'assistant',
-  predicate?: (msg: MessageWithParts) => boolean
+  role: "user" | "assistant",
+  predicate?: (msg: MessageWithParts) => boolean,
 ): string | undefined => {
   for (let i = messages.length - 1; i >= 0; i--) {
-    const msg = messages[i]
+    const msg = messages[i];
     if (msg.info.role === role && (!predicate || predicate(msg))) {
-      return msg.info.id
+      return msg.info.id;
     }
   }
-  return undefined
-}
+  return undefined;
+};
 
-export const MessageThread = memo(function MessageThread({ 
-  opcodeUrl, 
-  sessionID, 
-  directory, 
-  messages, 
-  onFileClick, 
+export const MessageThread = memo(function MessageThread({
+  opcodeUrl,
+  sessionID,
+  directory,
+  messages,
+  onFileClick,
   onChildSessionClick,
   onUndoMessage,
-  model
+  model,
 }: MessageThreadProps) {
-  const [editingUserMessageId, setEditingUserMessageId] = useState<string | null>(null)
-  const [editingForAssistantId, setEditingForAssistantId] = useState<string | null>(null)
-  const sessionStatus = useSessionStatusForSession(sessionID)
-  
+  const [editingUserMessageId, setEditingUserMessageId] = useState<
+    string | null
+  >(null);
+  const [editingForAssistantId, setEditingForAssistantId] = useState<
+    string | null
+  >(null);
+  const sessionStatus = useSessionStatusForSession(sessionID);
+
   const pendingAssistantId = useMemo(() => {
-    if (!messages) return undefined
-    return findLastMessageByRole(messages, 'assistant', isMessageStreaming)
-  }, [messages])
+    if (!messages) return undefined;
+    return findLastMessageByRole(messages, "assistant", isMessageStreaming);
+  }, [messages]);
 
   const lastUserMessageId = useMemo(() => {
-    if (!messages) return undefined
-    return findLastMessageByRole(messages, 'user')
-  }, [messages])
+    if (!messages) return undefined;
+    return findLastMessageByRole(messages, "user");
+  }, [messages]);
 
-  const isSessionBusy = !!pendingAssistantId || isSessionInRetry(sessionStatus)
-  const setSessionTodos = useSessionTodos((state) => state.setTodos)
+  const isSessionBusy = !!pendingAssistantId || isSessionInRetry(sessionStatus);
+  const setSessionTodos = useSessionTodos((state) => state.setTodos);
 
   useEffect(() => {
-    if (!messages || messages.length === 0) return
+    if (!messages || messages.length === 0) return;
 
     const latestTodoPart = messages
-      .flatMap(msg => msg.parts)
-      .filter((part): part is components['schemas']['ToolPart'] => part.type === 'tool' && (part.tool === 'todowrite' || part.tool === 'todoread'))
-      .filter(part => part.state.status === 'completed' && 'time' in part.state)
+      .flatMap((msg) => msg.parts)
+      .filter(
+        (part): part is components["schemas"]["ToolPart"] =>
+          part.type === "tool" &&
+          (part.tool === "todowrite" || part.tool === "todoread"),
+      )
+      .filter(
+        (part) => part.state.status === "completed" && "time" in part.state,
+      )
       .sort((a, b) => {
-        const aState = a.state as { time?: { end?: number } }
-        const bState = b.state as { time?: { end?: number } }
-        const aEndTime = aState.time?.end ?? 0
-        const bEndTime = bState.time?.end ?? 0
-        return bEndTime - aEndTime
-      })[0]
+        const aState = a.state as { time?: { end?: number } };
+        const bState = b.state as { time?: { end?: number } };
+        const aEndTime = aState.time?.end ?? 0;
+        const bEndTime = bState.time?.end ?? 0;
+        return bEndTime - aEndTime;
+      })[0];
 
-if (latestTodoPart) {
-const state = latestTodoPart.state
-      let todos: Todo[] = []
+    if (latestTodoPart) {
+      const state = latestTodoPart.state;
+      let todos: Todo[] = [];
 
-      if ('metadata' in state && state.metadata?.todos && Array.isArray(state.metadata.todos)) {
-        todos = state.metadata.todos as Todo[]
-      } else if ('output' in state && state.output) {
+      if (
+        "metadata" in state &&
+        state.metadata?.todos &&
+        Array.isArray(state.metadata.todos)
+      ) {
+        todos = state.metadata.todos as Todo[];
+      } else if ("output" in state && state.output) {
         try {
-          const parsed = JSON.parse(state.output)
+          const parsed = JSON.parse(state.output);
           todos = Array.isArray(parsed)
-            ? parsed as Todo[]
-            : parsed?.todos ? parsed.todos as Todo[]
-            : []
+            ? (parsed as Todo[])
+            : parsed?.todos
+              ? (parsed.todos as Todo[])
+              : [];
         } catch (_) {
-          console.warn('Failed to parse todo output:', _)
+          console.warn("Failed to parse todo output:", _);
         }
       }
 
       if (todos.length > 0) {
-        setSessionTodos(sessionID, todos)
+        setSessionTodos(sessionID, todos);
       }
     }
-  }, [messages, sessionID, setSessionTodos])
+  }, [messages, sessionID, setSessionTodos]);
 
-  const handleStartEditUserMessage = useCallback((userMessageId: string, assistantMessageId: string) => {
-    setEditingUserMessageId(userMessageId)
-    setEditingForAssistantId(assistantMessageId)
-  }, [])
+  const handleStartEditUserMessage = useCallback(
+    (userMessageId: string, assistantMessageId: string) => {
+      setEditingUserMessageId(userMessageId);
+      setEditingForAssistantId(assistantMessageId);
+    },
+    [],
+  );
 
   const handleCancelEdit = useCallback(() => {
-    setEditingUserMessageId(null)
-    setEditingForAssistantId(null)
-  }, [])
-  
+    setEditingUserMessageId(null);
+    setEditingForAssistantId(null);
+  }, []);
+
   if (!messages || messages.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground">
         No messages yet. Start a conversation below.
       </div>
-    )
+    );
   }
 
   return (
     <div className="flex flex-col space-y-2 p-2 overflow-x-hidden">
       {messages.map((msg, index) => {
-        const streaming = isMessageStreaming(msg)
-        const isQueued = msg.info.role === 'user' && pendingAssistantId && compareMessageIds(msg.info.id, pendingAssistantId) > 0
-        const isLastUserMessage = msg.info.role === 'user' && msg.info.id === lastUserMessageId
-        const messageTextContent = getMessageTextContent(msg)
+        const streaming = isMessageStreaming(msg);
+        const isQueued =
+          msg.info.role === "user" &&
+          pendingAssistantId &&
+          compareMessageIds(msg.info.id, pendingAssistantId) > 0;
+        const isLastUserMessage =
+          msg.info.role === "user" && msg.info.id === lastUserMessageId;
+        const messageTextContent = getMessageTextContent(msg);
 
-        const nextAssistantMessage = messages.slice(index + 1).find(m => m.info.role === 'assistant')
-        const isUserBeforeAssistant = msg.info.role === 'user' && nextAssistantMessage
-        const canEditUserMessage = isLastUserMessage && isUserBeforeAssistant && !isSessionBusy
-        const canUndoUserMessage = isLastUserMessage && nextAssistantMessage && !isSessionBusy && onUndoMessage
+        const nextAssistantMessage = messages
+          .slice(index + 1)
+          .find((m) => m.info.role === "assistant");
+        const isUserBeforeAssistant =
+          msg.info.role === "user" && nextAssistantMessage;
+        const canEditUserMessage =
+          isLastUserMessage && isUserBeforeAssistant && !isSessionBusy;
+        const canUndoUserMessage =
+          isLastUserMessage &&
+          nextAssistantMessage &&
+          !isSessionBusy &&
+          onUndoMessage;
 
-        const isEditingThisMessage = editingUserMessageId === msg.info.id
+        const isEditingThisMessage = editingUserMessageId === msg.info.id;
 
         return (
-          <div
-            key={msg.info.id}
-            className="flex flex-col group"
-          >
-            {msg.info.role === 'assistant' && streaming && (
+          <div key={msg.info.id} className="flex flex-col group">
+            {msg.info.role === "assistant" && streaming && (
               <SessionTodoDisplay sessionID={sessionID} />
             )}
             <div
               className={`w-full rounded-lg p-1.5 ${
-                msg.info.role === 'user'
-                  ? isQueued 
-                    ? 'bg-amber-500/10 border border-amber-500/30'
+                msg.info.role === "user"
+                  ? isQueued
+                    ? "bg-amber-500/10 border border-amber-500/30"
                     : isEditingThisMessage
-                      ? 'bg-blue-600/30 border border-blue-600/50'
-                      : 'bg-blue-600/20 border border-blue-600/30'
-                  : 'bg-card/50 border border-border'
-              } ${streaming ? 'animate-pulse-subtle' : ''}`}
+                      ? "bg-blue-600/30 border border-blue-600/50"
+                      : "bg-blue-600/20 border border-blue-600/30"
+                  : "bg-card/50 border border-border"
+              } ${streaming ? "animate-pulse-subtle" : ""}`}
             >
               <div className="flex items-center justify-between gap-2 mb-1">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-medium text-muted-foreground">
-                    {msg.info.role === 'user' ? 'You' : (msg.info.role === 'assistant' && 'modelID' in msg.info ? msg.info.modelID : 'Assistant')}
+                    {msg.info.role === "user"
+                      ? "You"
+                      : msg.info.role === "assistant" && "modelID" in msg.info
+                        ? msg.info.modelID
+                        : "Assistant"}
                   </span>
                   {msg.info.time && (
                     <span className="text-xs text-muted-foreground">
@@ -191,7 +225,12 @@ const state = latestTodoPart.state
                   )}
                   {canEditUserMessage && nextAssistantMessage && (
                     <button
-                      onClick={() => handleStartEditUserMessage(msg.info.id, nextAssistantMessage.info.id)}
+                      onClick={() =>
+                        handleStartEditUserMessage(
+                          msg.info.id,
+                          nextAssistantMessage.info.id,
+                        )
+                      }
                       className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
                       title="Edit message"
                     >
@@ -204,8 +243,8 @@ const state = latestTodoPart.state
                     </span>
                   )}
                 </div>
-                
-                {msg.info.role === 'user' && canUndoUserMessage && (
+
+                {msg.info.role === "user" && canUndoUserMessage && (
                   <UserMessageActionButtons
                     opcodeUrl={opcodeUrl}
                     sessionId={sessionID}
@@ -216,9 +255,11 @@ const state = latestTodoPart.state
                   />
                 )}
               </div>
-              
+
               <div className="space-y-2">
-                {msg.info.role === 'user' && isEditingThisMessage && editingForAssistantId ? (
+                {msg.info.role === "user" &&
+                isEditingThisMessage &&
+                editingForAssistantId ? (
                   <EditableUserMessage
                     opcodeUrl={opcodeUrl}
                     sessionId={sessionID}
@@ -228,10 +269,17 @@ const state = latestTodoPart.state
                     onCancel={handleCancelEdit}
                     model={model}
                   />
-                ) : msg.info.role === 'user' && canEditUserMessage && nextAssistantMessage ? (
+                ) : msg.info.role === "user" &&
+                  canEditUserMessage &&
+                  nextAssistantMessage ? (
                   <ClickableUserMessage
                     content={messageTextContent}
-                    onClick={() => handleStartEditUserMessage(msg.info.id, nextAssistantMessage.info.id)}
+                    onClick={() =>
+                      handleStartEditUserMessage(
+                        msg.info.id,
+                        nextAssistantMessage.info.id,
+                      )
+                    }
                     isEditable={false}
                   />
                 ) : (
@@ -244,19 +292,25 @@ const state = latestTodoPart.state
                         partIndex={partIndex}
                         onFileClick={onFileClick}
                         onChildSessionClick={onChildSessionClick}
-                        messageTextContent={msg.info.role === 'assistant' ? messageTextContent : undefined}
+                        messageTextContent={
+                          msg.info.role === "assistant"
+                            ? messageTextContent
+                            : undefined
+                        }
                       />
                     </div>
                   ))
                 )}
-                {msg.info.role === 'assistant' && 'error' in msg.info && msg.info.error && (
-                  <MessageError error={msg.info.error as OpenCodeError} />
-                )}
+                {msg.info.role === "assistant" &&
+                  "error" in msg.info &&
+                  msg.info.error && (
+                    <MessageError error={msg.info.error as OpenCodeError} />
+                  )}
               </div>
             </div>
           </div>
-        )
+        );
       })}
     </div>
-  )
-})
+  );
+});

@@ -1,4 +1,8 @@
-import { useState, useEffect } from 'react'
+import { Archive, Download, Folder, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getIgnoredPaths } from "@/api/files";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -6,20 +10,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Download, Loader2, Archive, Folder } from 'lucide-react'
-import { getIgnoredPaths } from '@/api/files'
+} from "@/components/ui/dialog";
 
 interface DownloadDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onDownload: (options: { includeGit?: boolean, includePaths?: string[] }) => Promise<void>
-  title: string
-  description: string
-  itemName: string
-  targetPath?: string
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onDownload: (options: {
+    includeGit?: boolean;
+    includePaths?: string[];
+  }) => Promise<void>;
+  title: string;
+  description: string;
+  itemName: string;
+  targetPath?: string;
 }
 
 export function DownloadDialog({
@@ -31,86 +34,90 @@ export function DownloadDialog({
   itemName,
   targetPath,
 }: DownloadDialogProps) {
-  const [isDownloading, setIsDownloading] = useState(false)
-  const [isConfirmed, setIsConfirmed] = useState(false)
-  const [isLoadingIgnored, setIsLoadingIgnored] = useState(false)
-  const [ignoredPaths, setIgnoredPaths] = useState<string[]>([])
-  const [ignoredPathsError, setIgnoredPathsError] = useState<string | null>(null)
-  const [includeAll, setIncludeAll] = useState(false)
-  const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set())
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isConfirmed, setIsConfirmed] = useState(false);
+  const [isLoadingIgnored, setIsLoadingIgnored] = useState(false);
+  const [ignoredPaths, setIgnoredPaths] = useState<string[]>([]);
+  const [ignoredPathsError, setIgnoredPathsError] = useState<string | null>(
+    null,
+  );
+  const [includeAll, setIncludeAll] = useState(false);
+  const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (open && targetPath) {
-      setIsLoadingIgnored(true)
-      setIgnoredPathsError(null)
+      setIsLoadingIgnored(true);
+      setIgnoredPathsError(null);
       getIgnoredPaths(targetPath)
-        .then(response => {
-          setIgnoredPaths(response.ignoredPaths)
-          setIsLoadingIgnored(false)
+        .then((response) => {
+          setIgnoredPaths(response.ignoredPaths);
+          setIsLoadingIgnored(false);
         })
         .catch((error) => {
-          setIgnoredPathsError(error.message || 'Failed to load ignored paths')
-          setIsLoadingIgnored(false)
-        })
+          setIgnoredPathsError(error.message || "Failed to load ignored paths");
+          setIsLoadingIgnored(false);
+        });
     }
-  }, [open, targetPath])
+  }, [open, targetPath]);
 
   useEffect(() => {
     if (includeAll) {
-      setSelectedPaths(new Set(ignoredPaths))
+      setSelectedPaths(new Set(ignoredPaths));
     }
-  }, [includeAll, ignoredPaths])
+  }, [includeAll, ignoredPaths]);
 
   useEffect(() => {
     if (selectedPaths.size === ignoredPaths.length && !includeAll) {
-      setIncludeAll(true)
+      setIncludeAll(true);
     } else if (selectedPaths.size < ignoredPaths.length && includeAll) {
-      setIncludeAll(false)
+      setIncludeAll(false);
     }
-  }, [selectedPaths.size, ignoredPaths.length, includeAll])
+  }, [selectedPaths.size, ignoredPaths.length, includeAll]);
 
   const handleCheckboxChange = (path: string, checked: boolean) => {
-    const newSelected = new Set(selectedPaths)
+    const newSelected = new Set(selectedPaths);
     if (checked) {
-      newSelected.add(path)
+      newSelected.add(path);
     } else {
-      newSelected.delete(path)
+      newSelected.delete(path);
     }
-    setSelectedPaths(newSelected)
-    setIncludeAll(newSelected.size === ignoredPaths.length)
-  }
+    setSelectedPaths(newSelected);
+    setIncludeAll(newSelected.size === ignoredPaths.length);
+  };
 
   const handleConfirm = async (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsConfirmed(true)
-    setIsDownloading(true)
+    e.preventDefault();
+    e.stopPropagation();
+    setIsConfirmed(true);
+    setIsDownloading(true);
     try {
-      const includeGit = selectedPaths.has('.git/')
-      const includePaths = Array.from(selectedPaths).filter(p => p !== '.git/')
-      await onDownload({ includeGit, includePaths })
+      const includeGit = selectedPaths.has(".git/");
+      const includePaths = Array.from(selectedPaths).filter(
+        (p) => p !== ".git/",
+      );
+      await onDownload({ includeGit, includePaths });
     } catch (error) {
-      console.error('Download failed:', error)
+      console.error("Download failed:", error);
     } finally {
-      setIsDownloading(false)
-      onOpenChange(false)
-      setIsConfirmed(false)
+      setIsDownloading(false);
+      onOpenChange(false);
+      setIsConfirmed(false);
     }
-  }
+  };
 
   const handleCancel = (e?: React.MouseEvent) => {
-    e?.preventDefault()
-    e?.stopPropagation()
-    if (isDownloading) return
-    onOpenChange(false)
-    setIsConfirmed(false)
-  }
-  
+    e?.preventDefault();
+    e?.stopPropagation();
+    if (isDownloading) return;
+    onOpenChange(false);
+    setIsConfirmed(false);
+  };
+
   const handleDialogOpenChange = (open: boolean) => {
     if (!open) {
-      handleCancel()
+      handleCancel();
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
@@ -127,18 +134,16 @@ export function DownloadDialog({
         </DialogHeader>
         <div className="space-y-4 py-4">
           {!isDownloading && (
-            <DialogDescription>
-              {description}
-            </DialogDescription>
+            <DialogDescription>{description}</DialogDescription>
           )}
-          
+
           {!isDownloading && !isLoadingIgnored && ignoredPaths.length > 0 && (
-              <div className="space-y-3">
+            <div className="space-y-3">
               <div
                 className="flex items-center space-x-2 cursor-pointer"
                 onClick={(e) => {
-                  e.stopPropagation()
-                  setIncludeAll(!includeAll)
+                  e.stopPropagation();
+                  setIncludeAll(!includeAll);
                 }}
               >
                 <Checkbox
@@ -146,19 +151,17 @@ export function DownloadDialog({
                   checked={includeAll}
                   onCheckedChange={() => {}}
                 />
-                <span className="text-sm font-medium">
-                  Download All
-                </span>
+                <span className="text-sm font-medium">Download All</span>
               </div>
 
               <div className="space-y-2 pl-6">
-                {ignoredPaths.map(path => (
+                {ignoredPaths.map((path) => (
                   <div
                     key={path}
                     className="flex items-center space-x-2 cursor-pointer"
                     onClick={(e) => {
-                      e.stopPropagation()
-                      handleCheckboxChange(path, !selectedPaths.has(path))
+                      e.stopPropagation();
+                      handleCheckboxChange(path, !selectedPaths.has(path));
                     }}
                   >
                     <Checkbox
@@ -187,11 +190,13 @@ export function DownloadDialog({
               <p className="text-sm text-destructive">{ignoredPathsError}</p>
             </div>
           )}
-          
+
           <div className="flex items-center gap-3 p-3 bg-muted rounded-md">
             <Archive className="w-8 h-8 text-muted-foreground" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">{isConfirmed ? 'Processing...' : itemName}</p>
+              <p className="text-sm font-medium">
+                {isConfirmed ? "Processing..." : itemName}
+              </p>
               {isDownloading && (
                 <p className="text-xs text-muted-foreground mt-1">
                   Creating ZIP archive, please wait...
@@ -211,13 +216,22 @@ export function DownloadDialog({
             </div>
           )}
         </div>
-        <DialogFooter >
+        <DialogFooter>
           {!isDownloading && !isConfirmed && (
-            <div className='flex gap-2 w-full'>
-              <Button type="button" variant="outline" onClick={handleCancel} className="flex-1">
+            <div className="flex gap-2 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                className="flex-1"
+              >
                 Cancel
               </Button>
-              <Button type="button" onClick={handleConfirm} className="gap-2 flex-1">
+              <Button
+                type="button"
+                onClick={handleConfirm}
+                className="gap-2 flex-1"
+              >
                 <Download className="w-4 h-4" />
                 Download
               </Button>
@@ -226,5 +240,5 @@ export function DownloadDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

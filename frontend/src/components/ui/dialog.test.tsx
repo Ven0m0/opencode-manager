@@ -1,11 +1,6 @@
-import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "./dialog";
+import { describe, expect, it } from "vitest";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./dialog";
 
 describe("DialogContent", () => {
   it("applies safe-area padding when fullscreen prop is true", () => {
@@ -16,10 +11,12 @@ describe("DialogContent", () => {
             <DialogTitle>Test Dialog</DialogTitle>
           </DialogHeader>
         </DialogContent>
-      </Dialog>
+      </Dialog>,
     );
     const content = screen.getByTestId("dialog-content");
-    expect(content).toHaveStyle({ paddingTop: "env(safe-area-inset-top, 0px)" });
+    expect(content).toHaveStyle({
+      paddingTop: "env(safe-area-inset-top, 0px)",
+    });
   });
 
   it("applies safe-area padding when mobileFullscreen prop is true", () => {
@@ -30,10 +27,12 @@ describe("DialogContent", () => {
             <DialogTitle>Test Dialog</DialogTitle>
           </DialogHeader>
         </DialogContent>
-      </Dialog>
+      </Dialog>,
     );
     const content = screen.getByTestId("dialog-content");
-    expect(content).toHaveStyle({ paddingTop: "env(safe-area-inset-top, 0px)" });
+    expect(content).toHaveStyle({
+      paddingTop: "env(safe-area-inset-top, 0px)",
+    });
   });
 
   it("applies inset-0 for fullscreen dialogs", () => {
@@ -42,7 +41,7 @@ describe("DialogContent", () => {
         <DialogContent fullscreen data-testid="dialog-content">
           Content
         </DialogContent>
-      </Dialog>
+      </Dialog>,
     );
     const content = screen.getByTestId("dialog-content");
     expect(content).toHaveClass("inset-0");
@@ -54,7 +53,7 @@ describe("DialogContent", () => {
         <DialogContent mobileFullscreen data-testid="dialog-content">
           Content
         </DialogContent>
-      </Dialog>
+      </Dialog>,
     );
     const content = screen.getByTestId("dialog-content");
     expect(content).toHaveClass("inset-0");
@@ -63,10 +62,8 @@ describe("DialogContent", () => {
   it("does not apply safe-area padding when neither fullscreen nor mobileFullscreen", () => {
     render(
       <Dialog open>
-        <DialogContent data-testid="dialog-content">
-          Content
-        </DialogContent>
-      </Dialog>
+        <DialogContent data-testid="dialog-content">Content</DialogContent>
+      </Dialog>,
     );
     const content = screen.getByTestId("dialog-content");
     const style = content.getAttribute("style") || "";
@@ -80,9 +77,11 @@ describe("DialogContent", () => {
         <DialogContent fullscreen data-testid="dialog-content">
           Content
         </DialogContent>
-      </Dialog>
+      </Dialog>,
     );
-    expect(screen.queryByRole("button", { name: /close/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /close/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows close button when mobileFullscreen is true", () => {
@@ -91,7 +90,7 @@ describe("DialogContent", () => {
         <DialogContent mobileFullscreen data-testid="dialog-content">
           Content
         </DialogContent>
-      </Dialog>
+      </Dialog>,
     );
     expect(screen.getByRole("button", { name: /close/i })).toBeInTheDocument();
   });
@@ -102,9 +101,11 @@ describe("DialogContent", () => {
         <DialogContent hideCloseButton data-testid="dialog-content">
           Content
         </DialogContent>
-      </Dialog>
+      </Dialog>,
     );
-    expect(screen.queryByRole("button", { name: /close/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /close/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("merges custom className with default classes", () => {
@@ -113,7 +114,7 @@ describe("DialogContent", () => {
         <DialogContent className="custom-class" data-testid="dialog-content">
           Content
         </DialogContent>
-      </Dialog>
+      </Dialog>,
     );
     const content = screen.getByTestId("dialog-content");
     expect(content).toHaveClass("custom-class");
@@ -127,7 +128,7 @@ describe("DialogContent", () => {
         <DialogContent>
           <span>Test Child Content</span>
         </DialogContent>
-      </Dialog>
+      </Dialog>,
     );
     expect(screen.getByText("Test Child Content")).toBeInTheDocument();
   });

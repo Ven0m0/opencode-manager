@@ -1,41 +1,45 @@
-import { useState } from 'react'
-import { useGitStatus, getApiErrorMessage } from '@/api/git'
-
-import { useGit } from '@/hooks/useGit'
-import { ChangesTab } from './ChangesTab'
-import { CommitsTab } from './CommitsTab'
-import { BranchesTab } from './BranchesTab'
-import { FileDiffView } from '@/components/file-browser/FileDiffView'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { GIT_UI_COLORS } from '@/lib/git-status-styles'
 import {
-  Loader2,
-  GitBranch,
-  FileCode,
-  History,
-  Upload,
-  ArrowUp,
   ArrowDown,
-  RefreshCw,
   ArrowDownFromLine,
+  ArrowUp,
+  FileCode,
+  GitBranch,
+  History,
+  Loader2,
+  RefreshCw,
+  Upload,
   X,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useMobile } from '@/hooks/useMobile'
-import { showToast } from '@/lib/toast'
+} from "lucide-react";
+import { useState } from "react";
+import { getApiErrorMessage, useGitStatus } from "@/api/git";
+import { FileDiffView } from "@/components/file-browser/FileDiffView";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useGit } from "@/hooks/useGit";
+import { useMobile } from "@/hooks/useMobile";
+import { GIT_UI_COLORS } from "@/lib/git-status-styles";
+import { showToast } from "@/lib/toast";
+import { cn } from "@/lib/utils";
+import { BranchesTab } from "./BranchesTab";
+import { ChangesTab } from "./ChangesTab";
+import { CommitsTab } from "./CommitsTab";
 
 interface SourceControlPanelProps {
-  repoId: number
-  isOpen: boolean
-  onClose: () => void
-  currentBranch: string
-  repoUrl?: string | null
-  isRepoWorktree?: boolean
-  repoName?: string
+  repoId: number;
+  isOpen: boolean;
+  onClose: () => void;
+  currentBranch: string;
+  repoUrl?: string | null;
+  isRepoWorktree?: boolean;
+  repoName?: string;
 }
 
-type Tab = 'changes' | 'commits' | 'branches'
+type Tab = "changes" | "commits" | "branches";
 
 export function SourceControlPanel({
   repoId,
@@ -46,28 +50,30 @@ export function SourceControlPanel({
   isRepoWorktree,
   repoName,
 }: SourceControlPanelProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('changes')
-  const [selectedFile, setSelectedFile] = useState<{path: string, staged: boolean} | undefined>()
-  const { data: status } = useGitStatus(repoId)
-  const git = useGit(repoId)
-  const isMobile = useMobile()
+  const [activeTab, setActiveTab] = useState<Tab>("changes");
+  const [selectedFile, setSelectedFile] = useState<
+    { path: string; staged: boolean } | undefined
+  >();
+  const { data: status } = useGitStatus(repoId);
+  const git = useGit(repoId);
+  const isMobile = useMobile();
   const handleGitAction = async (action: () => Promise<unknown>) => {
     try {
-      await action()
+      await action();
     } catch (error: unknown) {
-      const message = getApiErrorMessage(error)
-      showToast.error(message)
+      const message = getApiErrorMessage(error);
+      showToast.error(message);
     }
-  }
+  };
 
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
-    { id: 'changes', label: 'Changes', icon: FileCode },
-    { id: 'commits', label: 'Commits', icon: History },
-    { id: 'branches', label: 'Branches', icon: GitBranch },
-  ]
+    { id: "changes", label: "Changes", icon: FileCode },
+    { id: "commits", label: "Commits", icon: History },
+    { id: "branches", label: "Branches", icon: GitBranch },
+  ];
 
-  const changesCount = status?.files.length || 0
-  const stagedCount = status?.files.filter(f => f.staged).length || 0
+  const changesCount = status?.files.length || 0;
+  const stagedCount = status?.files.filter((f) => f.staged).length || 0;
 
   const content = (
     <div className="flex flex-col h-full">
@@ -80,13 +86,19 @@ export function SourceControlPanel({
           {status && (status.ahead > 0 || status.behind > 0) && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               {status.ahead > 0 && (
-                <span className={`flex items-center gap-0.5 ${GIT_UI_COLORS.ahead}`}>
-                  <ArrowUp className="w-3 h-3" />{status.ahead}
+                <span
+                  className={`flex items-center gap-0.5 ${GIT_UI_COLORS.ahead}`}
+                >
+                  <ArrowUp className="w-3 h-3" />
+                  {status.ahead}
                 </span>
               )}
               {status.behind > 0 && (
-                <span className={`flex items-center gap-0.5 ${GIT_UI_COLORS.behind}`}>
-                  <ArrowDown className="w-3 h-3" />{status.behind}
+                <span
+                  className={`flex items-center gap-0.5 ${GIT_UI_COLORS.behind}`}
+                >
+                  <ArrowDown className="w-3 h-3" />
+                  {status.behind}
                 </span>
               )}
             </div>
@@ -124,7 +136,9 @@ export function SourceControlPanel({
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => handleGitAction(() => git.push.mutateAsync(undefined))}
+            onClick={() =>
+              handleGitAction(() => git.push.mutateAsync(undefined))
+            }
             disabled={git.push.isPending}
             className="h-7 w-7 p-0"
             title="Push"
@@ -140,36 +154,46 @@ export function SourceControlPanel({
 
       <div className="flex border-b border-border flex-shrink-0">
         {tabs.map((tab) => {
-          const Icon = tab.icon
+          const Icon = tab.icon;
           return (
             <button
               key={tab.id}
               className={cn(
-                'flex items-center gap-1.5 px-3 py-2 text-sm transition-colors border-b-2 -mb-px',
+                "flex items-center gap-1.5 px-3 py-2 text-sm transition-colors border-b-2 -mb-px",
                 activeTab === tab.id
-                  ? 'border-primary text-foreground'
-                  : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-accent'
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:bg-accent",
               )}
               onClick={() => setActiveTab(tab.id)}
             >
               <Icon className="w-4 h-4" />
               <span>{tab.label}</span>
-              {tab.id === 'changes' && changesCount > 0 && (
+              {tab.id === "changes" && changesCount > 0 && (
                 <span className="text-xs px-1.5 py-0.5 rounded-full bg-accent">
-                  {stagedCount > 0 ? `${stagedCount}/${changesCount}` : changesCount}
+                  {stagedCount > 0
+                    ? `${stagedCount}/${changesCount}`
+                    : changesCount}
                 </span>
               )}
             </button>
-          )
+          );
         })}
       </div>
 
-      <div className={cn('flex-1 min-h-0', isMobile ? 'flex flex-col' : 'flex')}>
-        <div className={cn(
-          'overflow-hidden',
-          isMobile ? 'flex-1' : selectedFile ? 'w-[35%] border-r border-border' : 'flex-1'
-        )}>
-          {activeTab === 'changes' && (
+      <div
+        className={cn("flex-1 min-h-0", isMobile ? "flex flex-col" : "flex")}
+      >
+        <div
+          className={cn(
+            "overflow-hidden",
+            isMobile
+              ? "flex-1"
+              : selectedFile
+                ? "w-[35%] border-r border-border"
+                : "flex-1",
+          )}
+        >
+          {activeTab === "changes" && (
             <ChangesTab
               repoId={repoId}
               onFileSelect={(path, staged) => setSelectedFile({ path, staged })}
@@ -177,18 +201,23 @@ export function SourceControlPanel({
               isMobile={isMobile}
             />
           )}
-          {activeTab === 'commits' && (
-            <CommitsTab repoId={repoId} />
-          )}
-          {activeTab === 'branches' && (
-            <BranchesTab repoId={repoId} currentBranch={currentBranch} repoUrl={repoUrl} isRepoWorktree={isRepoWorktree} />
+          {activeTab === "commits" && <CommitsTab repoId={repoId} />}
+          {activeTab === "branches" && (
+            <BranchesTab
+              repoId={repoId}
+              currentBranch={currentBranch}
+              repoUrl={repoUrl}
+              isRepoWorktree={isRepoWorktree}
+            />
           )}
         </div>
 
         {selectedFile && !isMobile && (
           <div className="flex-1 overflow-hidden flex flex-col">
             <div className="flex items-center justify-between px-3 py-2 border-b border-border">
-              <span className="text-sm font-medium truncate">{selectedFile.path}</span>
+              <span className="text-sm font-medium truncate">
+                {selectedFile.path}
+              </span>
               <Button
                 variant="ghost"
                 size="sm"
@@ -199,13 +228,17 @@ export function SourceControlPanel({
               </Button>
             </div>
             <div className="flex-1 overflow-auto">
-              <FileDiffView repoId={repoId} filePath={selectedFile.path} includeStaged={selectedFile.staged} />
+              <FileDiffView
+                repoId={repoId}
+                filePath={selectedFile.path}
+                includeStaged={selectedFile.staged}
+              />
             </div>
           </div>
         )}
       </div>
     </div>
-  )
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -213,17 +246,19 @@ export function SourceControlPanel({
         mobileFullscreen
         hideCloseButton={isMobile}
         className={cn(
-          'p-0 flex flex-col bg-card border-border',
-          isMobile ? 'h-full' : 'w-[90vw] sm:max-w-6xl h-[90vh]'
+          "p-0 flex flex-col bg-card border-border",
+          isMobile ? "h-full" : "w-[90vw] sm:max-w-6xl h-[90vh]",
         )}
       >
-        <DialogHeader className={cn(
-          'px-4 py-3 border-b border-border flex-shrink-0',
-          isMobile && 'relative'
-        )}>
+        <DialogHeader
+          className={cn(
+            "px-4 py-3 border-b border-border flex-shrink-0",
+            isMobile && "relative",
+          )}
+        >
           <DialogTitle className="flex items-center gap-2">
             <GitBranch className="w-5 h-5" />
-            {isMobile && repoName ? repoName : 'Source Control'}
+            {isMobile && repoName ? repoName : "Source Control"}
           </DialogTitle>
           {isMobile && (
             <Button
@@ -236,10 +271,8 @@ export function SourceControlPanel({
             </Button>
           )}
         </DialogHeader>
-        <div className="flex-1 overflow-hidden">
-          {content}
-        </div>
+        <div className="flex-1 overflow-hidden">{content}</div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

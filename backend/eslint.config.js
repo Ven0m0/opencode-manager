@@ -1,37 +1,34 @@
-import js from '@eslint/js'
-import tseslint from 'typescript-eslint'
-import { defineConfig, globalIgnores } from 'eslint/config'
+import js from "@eslint/js";
+import { defineConfig, globalIgnores } from "eslint/config";
+import tseslint from "typescript-eslint";
 
 export default defineConfig([
-  globalIgnores(['dist', '.env*', 'coverage', 'src/utils/logger.ts']),
+  globalIgnores(["dist", ".env*", "coverage", "src/utils/logger.ts"]),
   {
-    files: ['**/*.ts'],
-    extends: [
-      js.configs.recommended,
-      tseslint.configs.recommended,
-    ],
+    files: ["**/*.ts"],
+    extends: [js.configs.recommended, tseslint.configs.recommended],
     languageOptions: {
       ecmaVersion: 2022,
       globals: {
-        process: 'readonly',
-        Buffer: 'readonly',
-        console: 'readonly',
+        process: "readonly",
+        Buffer: "readonly",
+        console: "readonly",
       },
       parserOptions: {
         project: true,
       },
     },
     rules: {
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': 'warn',
-      'no-useless-escape': 'warn',
+      "no-console": ["warn", { allow: ["warn", "error"] }],
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": "warn",
+      "no-useless-escape": "warn",
     },
   },
   {
-    files: ['test/**/*.ts'],
+    files: ["test/**/*.ts"],
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
+      "@typescript-eslint/no-explicit-any": "off",
     },
   },
-])
+]);

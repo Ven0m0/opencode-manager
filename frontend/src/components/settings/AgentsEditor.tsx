@@ -1,63 +1,66 @@
-import { useState } from 'react'
-import { Plus, Trash2, Edit } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogTrigger } from '@/components/ui/dialog'
-import { AgentDialog } from './AgentDialog'
+import { Edit, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { AgentDialog } from "./AgentDialog";
 
 interface Agent {
-  prompt?: string
-  description?: string
-  mode?: 'subagent' | 'primary' | 'all'
-  temperature?: number
-  topP?: number
-  top_p?: number
-  model?: string
-  tools?: Record<string, boolean>
+  prompt?: string;
+  description?: string;
+  mode?: "subagent" | "primary" | "all";
+  temperature?: number;
+  topP?: number;
+  top_p?: number;
+  model?: string;
+  tools?: Record<string, boolean>;
   permission?: {
-    edit?: 'ask' | 'allow' | 'deny'
-    bash?: 'ask' | 'allow' | 'deny' | Record<string, 'ask' | 'allow' | 'deny'>
-    webfetch?: 'ask' | 'allow' | 'deny'
-  }
-  disable?: boolean
-  [key: string]: unknown
+    edit?: "ask" | "allow" | "deny";
+    bash?: "ask" | "allow" | "deny" | Record<string, "ask" | "allow" | "deny">;
+    webfetch?: "ask" | "allow" | "deny";
+  };
+  disable?: boolean;
+  [key: string]: unknown;
 }
 
 interface AgentsEditorProps {
-  agents: Record<string, Agent>
-  onChange: (agents: Record<string, Agent>) => void
+  agents: Record<string, Agent>;
+  onChange: (agents: Record<string, Agent>) => void;
 }
 
 export function AgentsEditor({ agents, onChange }: AgentsEditorProps) {
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [editingAgent, setEditingAgent] = useState<{ name: string; agent: Agent } | null>(null)
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editingAgent, setEditingAgent] = useState<{
+    name: string;
+    agent: Agent;
+  } | null>(null);
 
   const handleAgentSubmit = (name: string, agent: Agent) => {
     if (editingAgent) {
-      const updatedAgents = { ...agents }
-      delete updatedAgents[editingAgent.name]
-      updatedAgents[name] = agent
-      onChange(updatedAgents)
-      setEditingAgent(null)
+      const updatedAgents = { ...agents };
+      delete updatedAgents[editingAgent.name];
+      updatedAgents[name] = agent;
+      onChange(updatedAgents);
+      setEditingAgent(null);
     } else {
       const updatedAgents = {
         ...agents,
-        [name]: agent
-      }
-      onChange(updatedAgents)
-      setIsCreateDialogOpen(false)
+        [name]: agent,
+      };
+      onChange(updatedAgents);
+      setIsCreateDialogOpen(false);
     }
-  }
+  };
 
   const deleteAgent = (name: string) => {
-    const updatedAgents = { ...agents }
-    delete updatedAgents[name]
-    onChange(updatedAgents)
-  }
+    const updatedAgents = { ...agents };
+    delete updatedAgents[name];
+    onChange(updatedAgents);
+  };
 
   const startEdit = (name: string, agent: Agent) => {
-    setEditingAgent({ name, agent })
-  }
+    setEditingAgent({ name, agent });
+  };
 
   return (
     <div className="space-y-4">
@@ -65,7 +68,7 @@ export function AgentsEditor({ agents, onChange }: AgentsEditorProps) {
         <h3 className="text-lg font-semibold">Agents</h3>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className='mr-1 h-6'>
+            <Button className="mr-1 h-6">
               <Plus className="h-4 w-4" />
             </Button>
           </DialogTrigger>
@@ -80,7 +83,9 @@ export function AgentsEditor({ agents, onChange }: AgentsEditorProps) {
       {Object.keys(agents).length === 0 ? (
         <Card>
           <CardContent className="p-2 sm:p-8 text-center">
-            <p className="text-muted-foreground">No agents configured. Add your first agent to get started.</p>
+            <p className="text-muted-foreground">
+              No agents configured. Add your first agent to get started.
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -109,14 +114,18 @@ export function AgentsEditor({ agents, onChange }: AgentsEditorProps) {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className='p-2'>
+              <CardContent className="p-2">
                 <div className="space-y-2">
                   {agent.description && (
-                    <p className="text-sm text-muted-foreground">{agent.description}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {agent.description}
+                    </p>
                   )}
                   <div className="text-xs text-muted-foreground space-y-1">
                     <p>Mode: {agent.mode}</p>
-                    {agent.temperature !== undefined && <p>Temperature: {agent.temperature}</p>}
+                    {agent.temperature !== undefined && (
+                      <p>Temperature: {agent.temperature}</p>
+                    )}
                     {agent.topP !== undefined && <p>Top P: {agent.topP}</p>}
                     {agent.model && <p>Model: {agent.model}</p>}
                     {agent.disable && <p>Status: Disabled</p>}
@@ -140,5 +149,5 @@ export function AgentsEditor({ agents, onChange }: AgentsEditorProps) {
         editingAgent={editingAgent}
       />
     </div>
-  )
+  );
 }

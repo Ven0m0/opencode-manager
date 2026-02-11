@@ -1,13 +1,15 @@
-import { Database } from 'bun:sqlite'
-import { logger } from '../utils/logger'
-import { mkdirSync } from 'fs'
-import { dirname } from 'path'
-import { runMigrations } from './migrations'
+import { Database } from "bun:sqlite";
+import { mkdirSync } from "node:fs";
+import { dirname } from "node:path";
+import { logger } from "../utils/logger";
+import { runMigrations } from "./migrations";
 
-export function initializeDatabase(dbPath: string = './data/opencode.db'): Database {
-  mkdirSync(dirname(dbPath), { recursive: true })
-  const db = new Database(dbPath)
-  
+export function initializeDatabase(
+  dbPath: string = "./data/opencode.db",
+): Database {
+  mkdirSync(dirname(dbPath), { recursive: true });
+  const db = new Database(dbPath);
+
   db.run(`
     CREATE TABLE IF NOT EXISTS repos (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -132,14 +134,15 @@ export function initializeDatabase(dbPath: string = './data/opencode.db'): Datab
     );
 
     CREATE INDEX IF NOT EXISTS idx_trusted_ssh_hosts_host ON trusted_ssh_hosts(host);
-  `)
-  
-  runMigrations(db)
-  
-  db.prepare('INSERT OR IGNORE INTO user_preferences (user_id, preferences, updated_at) VALUES (?, ?, ?)')
-    .run('default', '{}', Date.now())
-  
-  logger.info('Database initialized successfully')
-  
-  return db
+  `);
+
+  runMigrations(db);
+
+  db.prepare(
+    "INSERT OR IGNORE INTO user_preferences (user_id, preferences, updated_at) VALUES (?, ?, ?)",
+  ).run("default", "{}", Date.now());
+
+  logger.info("Database initialized successfully");
+
+  return db;
 }

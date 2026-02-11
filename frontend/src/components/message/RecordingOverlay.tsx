@@ -1,15 +1,15 @@
-import { X, Mic, MicOff } from 'lucide-react'
+import { Mic, MicOff, X } from "lucide-react";
 
 interface RecordingOverlayProps {
-  interimTranscript: string
-  onStop: () => void
-  onCancel: () => void
+  interimTranscript: string;
+  onStop: () => void;
+  onCancel: () => void;
 }
 
 export function RecordingOverlay({
   interimTranscript,
   onStop,
-  onCancel
+  onCancel,
 }: RecordingOverlayProps) {
   return (
     <div className="flex flex-col gap-3 py-2">
@@ -48,5 +48,5 @@ export function RecordingOverlay({
         </button>
       </div>
     </div>
-  )
+  );
 }

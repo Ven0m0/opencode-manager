@@ -1,9 +1,9 @@
-import { memo, useCallback, useState, useEffect, useRef } from "react";
-import { FilePreview } from "./FilePreview";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { FullscreenSheet } from "@/components/ui/fullscreen-sheet";
-import type { FileInfo } from "@/types/files";
-import { GPU_ACCELERATED_STYLE, MODAL_TRANSITION_MS } from "@/lib/utils";
 import { useSwipeBack } from "@/hooks/useMobile";
+import { GPU_ACCELERATED_STYLE, MODAL_TRANSITION_MS } from "@/lib/utils";
+import type { FileInfo } from "@/types/files";
+import { FilePreview } from "./FilePreview";
 
 interface MobileFilePreviewModalProps {
   isOpen: boolean;
@@ -21,11 +21,11 @@ export const MobileFilePreviewModal = memo(function MobileFilePreviewModal({
   const [localFile, setLocalFile] = useState<FileInfo | null>(null);
   const isClosingRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   const { bind, swipeStyles } = useSwipeBack(onClose, {
     enabled: isOpen,
   });
-  
+
   useEffect(() => {
     return bind(containerRef.current);
   }, [bind]);
@@ -52,9 +52,11 @@ export const MobileFilePreviewModal = memo(function MobileFilePreviewModal({
   }
 
   return (
-    <div ref={containerRef} style={{ isolation: 'isolate' }}>
+    <div ref={containerRef} style={{ isolation: "isolate" }}>
       <FullscreenSheet style={{ ...GPU_ACCELERATED_STYLE, ...swipeStyles }}>
-        <div className={`h-full overflow-hidden bg-background pt-safe ${showFilePreviewHeader ? "" : "pb-8"}`}>
+        <div
+          className={`h-full overflow-hidden bg-background pt-safe ${showFilePreviewHeader ? "" : "pb-8"}`}
+        >
           <FilePreview
             key={localFile.path}
             file={localFile}
@@ -66,4 +68,4 @@ export const MobileFilePreviewModal = memo(function MobileFilePreviewModal({
       </FullscreenSheet>
     </div>
   );
-})
+});

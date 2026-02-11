@@ -1,81 +1,96 @@
-import { API_BASE_URL } from '@/config'
-import { fetchWrapper, FetchError } from './fetchWrapper'
+import { API_BASE_URL } from "@/config";
+import { FetchError, fetchWrapper } from "./fetchWrapper";
 
 export interface STTModelsResponse {
-  models: string[]
-  cached: boolean
+  models: string[];
+  cached: boolean;
 }
 
 export interface STTStatusResponse {
-  enabled: boolean
-  configured: boolean
-  provider: 'external' | 'builtin'
-  model: string
+  enabled: boolean;
+  configured: boolean;
+  provider: "external" | "builtin";
+  model: string;
 }
 
 export interface STTTranscribeResponse {
-  text: string
+  text: string;
 }
 
 export interface STTErrorResponse {
-  error: string
-  details?: string
+  error: string;
+  details?: string;
 }
 
 export const sttApi = {
-  getModels: async (userId = 'default', forceRefresh = false): Promise<STTModelsResponse> => {
+  getModels: async (
+    userId = "default",
+    forceRefresh = false,
+  ): Promise<STTModelsResponse> => {
     return fetchWrapper(`${API_BASE_URL}/api/stt/models`, {
-      params: { userId, ...(forceRefresh && { refresh: 'true' }) },
-    })
+      params: { userId, ...(forceRefresh && { refresh: "true" }) },
+    });
   },
 
-  getStatus: async (userId = 'default'): Promise<STTStatusResponse> => {
+  getStatus: async (userId = "default"): Promise<STTStatusResponse> => {
     return fetchWrapper(`${API_BASE_URL}/api/stt/status`, {
       params: { userId },
-    })
+    });
   },
 
   transcribe: async (
     audioBlob: Blob,
-    userId = 'default',
-    signal?: AbortSignal
+    userId = "default",
+    signal?: AbortSignal,
   ): Promise<STTTranscribeResponse> => {
-    const formData = new FormData()
+    const formData = new FormData();
 
-    const extension = audioBlob.type.includes('webm') ? 'webm' :
-                      audioBlob.type.includes('ogg') ? 'ogg' :
-                      audioBlob.type.includes('mp4') ? 'm4a' : 'webm'
-    formData.append('audio', audioBlob, `recording.${extension}`)
+    const extension = audioBlob.type.includes("webm")
+      ? "webm"
+      : audioBlob.type.includes("ogg")
+        ? "ogg"
+        : audioBlob.type.includes("mp4")
+          ? "m4a"
+          : "webm";
+    formData.append("audio", audioBlob, `recording.${extension}`);
 
-    const urlObj = new URL(`${API_BASE_URL}/api/stt/transcribe`, window.location.origin)
-    urlObj.searchParams.set('userId', userId)
+    const urlObj = new URL(
+      `${API_BASE_URL}/api/stt/transcribe`,
+      window.location.origin,
+    );
+    urlObj.searchParams.set("userId", userId);
 
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 60000)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-    const abortSignal = signal || controller.signal
+    const abortSignal = signal || controller.signal;
 
     try {
       const response = await fetch(urlObj.toString(), {
-        method: 'POST',
+        method: "POST",
         body: formData,
         signal: abortSignal,
-      })
+      });
 
-      clearTimeout(timeoutId)
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
-        const data = await response.json().catch(() => ({ error: 'Transcription failed' }))
-        throw new FetchError(data.error || 'Transcription failed', response.status)
+        const data = await response
+          .json()
+          .catch(() => ({ error: "Transcription failed" }));
+        throw new FetchError(
+          data.error || "Transcription failed",
+          response.status,
+        );
       }
 
-      return response.json()
+      return response.json();
     } catch (error) {
-      clearTimeout(timeoutId)
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new FetchError('Transcription timeout', 408, 'TIMEOUT')
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new FetchError("Transcription timeout", 408, "TIMEOUT");
       }
-      throw error
+      throw error;
     }
   },
-}
+};

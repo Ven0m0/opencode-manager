@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { NotificationPreferencesSchema, DEFAULT_NOTIFICATION_PREFERENCES } from "./notifications";
+import {
+  DEFAULT_NOTIFICATION_PREFERENCES,
+  NotificationPreferencesSchema,
+} from "./notifications";
 
 export const CustomCommandSchema = z.object({
   name: z.string(),
@@ -9,7 +12,7 @@ export const CustomCommandSchema = z.object({
 
 export const TTSConfigSchema = z.object({
   enabled: z.boolean(),
-  provider: z.enum(['external', 'builtin']).default('external'),
+  provider: z.enum(["external", "builtin"]).default("external"),
   endpoint: z.string(),
   apiKey: z.string(),
   voice: z.string(),
@@ -23,11 +26,11 @@ export const TTSConfigSchema = z.object({
 
 export const STTConfigSchema = z.object({
   enabled: z.boolean(),
-  provider: z.enum(['external', 'builtin']).default('builtin'),
+  provider: z.enum(["external", "builtin"]).default("builtin"),
   endpoint: z.string(),
   apiKey: z.string(),
   model: z.string(),
-  language: z.string().default('en-US'),
+  language: z.string().default("en-US"),
   availableModels: z.array(z.string()).optional(),
   lastModelsFetch: z.number().optional(),
 });
@@ -40,7 +43,7 @@ export const CustomAgentSchema = z.object({
 
 export type TTSConfig = {
   enabled: boolean;
-  provider: 'external' | 'builtin';
+  provider: "external" | "builtin";
   endpoint: string;
   apiKey: string;
   voice: string;
@@ -54,7 +57,7 @@ export type TTSConfig = {
 
 export type STTConfig = {
   enabled: boolean;
-  provider: 'external' | 'builtin';
+  provider: "external" | "builtin";
   endpoint: string;
   apiKey: string;
   model: string;
@@ -63,33 +66,33 @@ export type STTConfig = {
   lastModelsFetch?: number;
 };
 
-const isBrowser = typeof navigator !== 'undefined';
-const isMac = isBrowser && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-const CMD_KEY = isMac ? 'Cmd' : 'Ctrl';
+const isBrowser = typeof navigator !== "undefined";
+const isMac = isBrowser && navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+const CMD_KEY = isMac ? "Cmd" : "Ctrl";
 
 export const DEFAULT_LEADER_KEY = `${CMD_KEY}+O`;
 
 export const DEFAULT_KEYBOARD_SHORTCUTS: Record<string, string> = {
   submit: `${CMD_KEY}+Enter`,
-  abort: 'Escape',
-  toggleMode: 'T',
-  undo: 'Z',
-  redo: 'Shift+Z',
-  compact: 'K',
-  fork: 'F',
-  settings: ',',
-  sessions: 'S',
-  newSession: 'N',
-  closeSession: 'W',
-  toggleSidebar: 'B',
-  selectModel: 'M',
+  abort: "Escape",
+  toggleMode: "T",
+  undo: "Z",
+  redo: "Shift+Z",
+  compact: "K",
+  fork: "F",
+  settings: ",",
+  sessions: "S",
+  newSession: "N",
+  closeSession: "W",
+  toggleSidebar: "B",
+  selectModel: "M",
   variantCycle: `${CMD_KEY}+T`,
 };
 
 export const GitCredentialSchema = z.object({
   name: z.string(),
   host: z.string(),
-  type: z.enum(['pat', 'ssh']).default('pat'),
+  type: z.enum(["pat", "ssh"]).default("pat"),
   token: z.string().optional(),
   sshPrivateKey: z.string().optional(),
   sshPrivateKeyEncrypted: z.string().optional(),
@@ -108,8 +111,8 @@ export const GitIdentitySchema = z.object({
 export type GitIdentity = z.infer<typeof GitIdentitySchema>;
 
 export const DEFAULT_GIT_IDENTITY: GitIdentity = {
-  name: 'OpenCode Agent',
-  email: '',
+  name: "OpenCode Agent",
+  email: "",
 };
 
 export const UserPreferencesSchema = z.object({
@@ -137,7 +140,7 @@ export const UserPreferencesSchema = z.object({
 
 export const DEFAULT_TTS_CONFIG: TTSConfig = {
   enabled: false,
-  provider: 'external',
+  provider: "external",
   endpoint: "https://api.openai.com",
   apiKey: "",
   voice: "alloy",
@@ -151,11 +154,11 @@ export const DEFAULT_TTS_CONFIG: TTSConfig = {
 
 export const DEFAULT_STT_CONFIG: STTConfig = {
   enabled: false,
-  provider: 'builtin',
+  provider: "builtin",
   endpoint: "https://api.openai.com",
   apiKey: "",
-  model: '',
-  language: 'en-US',
+  model: "",
+  language: "en-US",
   availableModels: [],
   lastModelsFetch: 0,
 };
@@ -168,7 +171,7 @@ export const DEFAULT_USER_PREFERENCES = {
   expandToolCalls: false,
   expandDiffs: true,
   leaderKey: DEFAULT_LEADER_KEY,
-  directShortcuts: ['submit', 'abort'],
+  directShortcuts: ["submit", "abort"],
   keyboardShortcuts: DEFAULT_KEYBOARD_SHORTCUTS,
   customCommands: [],
   customAgents: [],

@@ -10,7 +10,7 @@ export const notificationsApi = {
   subscribe: async (
     subscription: PushSubscriptionJSON,
     deviceName?: string,
-    userId = 'default'
+    userId = "default",
   ): Promise<{ subscription: PushSubscriptionRecord }> => {
     return fetchWrapper(`${API_BASE_URL}/api/notifications/subscribe`, {
       method: "POST",
@@ -24,7 +24,10 @@ export const notificationsApi = {
     });
   },
 
-  unsubscribe: async (endpoint: string, userId = 'default'): Promise<{ success: boolean }> => {
+  unsubscribe: async (
+    endpoint: string,
+    userId = "default",
+  ): Promise<{ success: boolean }> => {
     return fetchWrapper(`${API_BASE_URL}/api/notifications/subscribe`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -33,7 +36,9 @@ export const notificationsApi = {
     });
   },
 
-  getSubscriptions: async (userId = 'default'): Promise<{
+  getSubscriptions: async (
+    userId = "default",
+  ): Promise<{
     subscriptions: PushSubscriptionRecord[];
   }> => {
     return fetchWrapper(`${API_BASE_URL}/api/notifications/subscriptions`, {
@@ -43,15 +48,17 @@ export const notificationsApi = {
 
   removeSubscription: async (
     id: number,
-    userId = 'default'
+    userId = "default",
   ): Promise<{ success: boolean }> => {
     return fetchWrapper(
       `${API_BASE_URL}/api/notifications/subscriptions/${id}`,
-      { method: "DELETE", params: { userId } }
+      { method: "DELETE", params: { userId } },
     );
   },
 
-  sendTest: async (userId = 'default'): Promise<{
+  sendTest: async (
+    userId = "default",
+  ): Promise<{
     success: boolean;
     devicesNotified: number;
   }> => {

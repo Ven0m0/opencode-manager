@@ -1,10 +1,10 @@
-import { Bell, HelpCircle } from 'lucide-react'
-import { PendingActionBadge } from '@/components/ui/pending-action-badge'
-import { usePermissions, useQuestions } from '@/contexts/EventContext'
+import { Bell, HelpCircle } from "lucide-react";
+import { PendingActionBadge } from "@/components/ui/pending-action-badge";
+import { usePermissions, useQuestions } from "@/contexts/EventContext";
 
 export function PendingActionsGroup() {
-  const { pendingCount: permissionCount, setShowDialog } = usePermissions()
-  const { pendingCount: questionCount, navigateToCurrent } = useQuestions()
+  const { pendingCount: permissionCount, setShowDialog } = usePermissions();
+  const { pendingCount: questionCount, navigateToCurrent } = useQuestions();
 
   return (
     <>
@@ -23,5 +23,5 @@ export function PendingActionsGroup() {
         label="question"
       />
     </>
-  )
+  );
 }

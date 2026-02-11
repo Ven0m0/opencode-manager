@@ -18,5 +18,5 @@ export function RepoCardSkeleton() {
         </div>
       </div>
     </div>
-  )
+  );
 }

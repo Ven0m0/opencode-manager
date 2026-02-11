@@ -1,31 +1,31 @@
-import { useState } from 'react'
-import { useLoaderData } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { useAuth } from '@/hooks/useAuth'
-import { useTheme } from '@/hooks/useTheme'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Github, KeyRound, Mail, AlertCircle } from 'lucide-react'
-import type { AuthConfig } from '@/lib/auth-loaders'
+import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertCircle, Github, KeyRound, Loader2, Mail } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useLoaderData } from "react-router-dom";
+import { z } from "zod";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
+import type { AuthConfig } from "@/lib/auth-loaders";
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
-})
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
 
-type LoginFormData = z.infer<typeof loginSchema>
+type LoginFormData = z.infer<typeof loginSchema>;
 
 export function Login() {
-  const { signInWithEmail, signInWithProvider, signInWithPasskey } = useAuth()
-  const { config } = useLoaderData() as { config: AuthConfig }
-  const theme = useTheme()
-  const [error, setError] = useState<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [oauthLoading, setOauthLoading] = useState<string | null>(null)
+  const { signInWithEmail, signInWithProvider, signInWithPasskey } = useAuth();
+  const { config } = useLoaderData() as { config: AuthConfig };
+  const theme = useTheme();
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState<string | null>(null);
 
   const {
     register,
@@ -33,58 +33,64 @@ export function Login() {
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-  })
+  });
 
   const onSubmit = async (data: LoginFormData) => {
-    setError(null)
-    setIsSubmitting(true)
+    setError(null);
+    setIsSubmitting(true);
     try {
-      const result = await signInWithEmail(data.email, data.password)
+      const result = await signInWithEmail(data.email, data.password);
       if (result.error) {
-        setError(result.error)
+        setError(result.error);
       }
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  const handleOAuth = async (provider: 'github' | 'google' | 'discord') => {
-    setError(null)
-    setOauthLoading(provider)
+  const handleOAuth = async (provider: "github" | "google" | "discord") => {
+    setError(null);
+    setOauthLoading(provider);
     try {
-      const result = await signInWithProvider(provider)
+      const result = await signInWithProvider(provider);
       if (result.error) {
-        setError(result.error)
+        setError(result.error);
       }
     } finally {
-      setOauthLoading(null)
+      setOauthLoading(null);
     }
-  }
+  };
 
   const handlePasskey = async () => {
-    setError(null)
-    setIsSubmitting(true)
+    setError(null);
+    setIsSubmitting(true);
     try {
-      const result = await signInWithPasskey()
+      const result = await signInWithPasskey();
       if (result.error) {
-        setError(result.error)
+        setError(result.error);
       }
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  const hasOAuth = config.enabledProviders.some(p => ['github', 'google', 'discord'].includes(p))
-  const hasPasskey = config.enabledProviders.includes('passkey')
-  const hasCredentials = config.enabledProviders.includes('credentials')
+  const hasOAuth = config.enabledProviders.some((p) =>
+    ["github", "google", "discord"].includes(p),
+  );
+  const hasPasskey = config.enabledProviders.includes("passkey");
+  const hasCredentials = config.enabledProviders.includes("credentials");
 
   return (
     <div className="h-dvh flex flex-col items-center justify-center bg-gradient-to-br from-background via-background to-background p-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="flex flex-col items-center space-y-2">
-          <img 
-            src={theme === 'light' ? "/opencode-wordmark-light.svg" : "/opencode-wordmark-dark.svg"} 
-            alt="OpenCode" 
+          <img
+            src={
+              theme === "light"
+                ? "/opencode-wordmark-light.svg"
+                : "/opencode-wordmark-dark.svg"
+            }
+            alt="OpenCode"
             className="h-8 w-auto"
           />
         </div>
@@ -115,14 +121,14 @@ export function Login() {
 
           {hasOAuth && (
             <div className="space-y-2">
-              {config.enabledProviders.includes('github') && (
+              {config.enabledProviders.includes("github") && (
                 <Button
                   variant="outline"
                   className="w-full border-border hover:bg-accent transition-all duration-200"
-                  onClick={() => handleOAuth('github')}
+                  onClick={() => handleOAuth("github")}
                   disabled={!!oauthLoading}
                 >
-                  {oauthLoading === 'github' ? (
+                  {oauthLoading === "github" ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <Github className="mr-2 h-4 w-4" />
@@ -130,14 +136,14 @@ export function Login() {
                   Continue with GitHub
                 </Button>
               )}
-              {config.enabledProviders.includes('google') && (
+              {config.enabledProviders.includes("google") && (
                 <Button
                   variant="outline"
                   className="w-full border-border hover:bg-accent transition-all duration-200"
-                  onClick={() => handleOAuth('google')}
+                  onClick={() => handleOAuth("google")}
                   disabled={!!oauthLoading}
                 >
-                  {oauthLoading === 'google' ? (
+                  {oauthLoading === "google" ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -162,14 +168,14 @@ export function Login() {
                   Continue with Google
                 </Button>
               )}
-              {config.enabledProviders.includes('discord') && (
+              {config.enabledProviders.includes("discord") && (
                 <Button
                   variant="outline"
                   className="w-full border-border hover:bg-accent transition-all duration-200"
-                  onClick={() => handleOAuth('discord')}
+                  onClick={() => handleOAuth("discord")}
                   disabled={!!oauthLoading}
                 >
-                  {oauthLoading === 'discord' ? (
+                  {oauthLoading === "discord" ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -191,7 +197,9 @@ export function Login() {
                 <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or continue with email</span>
+                <span className="bg-card px-2 text-muted-foreground">
+                  Or continue with email
+                </span>
               </div>
             </div>
           )}
@@ -199,31 +207,45 @@ export function Login() {
           {hasCredentials && (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm text-muted-foreground">Email</Label>
+                <Label
+                  htmlFor="email"
+                  className="text-sm text-muted-foreground"
+                >
+                  Email
+                </Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder=""
                   className="bg-input border-border focus:border-primary"
-                  {...register('email')}
+                  {...register("email")}
                   aria-invalid={!!errors.email}
                 />
                 {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm text-muted-foreground">Password</Label>
+                <Label
+                  htmlFor="password"
+                  className="text-sm text-muted-foreground"
+                >
+                  Password
+                </Label>
                 <Input
                   id="password"
                   type="password"
                   placeholder=""
                   className="bg-input border-border focus:border-primary"
-                  {...register('password')}
+                  {...register("password")}
                   aria-invalid={!!errors.password}
                 />
                 {errors.password && (
-                  <p className="text-sm text-destructive">{errors.password.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.password.message}
+                  </p>
                 )}
               </div>
               <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -237,9 +259,7 @@ export function Login() {
             </form>
           )}
         </div>
-
-        
       </div>
     </div>
-  )
+  );
 }

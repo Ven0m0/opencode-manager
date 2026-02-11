@@ -1,202 +1,226 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import * as fs from 'fs/promises'
+import * as fs from "node:fs/promises";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock('fs/promises', () => ({
+vi.mock("fs/promises", () => ({
   mkdir: vi.fn(),
   readFile: vi.fn(),
   writeFile: vi.fn(),
   readdir: vi.fn(),
   stat: vi.fn(),
   unlink: vi.fn(),
-}))
+}));
 
-vi.mock('bun:sqlite', () => ({
+vi.mock("bun:sqlite", () => ({
   Database: vi.fn(),
-}))
-vi.mock('../../src/services/settings', () => ({
+}));
+vi.mock("../../src/services/settings", () => ({
   SettingsService: vi.fn(),
-}))
-vi.mock('../../src/utils/logger', () => ({
+}));
+vi.mock("../../src/utils/logger", () => ({
   logger: {
     info: vi.fn(),
     error: vi.fn(),
     warn: vi.fn(),
   },
-}))
+}));
 
-const mockMkdir = fs.mkdir as any
-const mockReadFile = fs.readFile as any
-const mockReaddir = fs.readdir as any
-const mockStat = fs.stat as any
-const mockUnlink = fs.unlink as any
+const mockMkdir = fs.mkdir as any;
+const mockReadFile = fs.readFile as any;
+const mockReaddir = fs.readdir as any;
+const mockStat = fs.stat as any;
+const mockUnlink = fs.unlink as any;
 
-import { createTTSRoutes, cleanupExpiredCache, getCacheStats, generateCacheKey, ensureCacheDir, getCachedAudio, getCacheSize, cleanupOldestFiles } from '../../src/routes/tts'
+import {
+  cleanupExpiredCache,
+  cleanupOldestFiles,
+  createTTSRoutes,
+  ensureCacheDir,
+  generateCacheKey,
+  getCachedAudio,
+  getCacheSize,
+  getCacheStats,
+} from "../../src/routes/tts";
 
-describe('TTS Routes', () => {
-  let mockDb: any
+describe("TTS Routes", () => {
+  let mockDb: any;
 
   beforeEach(() => {
-    vi.clearAllMocks()
-    
-    mockDb = {} as any
-    createTTSRoutes(mockDb)
-  })
+    vi.clearAllMocks();
 
-  describe('generateCacheKey', () => {
-    it('should generate consistent cache keys for identical inputs', () => {
-      const text = 'Hello world'
-      const voice = 'alloy'
-      const model = 'tts-1'
-      const speed = 1.0
-      
-      const key1 = generateCacheKey(text, voice, model, speed)
-      const key2 = generateCacheKey(text, voice, model, speed)
-      
-      expect(key1).toBe(key2)
-      expect(key1).toMatch(/^[a-f0-9]{64}$/)
-    })
+    mockDb = {} as any;
+    createTTSRoutes(mockDb);
+  });
 
-    it('should generate different cache keys for different inputs', () => {
-      const key1 = generateCacheKey('Hello', 'alloy', 'tts-1', 1.0)
-      const key2 = generateCacheKey('World', 'alloy', 'tts-1', 1.0)
-      
-      expect(key1).not.toBe(key2)
-    })
-  })
+  describe("generateCacheKey", () => {
+    it("should generate consistent cache keys for identical inputs", () => {
+      const text = "Hello world";
+      const voice = "alloy";
+      const model = "tts-1";
+      const speed = 1.0;
 
-  describe('ensureCacheDir', () => {
-    it('should create cache directory when it does not exist', async () => {
-      mockMkdir.mockResolvedValue(undefined)
-      
-      await ensureCacheDir()
-      
+      const key1 = generateCacheKey(text, voice, model, speed);
+      const key2 = generateCacheKey(text, voice, model, speed);
+
+      expect(key1).toBe(key2);
+      expect(key1).toMatch(/^[a-f0-9]{64}$/);
+    });
+
+    it("should generate different cache keys for different inputs", () => {
+      const key1 = generateCacheKey("Hello", "alloy", "tts-1", 1.0);
+      const key2 = generateCacheKey("World", "alloy", "tts-1", 1.0);
+
+      expect(key1).not.toBe(key2);
+    });
+  });
+
+  describe("ensureCacheDir", () => {
+    it("should create cache directory when it does not exist", async () => {
+      mockMkdir.mockResolvedValue(undefined);
+
+      await ensureCacheDir();
+
       expect(mockMkdir).toHaveBeenCalledWith(
-        expect.stringContaining('cache/tts'),
-        { recursive: true }
-      )
-    })
-  })
+        expect.stringContaining("cache/tts"),
+        { recursive: true },
+      );
+    });
+  });
 
-describe('getCachedAudio', () => {
-     beforeEach(() => {
-       vi.useFakeTimers()
-     })
+  describe("getCachedAudio", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
 
-     afterEach(() => {
-       vi.useRealTimers()
-     })
+    afterEach(() => {
+      vi.useRealTimers();
+    });
 
-    it('should return cached audio when file exists and is not expired', async () => {
-      const cacheKey = 'test-key'
-      const audioBuffer = Buffer.from('audio data')
+    it("should return cached audio when file exists and is not expired", async () => {
+      const cacheKey = "test-key";
+      const audioBuffer = Buffer.from("audio data");
 
       mockStat.mockResolvedValue({
         mtimeMs: Date.now() - 1000,
         size: 1024,
-      } as any)
-      mockReadFile.mockResolvedValue(audioBuffer)
-      
-      const result = await getCachedAudio(cacheKey)
-      
-      expect(result).toBe(audioBuffer)
-      expect(mockReadFile).toHaveBeenCalledWith(
-        expect.stringContaining(`${cacheKey}.mp3`)
-      )
-    })
+      } as any);
+      mockReadFile.mockResolvedValue(audioBuffer);
 
-    it('should return null when cached file has expired', async () => {
-      const cacheKey = 'test-key'
+      const result = await getCachedAudio(cacheKey);
+
+      expect(result).toBe(audioBuffer);
+      expect(mockReadFile).toHaveBeenCalledWith(
+        expect.stringContaining(`${cacheKey}.mp3`),
+      );
+    });
+
+    it("should return null when cached file has expired", async () => {
+      const cacheKey = "test-key";
 
       mockStat.mockResolvedValue({
         mtimeMs: Date.now() - 25 * 60 * 60 * 1000,
         size: 1024,
-      } as any)
-      mockUnlink.mockResolvedValue(undefined)
-      
-      const result = await getCachedAudio(cacheKey)
-      
-      expect(result).toBeNull()
+      } as any);
+      mockUnlink.mockResolvedValue(undefined);
+
+      const result = await getCachedAudio(cacheKey);
+
+      expect(result).toBeNull();
       expect(mockUnlink).toHaveBeenCalledWith(
-        expect.stringContaining(`${cacheKey}.mp3`)
-      )
-    })
+        expect.stringContaining(`${cacheKey}.mp3`),
+      );
+    });
 
-    it('should return null when cached file does not exist', async () => {
-      const cacheKey = 'nonexistent-key'
-      
-      mockStat.mockRejectedValue(new Error('File not found'))
-      
-      const result = await getCachedAudio(cacheKey)
-      
-      expect(result).toBeNull()
-    })
-  })
+    it("should return null when cached file does not exist", async () => {
+      const cacheKey = "nonexistent-key";
 
-  describe('getCacheSize', () => {
-    it('should calculate correct cache size', async () => {
-      mockReaddir.mockResolvedValue(['file1.mp3', 'file2.mp3', 'readme.txt'] as any)
+      mockStat.mockRejectedValue(new Error("File not found"));
+
+      const result = await getCachedAudio(cacheKey);
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("getCacheSize", () => {
+    it("should calculate correct cache size", async () => {
+      mockReaddir.mockResolvedValue([
+        "file1.mp3",
+        "file2.mp3",
+        "readme.txt",
+      ] as any);
       mockStat
         .mockResolvedValueOnce({ size: 1024, mtimeMs: Date.now() } as any)
-        .mockResolvedValueOnce({ size: 2048, mtimeMs: Date.now() } as any)
-      
-      const size = await getCacheSize()
-      
-      expect(size).toBe(3072) // 1024 + 2048
-    })
+        .mockResolvedValueOnce({ size: 2048, mtimeMs: Date.now() } as any);
 
-    it('should handle cache directory errors gracefully', async () => {
-      mockReaddir.mockRejectedValue(new Error('Permission denied'))
-      
-      const size = await getCacheSize()
-      
-      expect(size).toBe(0)
-    })
-  })
+      const size = await getCacheSize();
 
-  describe('cleanupMethods', () => {
-    it('should remove oldest files when cache size limit exceeded', async () => {
-      mockReaddir.mockResolvedValue(['file1.mp3', 'file2.mp3', 'file3.mp3'] as any)
+      expect(size).toBe(3072); // 1024 + 2048
+    });
+
+    it("should handle cache directory errors gracefully", async () => {
+      mockReaddir.mockRejectedValue(new Error("Permission denied"));
+
+      const size = await getCacheSize();
+
+      expect(size).toBe(0);
+    });
+  });
+
+  describe("cleanupMethods", () => {
+    it("should remove oldest files when cache size limit exceeded", async () => {
+      mockReaddir.mockResolvedValue([
+        "file1.mp3",
+        "file2.mp3",
+        "file3.mp3",
+      ] as any);
       mockStat
         .mockResolvedValueOnce({ size: 1024, mtimeMs: 1000 } as any)
         .mockResolvedValueOnce({ size: 2048, mtimeMs: 2000 } as any)
-        .mockResolvedValueOnce({ size: 1536, mtimeMs: 3000 } as any)
-      mockUnlink.mockResolvedValue(undefined)
-      
-      await cleanupOldestFiles(1500) // Need 1500 bytes freed
-      
-      expect(mockUnlink).toHaveBeenCalledWith(
-        expect.stringContaining('file1.mp3')
-      )
-    })
+        .mockResolvedValueOnce({ size: 1536, mtimeMs: 3000 } as any);
+      mockUnlink.mockResolvedValue(undefined);
 
-    it('should return cache statistics for files', async () => {
-      const currentTime = Date.now()
-      mockReaddir.mockResolvedValue(['file1.mp3', 'file2.mp3'] as any)
+      await cleanupOldestFiles(1500); // Need 1500 bytes freed
+
+      expect(mockUnlink).toHaveBeenCalledWith(
+        expect.stringContaining("file1.mp3"),
+      );
+    });
+
+    it("should return cache statistics for files", async () => {
+      const currentTime = Date.now();
+      mockReaddir.mockResolvedValue(["file1.mp3", "file2.mp3"] as any);
       mockStat
         .mockResolvedValueOnce({ size: 1024, mtimeMs: currentTime } as any)
-        .mockResolvedValueOnce({ size: 2048, mtimeMs: currentTime } as any)
-      
-      const stats = await getCacheStats()
-      
-      expect(stats.count).toBe(2)
-      expect(stats.sizeBytes).toBe(3072)
-      expect(stats.sizeMB).toBeCloseTo(0, 1)
-    })
+        .mockResolvedValueOnce({ size: 2048, mtimeMs: currentTime } as any);
 
-    it('should cleanup expired cache files', async () => {
-      mockReaddir.mockResolvedValue(['file1.mp3', 'file2.mp3', 'expired.mp3'] as any)
+      const stats = await getCacheStats();
+
+      expect(stats.count).toBe(2);
+      expect(stats.sizeBytes).toBe(3072);
+      expect(stats.sizeMB).toBeCloseTo(0, 1);
+    });
+
+    it("should cleanup expired cache files", async () => {
+      mockReaddir.mockResolvedValue([
+        "file1.mp3",
+        "file2.mp3",
+        "expired.mp3",
+      ] as any);
       mockStat
         .mockResolvedValueOnce({ size: 1024, mtimeMs: Date.now() } as any)
         .mockResolvedValueOnce({ size: 2048, mtimeMs: Date.now() } as any)
-        .mockResolvedValueOnce({ size: 1536, mtimeMs: Date.now() - 25 * 60 * 60 * 1000 } as any)
-      mockUnlink.mockResolvedValue(undefined)
-      
-      const cleaned = await cleanupExpiredCache()
-      
-      expect(cleaned).toBe(1)
+        .mockResolvedValueOnce({
+          size: 1536,
+          mtimeMs: Date.now() - 25 * 60 * 60 * 1000,
+        } as any);
+      mockUnlink.mockResolvedValue(undefined);
+
+      const cleaned = await cleanupExpiredCache();
+
+      expect(cleaned).toBe(1);
       expect(mockUnlink).toHaveBeenCalledWith(
-        expect.stringContaining('expired.mp3')
-      )
-    })
-  })
-})
+        expect.stringContaining("expired.mp3"),
+      );
+    });
+  });
+});

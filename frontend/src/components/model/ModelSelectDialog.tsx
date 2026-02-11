@@ -1,23 +1,29 @@
-import { useState, useEffect, useMemo, useCallback, memo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Check, Loader2, Search, Star } from "lucide-react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import type { Model, ProviderWithModels } from "@/api/providers";
+import {
+  formatModelName,
+  formatProviderName,
+  getProvidersWithModels,
+} from "@/api/providers";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Search, Check, Star } from "lucide-react";
 import {
-  getProvidersWithModels,
-  formatModelName,
-  formatProviderName,
-} from "@/api/providers";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useModelSelection } from "@/hooks/useModelSelection";
-import { useQuery } from "@tanstack/react-query";
-import type { Model, ProviderWithModels } from "@/api/providers";
 
 interface ModelSelectDialogProps {
   open: boolean;
@@ -72,11 +78,11 @@ interface ModelCardProps {
   onSelect: (providerId: string, modelId: string) => void;
 }
 
-const ModelCard = memo(function ModelCard({ 
-  model, 
-  provider, 
-  isSelected, 
-  onSelect 
+const ModelCard = memo(function ModelCard({
+  model,
+  provider,
+  isSelected,
+  onSelect,
 }: ModelCardProps) {
   const capabilities = useMemo(() => {
     const caps = [];
@@ -87,8 +93,10 @@ const ModelCard = memo(function ModelCard({
   }, [model.reasoning, model.tool_call, model.attachment]);
 
   const statusBadge = useMemo(() => {
-    if (model.experimental) return <Badge variant="secondary">Experimental</Badge>;
-    if (model.status === "alpha") return <Badge variant="destructive">Alpha</Badge>;
+    if (model.experimental)
+      return <Badge variant="secondary">Experimental</Badge>;
+    if (model.status === "alpha")
+      return <Badge variant="destructive">Alpha</Badge>;
     if (model.status === "beta") return <Badge variant="secondary">Beta</Badge>;
     return null;
   }, [model.experimental, model.status]);
@@ -125,7 +133,11 @@ const ModelCard = memo(function ModelCard({
       {capabilities.length > 0 && (
         <div className="flex gap-1 flex-wrap mb-2 sm:mb-3">
           {capabilities.slice(0, 2).map((cap) => (
-            <Badge key={cap} variant="secondary" className="text-xs px-1.5 py-0.5">
+            <Badge
+              key={cap}
+              variant="secondary"
+              className="text-xs px-1.5 py-0.5"
+            >
               {cap}
             </Badge>
           ))}
@@ -146,8 +158,8 @@ const ModelCard = memo(function ModelCard({
             <span className="ml-1">
               {model.limit.context >= 1000000
                 ? `${(model.limit.context / 1000000).toFixed(1)}M`
-                : model.limit.context.toLocaleString()
-              } tokens
+                : model.limit.context.toLocaleString()}{" "}
+              tokens
             </span>
           </div>
         )}
@@ -171,10 +183,10 @@ interface ModelGridProps {
   showRecent?: boolean;
 }
 
-const ModelGrid = memo(function ModelGrid({ 
-  models, 
-  currentModel, 
-  onSelect, 
+const ModelGrid = memo(function ModelGrid({
+  models,
+  currentModel,
+  onSelect,
   loading,
   recentModels = [],
   showRecent = false,
@@ -189,9 +201,7 @@ const ModelGrid = memo(function ModelGrid({
 
   if (models.length === 0 && recentModels.length === 0) {
     return (
-      <div className="text-center py-12 text-zinc-500">
-        No models found
-      </div>
+      <div className="text-center py-12 text-zinc-500">No models found</div>
     );
   }
 
@@ -271,7 +281,9 @@ const ProviderSidebar = memo(function ProviderSidebar({
             {providers.map((provider) => (
               <Button
                 key={provider.id}
-                variant={selectedProvider === provider.id ? "secondary" : "ghost"}
+                variant={
+                  selectedProvider === provider.id ? "secondary" : "ghost"
+                }
                 size="sm"
                 onClick={() => onSelect(provider.id)}
                 className="w-full justify-start text-sm"
@@ -295,7 +307,10 @@ export function ModelSelectDialog({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProvider, setSelectedProvider] = useState<string>("");
 
-  const { modelString, setModel, recentModels } = useModelSelection(opcodeUrl, directory);
+  const { modelString, setModel, recentModels } = useModelSelection(
+    opcodeUrl,
+    directory,
+  );
   const currentModel = modelString || "";
 
   const { data: allProviders = [], isLoading: loading } = useQuery({
@@ -307,7 +322,7 @@ export function ModelSelectDialog({
   });
 
   const connectedProviders = useMemo(() => {
-    return allProviders.filter(p => p.isConnected);
+    return allProviders.filter((p) => p.isConnected);
   }, [allProviders]);
 
   useEffect(() => {
@@ -322,7 +337,7 @@ export function ModelSelectDialog({
         model,
         provider,
         modelKey: `${provider.id}/${model.id}`,
-      }))
+      })),
     );
   }, [connectedProviders]);
 
@@ -339,25 +354,28 @@ export function ModelSelectDialog({
   const filteredModels = useMemo(() => {
     const search = searchQuery.toLowerCase();
     let filtered = flatModels;
-    
+
     if (selectedProvider) {
-      filtered = filtered.filter((item) => item.provider.id === selectedProvider);
-    }
-    
-    if (search) {
-      filtered = filtered.filter((item) =>
-        item.model.name.toLowerCase().includes(search) ||
-        item.model.id.toLowerCase().includes(search) ||
-        item.provider.name.toLowerCase().includes(search)
+      filtered = filtered.filter(
+        (item) => item.provider.id === selectedProvider,
       );
     }
-    
+
+    if (search) {
+      filtered = filtered.filter(
+        (item) =>
+          item.model.name.toLowerCase().includes(search) ||
+          item.model.id.toLowerCase().includes(search) ||
+          item.provider.name.toLowerCase().includes(search),
+      );
+    }
+
     return filtered;
   }, [flatModels, selectedProvider, searchQuery]);
 
   const selectedProviderData = useMemo(
-    () => connectedProviders.find(p => p.id === selectedProvider),
-    [connectedProviders, selectedProvider]
+    () => connectedProviders.find((p) => p.id === selectedProvider),
+    [connectedProviders, selectedProvider],
   );
 
   const handleProviderSelect = useCallback((providerId: string) => {
@@ -369,19 +387,27 @@ export function ModelSelectDialog({
     setSearchQuery(query);
   }, []);
 
-  const handleModelSelect = useCallback((providerId: string, modelId: string) => {
-    setModel({ providerID: providerId, modelID: modelId });
-    onOpenChange(false);
-  }, [setModel, onOpenChange]);
+  const handleModelSelect = useCallback(
+    (providerId: string, modelId: string) => {
+      setModel({ providerID: providerId, modelID: modelId });
+      onOpenChange(false);
+    },
+    [setModel, onOpenChange],
+  );
 
   const searchResetKey = selectedProvider;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent mobileFullscreen className="sm:w-[95vw] sm:max-w-7xl sm:h-[90vh] sm:max-h-[90vh] bg-background border-border text-foreground flex flex-col gap-0">
+      <DialogContent
+        mobileFullscreen
+        className="sm:w-[95vw] sm:max-w-7xl sm:h-[90vh] sm:max-h-[90vh] bg-background border-border text-foreground flex flex-col gap-0"
+      >
         <DialogHeader className="p-4 sm:p-6 pb-2 border-b border-border flex-shrink-0">
           <DialogTitle className="text-lg sm:text-xl font-semibold">
-            {selectedProvider && selectedProviderData ? `Select Model - ${selectedProviderData.name}` : 'Select Model'}
+            {selectedProvider && selectedProviderData
+              ? `Select Model - ${selectedProviderData.name}`
+              : "Select Model"}
           </DialogTitle>
         </DialogHeader>
 
@@ -394,7 +420,10 @@ export function ModelSelectDialog({
 
           <div className="flex-1 flex flex-col overflow-hidden min-w-0">
             <div className="sm:hidden p-3 border-b border-border flex-shrink-0">
-              <Select onValueChange={handleProviderSelect} value={selectedProvider || undefined}>
+              <Select
+                onValueChange={handleProviderSelect}
+                value={selectedProvider || undefined}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a provider..." />
                 </SelectTrigger>
@@ -408,10 +437,7 @@ export function ModelSelectDialog({
               </Select>
             </div>
 
-            <SearchInput 
-              key={searchResetKey} 
-              onSearch={handleSearch} 
-            />
+            <SearchInput key={searchResetKey} onSearch={handleSearch} />
 
             <div className="flex-1 overflow-y-auto p-3 sm:p-4">
               <ModelGrid
@@ -428,7 +454,10 @@ export function ModelSelectDialog({
             {currentModel && (
               <div className="p-3 sm:p-4 border-t border-border bg-muted/20 flex-shrink-0">
                 <p className="text-xs sm:text-sm text-muted-foreground">
-                  Current: <span className="font-medium text-foreground break-all">{currentModel}</span>
+                  Current:{" "}
+                  <span className="font-medium text-foreground break-all">
+                    {currentModel}
+                  </span>
                 </p>
               </div>
             )}

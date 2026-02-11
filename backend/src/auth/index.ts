@@ -1,57 +1,65 @@
-import { betterAuth } from 'better-auth'
-import { passkey } from '@better-auth/passkey'
-import { Database } from 'bun:sqlite'
-import { ENV } from '@opencode-manager/shared/config/env'
+import type { Database } from "bun:sqlite";
+import { passkey } from "@better-auth/passkey";
+import { ENV } from "@opencode-manager/shared/config/env";
+import { betterAuth } from "better-auth";
 
-export type AuthInstance = ReturnType<typeof createAuth>
+export type AuthInstance = ReturnType<typeof createAuth>;
 
 export function createAuth(db: Database) {
-  const socialProviders: Record<string, { clientId: string; clientSecret: string }> = {}
+  const socialProviders: Record<
+    string,
+    { clientId: string; clientSecret: string }
+  > = {};
 
   if (ENV.AUTH.GITHUB_CLIENT_ID && ENV.AUTH.GITHUB_CLIENT_SECRET) {
     socialProviders.github = {
       clientId: ENV.AUTH.GITHUB_CLIENT_ID,
       clientSecret: ENV.AUTH.GITHUB_CLIENT_SECRET,
-    }
+    };
   }
 
   if (ENV.AUTH.GOOGLE_CLIENT_ID && ENV.AUTH.GOOGLE_CLIENT_SECRET) {
     socialProviders.google = {
       clientId: ENV.AUTH.GOOGLE_CLIENT_ID,
       clientSecret: ENV.AUTH.GOOGLE_CLIENT_SECRET,
-    }
+    };
   }
 
   if (ENV.AUTH.DISCORD_CLIENT_ID && ENV.AUTH.DISCORD_CLIENT_SECRET) {
     socialProviders.discord = {
       clientId: ENV.AUTH.DISCORD_CLIENT_ID,
       clientSecret: ENV.AUTH.DISCORD_CLIENT_SECRET,
-    }
+    };
   }
 
-  const baseURL = ENV.AUTH.TRUSTED_ORIGINS.split(',')[0]?.trim() || `http://localhost:${ENV.SERVER.PORT}`
-  
+  const baseURL =
+    ENV.AUTH.TRUSTED_ORIGINS.split(",")[0]?.trim() ||
+    `http://localhost:${ENV.SERVER.PORT}`;
+
   const auth = betterAuth({
     baseURL,
-    basePath: '/api/auth',
+    basePath: "/api/auth",
     database: db,
     secret: ENV.AUTH.SECRET,
-    trustedOrigins: ENV.AUTH.TRUSTED_ORIGINS.split(',').map((o: string) => o.trim()),
+    trustedOrigins: ENV.AUTH.TRUSTED_ORIGINS.split(",").map((o: string) =>
+      o.trim(),
+    ),
     emailAndPassword: {
       enabled: true,
       minPasswordLength: 8,
       maxPasswordLength: 128,
       autoSignIn: true,
     },
-    socialProviders: Object.keys(socialProviders).length > 0 ? socialProviders : undefined,
+    socialProviders:
+      Object.keys(socialProviders).length > 0 ? socialProviders : undefined,
     plugins: [
       passkey({
         rpID: ENV.AUTH.PASSKEY_RP_ID,
         rpName: ENV.AUTH.PASSKEY_RP_NAME,
         origin: ENV.AUTH.PASSKEY_ORIGIN,
         authenticatorSelection: {
-          residentKey: 'required',
-          userVerification: 'preferred',
+          residentKey: "required",
+          userVerification: "preferred",
         },
       }),
     ],
@@ -66,41 +74,41 @@ export function createAuth(db: Database) {
     user: {
       additionalFields: {
         role: {
-          type: 'string',
+          type: "string",
           required: false,
-          defaultValue: 'user',
+          defaultValue: "user",
           input: false,
         },
       },
     },
     advanced: {
-      cookiePrefix: 'opencode',
+      cookiePrefix: "opencode",
       useSecureCookies: ENV.AUTH.SECURE_COOKIES,
     },
-  })
+  });
 
-  return auth
+  return auth;
 }
 
 export type Session = {
   session: {
-    id: string
-    userId: string
-    token: string
-    expiresAt: Date
-    createdAt: Date
-    updatedAt: Date
-    ipAddress?: string | null
-    userAgent?: string | null
-  }
+    id: string;
+    userId: string;
+    token: string;
+    expiresAt: Date;
+    createdAt: Date;
+    updatedAt: Date;
+    ipAddress?: string | null;
+    userAgent?: string | null;
+  };
   user: {
-    id: string
-    name: string
-    email: string
-    emailVerified: boolean
-    image?: string | null
-    createdAt: Date
-    updatedAt: Date
-    role?: string
-  }
-}
+    id: string;
+    name: string;
+    email: string;
+    emailVerified: boolean;
+    image?: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+    role?: string;
+  };
+};

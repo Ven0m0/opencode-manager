@@ -1,95 +1,106 @@
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Loader2, ExternalLink, CheckCircle } from 'lucide-react'
-import { oauthApi, type OAuthAuthorizeResponse } from '@/api/oauth'
-import { mapOAuthError, OAuthMethod } from '@/lib/oauthErrors'
+import { CheckCircle, ExternalLink, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { type OAuthAuthorizeResponse, oauthApi } from "@/api/oauth";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { mapOAuthError, OAuthMethod } from "@/lib/oauthErrors";
 
 interface OAuthCallbackDialogProps {
-  providerId: string
-  providerName: string
-  authResponse: OAuthAuthorizeResponse
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSuccess: () => void
+  providerId: string;
+  providerName: string;
+  authResponse: OAuthAuthorizeResponse;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess: () => void;
 }
 
-export function OAuthCallbackDialog({ 
-  providerId, 
-  providerName, 
+export function OAuthCallbackDialog({
+  providerId,
+  providerName,
   authResponse,
-  open, 
-  onOpenChange, 
-  onSuccess 
+  open,
+  onOpenChange,
+  onSuccess,
 }: OAuthCallbackDialogProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [loadingMessage, setLoadingMessage] = useState('')
-  const [authCode, setAuthCode] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("");
+  const [authCode, setAuthCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const handleAutoCallback = async () => {
-    setIsLoading(true)
-    setLoadingMessage('Completing authentication...')
-    setError(null)
+    setIsLoading(true);
+    setLoadingMessage("Completing authentication...");
+    setError(null);
 
     try {
-      setLoadingMessage('Restarting server with new credentials...')
-      await oauthApi.callback(providerId, { method: OAuthMethod.AUTO })
-      onSuccess()
+      setLoadingMessage("Restarting server with new credentials...");
+      await oauthApi.callback(providerId, { method: OAuthMethod.AUTO });
+      onSuccess();
     } catch (err) {
-      setError(mapOAuthError(err, 'callback'))
-      console.error('OAuth callback error:', err)
+      setError(mapOAuthError(err, "callback"));
+      console.error("OAuth callback error:", err);
     } finally {
-      setIsLoading(false)
-      setLoadingMessage('')
+      setIsLoading(false);
+      setLoadingMessage("");
     }
-  }
+  };
 
   const handleCodeCallback = async () => {
     if (!authCode.trim()) {
-      setError('Please enter the authorization code')
-      return
+      setError("Please enter the authorization code");
+      return;
     }
 
-    setIsLoading(true)
-    setLoadingMessage('Completing authentication...')
-    setError(null)
+    setIsLoading(true);
+    setLoadingMessage("Completing authentication...");
+    setError(null);
 
     try {
-      setLoadingMessage('Restarting server with new credentials...')
-      await oauthApi.callback(providerId, { method: OAuthMethod.CODE, code: authCode.trim() })
-      onSuccess()
+      setLoadingMessage("Restarting server with new credentials...");
+      await oauthApi.callback(providerId, {
+        method: OAuthMethod.CODE,
+        code: authCode.trim(),
+      });
+      onSuccess();
     } catch (err) {
-      setError(mapOAuthError(err, 'callback'))
-      console.error('OAuth callback error:', err)
+      setError(mapOAuthError(err, "callback"));
+      console.error("OAuth callback error:", err);
     } finally {
-      setIsLoading(false)
-      setLoadingMessage('')
+      setIsLoading(false);
+      setLoadingMessage("");
     }
-  }
+  };
 
   const handleOpenAuthUrl = () => {
-    window.open(authResponse.url, '_blank')
-  }
+    window.open(authResponse.url, "_blank");
+  };
 
   const handleClose = () => {
-    setError(null)
-    setAuthCode('')
-    onOpenChange(false)
-  }
+    setError(null);
+    setAuthCode("");
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="bg-card border-border max-w-lg z-[200]" overlayClassName="z-[200]">
+      <DialogContent
+        className="bg-card border-border max-w-lg z-[200]"
+        overlayClassName="z-[200]"
+      >
         <DialogHeader>
           <DialogTitle>Complete {providerName} Authentication</DialogTitle>
           <DialogDescription>
-            {authResponse.method === 'auto' 
-              ? 'Follow the instructions to complete authentication.'
-              : 'Enter the authorization code from the provider.'
-            }
+            {authResponse.method === "auto"
+              ? "Follow the instructions to complete authentication."
+              : "Enter the authorization code from the provider."}
           </DialogDescription>
         </DialogHeader>
 
@@ -100,12 +111,12 @@ export function OAuthCallbackDialog({
         )}
 
         <div className="space-y-4">
-          {authResponse.method === 'auto' ? (
+          {authResponse.method === "auto" ? (
             <div className="space-y-3">
               <div className="bg-muted p-3 rounded-md">
                 <p className="text-sm">{authResponse.instructions}</p>
               </div>
-              
+
               <Button
                 onClick={handleOpenAuthUrl}
                 className="w-full"
@@ -124,12 +135,12 @@ export function OAuthCallbackDialog({
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    {loadingMessage || 'Completing...'}
+                    {loadingMessage || "Completing..."}
                   </>
                 ) : (
                   <>
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    I Completed Authorization
+                    <CheckCircle className="h-4 w-4 mr-2" />I Completed
+                    Authorization
                   </>
                 )}
               </Button>
@@ -169,7 +180,7 @@ export function OAuthCallbackDialog({
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    {loadingMessage || 'Completing...'}
+                    {loadingMessage || "Completing..."}
                   </>
                 ) : (
                   <>
@@ -183,5 +194,5 @@ export function OAuthCallbackDialog({
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -1,18 +1,20 @@
-import { Hono } from 'hono'
-import { z } from 'zod'
-import { logger } from '../utils/logger'
-import { ENV } from '@opencode-manager/shared/config/env'
+import { ENV } from "@opencode-manager/shared/config/env";
+import { Hono } from "hono";
+import { z } from "zod";
+import { logger } from "../utils/logger";
 
 const TitleRequestSchema = z.object({
   text: z.string().min(1).max(5000),
-  sessionID: z.string().min(1)
-})
+  sessionID: z.string().min(1),
+});
 
-const OPENCODE_SERVER_URL = `http://127.0.0.1:${ENV.OPENCODE.PORT}`
+const OPENCODE_SERVER_URL = `http://127.0.0.1:${ENV.OPENCODE.PORT}`;
 
 function buildUrl(path: string, directory?: string): string {
-  const url = `${OPENCODE_SERVER_URL}${path}`
-  return directory ? `${url}${url.includes('?') ? '&' : '?'}directory=${encodeURIComponent(directory)}` : url
+  const url = `${OPENCODE_SERVER_URL}${path}`;
+  return directory
+    ? `${url}${url.includes("?") ? "&" : "?"}directory=${encodeURIComponent(directory)}`
+    : url;
 }
 
 const TITLE_PROMPT = `You are a title generator. You output ONLY a thread title. Nothing else.
@@ -50,108 +52,136 @@ Your output must be:
 "implement rate limiting" → Implementing rate limiting
 "how do I connect postgres to my API" → Connecting Postgres to API
 "best practices for React hooks" → React hooks best practices
-</examples>`
+</examples>`;
 
 export function createTitleRoutes() {
-  const app = new Hono()
+  const app = new Hono();
 
-  app.post('/', async (c) => {
+  app.post("/", async (c) => {
     try {
-      const body = await c.req.json()
-      const { text, sessionID } = TitleRequestSchema.parse(body)
-      const directory = c.req.header('directory') || ''
+      const body = await c.req.json();
+      const { text, sessionID } = TitleRequestSchema.parse(body);
+      const directory = c.req.header("directory") || "";
 
-      logger.info('Generating session title via LLM', { sessionID, textLength: text.length })
+      logger.info("Generating session title via LLM", {
+        sessionID,
+        textLength: text.length,
+      });
 
-      const configResponse = await fetch(buildUrl('/config', directory))
+      const configResponse = await fetch(buildUrl("/config", directory));
       if (!configResponse.ok) {
-        logger.error('Failed to fetch OpenCode config')
-        return c.json({ error: 'Failed to fetch config' }, 500)
+        logger.error("Failed to fetch OpenCode config");
+        return c.json({ error: "Failed to fetch config" }, 500);
       }
-      const config = await configResponse.json() as { model?: string; small_model?: string }
+      const config = (await configResponse.json()) as {
+        model?: string;
+        small_model?: string;
+      };
 
-      const modelStr = config.small_model || (config.model ?? "")
-      const [providerID, modelID] = modelStr.split('/')
+      const modelStr = config.small_model || (config.model ?? "");
+      const [providerID, modelID] = modelStr.split("/");
 
-      const titleSessionResponse = await fetch(buildUrl('/session', directory), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: 'Title Generation' })
-      })
+      const titleSessionResponse = await fetch(
+        buildUrl("/session", directory),
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: "Title Generation" }),
+        },
+      );
 
       if (!titleSessionResponse.ok) {
-        logger.error('Failed to create title generation session')
-        return c.json({ error: 'Failed to create session' }, 500)
+        logger.error("Failed to create title generation session");
+        return c.json({ error: "Failed to create session" }, 500);
       }
 
-      const titleSession = await titleSessionResponse.json() as { id: string }
-      const titleSessionID = titleSession.id
+      const titleSession = (await titleSessionResponse.json()) as {
+        id: string;
+      };
+      const titleSessionID = titleSession.id;
 
       try {
-        const promptResponse = await fetch(buildUrl(`/session/${titleSessionID}/message`, directory), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            parts: [
-              { 
-                type: 'text', 
-                text: `${TITLE_PROMPT}\n\nGenerate a title for this conversation:\n<user_message>\n${text.substring(0, 2000)}\n</user_message>` 
-              }
-            ],
-            model: { providerID, modelID }
-          })
-        })
+        const promptResponse = await fetch(
+          buildUrl(`/session/${titleSessionID}/message`, directory),
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              parts: [
+                {
+                  type: "text",
+                  text: `${TITLE_PROMPT}\n\nGenerate a title for this conversation:\n<user_message>\n${text.substring(0, 2000)}\n</user_message>`,
+                },
+              ],
+              model: { providerID, modelID },
+            }),
+          },
+        );
 
         if (!promptResponse.ok) {
-          const errorText = await promptResponse.text()
-          logger.error('Failed to generate title via LLM', { error: errorText })
-          return c.json({ error: 'LLM request failed' }, 500)
+          const errorText = await promptResponse.text();
+          logger.error("Failed to generate title via LLM", {
+            error: errorText,
+          });
+          return c.json({ error: "LLM request failed" }, 500);
         }
 
-        const result = await promptResponse.json() as { parts?: Array<{ type: string; text?: string }> }
-        
-        let title = ''
+        const result = (await promptResponse.json()) as {
+          parts?: Array<{ type: string; text?: string }>;
+        };
+
+        let title = "";
         if (result.parts) {
-          const textPart = result.parts.find((p: { type: string }) => p.type === 'text')
-          if (textPart && 'text' in textPart) {
-            title = (textPart.text as string)
-              .replace(/<think>[\s\S]*?<\/think>\s*/g, '')
-              .split('\n')
-              .map((line: string) => line.trim())
-              .find((line: string) => line.length > 0) || ''
+          const textPart = result.parts.find(
+            (p: { type: string }) => p.type === "text",
+          );
+          if (textPart && "text" in textPart) {
+            title =
+              (textPart.text as string)
+                .replace(/<think>[\s\S]*?<\/think>\s*/g, "")
+                .split("\n")
+                .map((line: string) => line.trim())
+                .find((line: string) => line.length > 0) || "";
           }
         }
 
         if (title && title.length > 100) {
-          title = title.substring(0, 97) + '...'
+          title = `${title.substring(0, 97)}...`;
         }
 
         if (title) {
-          const updateResponse = await fetch(buildUrl(`/session/${sessionID}`, directory), {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title })
-          })
+          const updateResponse = await fetch(
+            buildUrl(`/session/${sessionID}`, directory),
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ title }),
+            },
+          );
 
           if (!updateResponse.ok) {
-            logger.error('Failed to update session title')
+            logger.error("Failed to update session title");
           }
         }
 
-        logger.info('Session title generated', { sessionID, title })
-        return c.json({ title })
-
+        logger.info("Session title generated", { sessionID, title });
+        return c.json({ title });
       } finally {
         fetch(buildUrl(`/session/${titleSessionID}`, directory), {
-          method: 'DELETE'
-        }).catch(() => {})
+          method: "DELETE",
+        }).catch(() => {});
       }
-
     } catch (error) {
-      logger.error('Failed to generate session title:', error)
-      return c.json({ error: error instanceof Error ? error.message : 'Failed to generate title' }, 500)
+      logger.error("Failed to generate session title:", error);
+      return c.json(
+        {
+          error:
+            error instanceof Error ? error.message : "Failed to generate title",
+        },
+        500,
+      );
     }
-  })
+  });
 
-  return app
+  return app;
 }

@@ -1,7 +1,7 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Check, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { X, Check } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useMobile } from "@/hooks/useMobile";
 
 interface EditSessionTitleDialogProps {
@@ -11,7 +11,12 @@ interface EditSessionTitleDialogProps {
   onSave: (newTitle: string) => void;
 }
 
-export function EditSessionTitleDialog({ isOpen, currentTitle, onClose, onSave }: EditSessionTitleDialogProps) {
+export function EditSessionTitleDialog({
+  isOpen,
+  currentTitle,
+  onClose,
+  onSave,
+}: EditSessionTitleDialogProps) {
   const [editTitle, setEditTitle] = useState(currentTitle);
   const inputRef = useRef<HTMLInputElement>(null);
   const isMobile = useMobile();
@@ -23,10 +28,10 @@ export function EditSessionTitleDialog({ isOpen, currentTitle, onClose, onSave }
   }, [isOpen, currentTitle]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       setEditTitle(currentTitle);
       onClose();
-    } else if (e.key === 'Enter') {
+    } else if (e.key === "Enter") {
       if (editTitle.trim() && editTitle !== currentTitle) {
         onSave(editTitle.trim());
       }
@@ -49,15 +54,18 @@ export function EditSessionTitleDialog({ isOpen, currentTitle, onClose, onSave }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent 
+      <DialogContent
         hideCloseButton
-        className={isMobile 
-          ? "w-screen max-w-none left-0 top-0 translate-x-0 translate-y-0 rounded-none border-0 border-b bg-background p-4 gap-0 pt-safe"
-          : "p-6 gap-0"
+        className={
+          isMobile
+            ? "w-screen max-w-none left-0 top-0 translate-x-0 translate-y-0 rounded-none border-0 border-b bg-background p-4 gap-0 pt-safe"
+            : "p-6 gap-0"
         }
       >
         <form onSubmit={handleSubmit} className="min-w-0">
-          <p className="text-sm text-muted-foreground mb-2">Change session title</p>
+          <p className="text-sm text-muted-foreground mb-2">
+            Change session title
+          </p>
           <div className="relative">
             <input
               ref={inputRef}
@@ -90,10 +98,7 @@ export function EditSessionTitleDialog({ isOpen, currentTitle, onClose, onSave }
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              className="flex-1 h-10"
-            >
+            <Button type="submit" className="flex-1 h-10">
               <Check className="w-4 h-4 mr-2" />
               Save
             </Button>

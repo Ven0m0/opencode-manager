@@ -1,5 +1,3 @@
-
-
 export function MessageSkeleton() {
   return (
     <div className="flex flex-col space-y-2 p-2 overflow-x-hidden">
@@ -100,4 +98,3 @@ export function MessageSkeleton() {
     </div>
   );
 }
-

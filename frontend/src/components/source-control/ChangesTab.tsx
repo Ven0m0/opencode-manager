@@ -1,61 +1,67 @@
-import { useState } from 'react'
-import { useGitStatus, getApiErrorMessage } from '@/api/git'
-import { useGit } from '@/hooks/useGit'
-import { GitFlatFileList } from './GitFlatFileList'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { FileDiffView } from '@/components/file-browser/FileDiffView'
-import { Loader2, GitCommit, FileText, AlertCircle, X } from 'lucide-react'
+import { AlertCircle, FileText, GitCommit, Loader2, X } from "lucide-react";
+import { useState } from "react";
+import { getApiErrorMessage, useGitStatus } from "@/api/git";
+import { FileDiffView } from "@/components/file-browser/FileDiffView";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { useGit } from "@/hooks/useGit";
+import { GitFlatFileList } from "./GitFlatFileList";
 
 interface ChangesTabProps {
-  repoId: number
-  onFileSelect: (path: string, staged: boolean) => void
-  selectedFile?: {path: string, staged: boolean}
-  isMobile: boolean
+  repoId: number;
+  onFileSelect: (path: string, staged: boolean) => void;
+  selectedFile?: { path: string; staged: boolean };
+  isMobile: boolean;
 }
 
-export function ChangesTab({ repoId, onFileSelect, selectedFile, isMobile }: ChangesTabProps) {
-  const { data: status, isLoading, error } = useGitStatus(repoId)
-  const git = useGit(repoId)
-  const [commitMessage, setCommitMessage] = useState('')
-  const [apiError, setApiError] = useState<string | null>(null)
+export function ChangesTab({
+  repoId,
+  onFileSelect,
+  selectedFile,
+  isMobile,
+}: ChangesTabProps) {
+  const { data: status, isLoading, error } = useGitStatus(repoId);
+  const git = useGit(repoId);
+  const [commitMessage, setCommitMessage] = useState("");
+  const [apiError, setApiError] = useState<string | null>(null);
 
-  const stagedFiles = status?.files.filter(f => f.staged) || []
-  const unstagedFiles = status?.files.filter(f => !f.staged) || []
-  const canCommit = commitMessage.trim() && stagedFiles.length > 0 && !git.commit.isPending
+  const stagedFiles = status?.files.filter((f) => f.staged) || [];
+  const unstagedFiles = status?.files.filter((f) => !f.staged) || [];
+  const canCommit =
+    commitMessage.trim() && stagedFiles.length > 0 && !git.commit.isPending;
 
   const handleGitAction = async (action: () => Promise<unknown>) => {
     try {
-      setApiError(null)
-      await action()
+      setApiError(null);
+      await action();
     } catch (error: unknown) {
-      const message = getApiErrorMessage(error)
-      setApiError(message)
+      const message = getApiErrorMessage(error);
+      setApiError(message);
     }
-  }
+  };
 
   const handleStage = (paths: string[]) => {
-    handleGitAction(() => git.stageFiles.mutateAsync(paths))
-  }
+    handleGitAction(() => git.stageFiles.mutateAsync(paths));
+  };
 
   const handleUnstage = (paths: string[]) => {
-    handleGitAction(() => git.unstageFiles.mutateAsync(paths))
-  }
+    handleGitAction(() => git.unstageFiles.mutateAsync(paths));
+  };
 
   const handleCommit = () => {
     handleGitAction(async () => {
-      await git.commit.mutateAsync({ message: commitMessage.trim() })
-      setCommitMessage('')
-    })
-  }
+      await git.commit.mutateAsync({ message: commitMessage.trim() });
+      setCommitMessage("");
+    });
+  };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -65,10 +71,10 @@ export function ChangesTab({ repoId, onFileSelect, selectedFile, isMobile }: Cha
         <p className="text-sm">Failed to load git status</p>
         <p className="text-xs mt-1">{error.message}</p>
       </div>
-    )
+    );
   }
 
-  if (!status) return null
+  if (!status) return null;
 
   if (isMobile && selectedFile) {
     return (
@@ -77,7 +83,12 @@ export function ChangesTab({ repoId, onFileSelect, selectedFile, isMobile }: Cha
           <div className="mx-3 mt-3 p-2 rounded border bg-destructive/10 border-destructive/20 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
             <span className="text-sm text-destructive flex-1">{apiError}</span>
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setApiError(null)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={() => setApiError(null)}
+            >
               <X className="w-3 h-3" />
             </Button>
           </div>
@@ -85,8 +96,12 @@ export function ChangesTab({ repoId, onFileSelect, selectedFile, isMobile }: Cha
 
         <Tabs defaultValue="files" className="flex flex-col h-full">
           <TabsList className="flex-shrink-0">
-            <TabsTrigger value="files">Files ({stagedFiles.length + unstagedFiles.length})</TabsTrigger>
-            <TabsTrigger value="diff">{selectedFile.path.split('/').pop() || selectedFile.path}</TabsTrigger>
+            <TabsTrigger value="files">
+              Files ({stagedFiles.length + unstagedFiles.length})
+            </TabsTrigger>
+            <TabsTrigger value="diff">
+              {selectedFile.path.split("/").pop() || selectedFile.path}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="files" className="flex-1 overflow-hidden mt-0">
@@ -130,8 +145,12 @@ export function ChangesTab({ repoId, onFileSelect, selectedFile, isMobile }: Cha
                     onChange={(e) => setCommitMessage(e.target.value)}
                     className="min-h-[80px] md:text-sm resize-none"
                     onKeyDown={(e) => {
-                      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && canCommit) {
-                        handleCommit()
+                      if (
+                        (e.metaKey || e.ctrlKey) &&
+                        e.key === "Enter" &&
+                        canCommit
+                      ) {
+                        handleCommit();
                       }
                     }}
                   />
@@ -145,10 +164,12 @@ export function ChangesTab({ repoId, onFileSelect, selectedFile, isMobile }: Cha
                     ) : (
                       <GitCommit className="w-4 h-4 mr-2" />
                     )}
-                    Commit {stagedFiles.length > 0 && `(${stagedFiles.length} staged)`}
+                    Commit{" "}
+                    {stagedFiles.length > 0 && `(${stagedFiles.length} staged)`}
                   </Button>
                   <p className="text-[10px] text-muted-foreground text-center">
-                    {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+Enter to commit
+                    {navigator.platform.includes("Mac") ? "⌘" : "Ctrl"}+Enter to
+                    commit
                   </p>
                 </div>
               )}
@@ -156,11 +177,15 @@ export function ChangesTab({ repoId, onFileSelect, selectedFile, isMobile }: Cha
           </TabsContent>
 
           <TabsContent value="diff" className="flex-1 overflow-hidden mt-0">
-            <FileDiffView repoId={repoId} filePath={selectedFile.path} includeStaged={selectedFile.staged} />
+            <FileDiffView
+              repoId={repoId}
+              filePath={selectedFile.path}
+              includeStaged={selectedFile.staged}
+            />
           </TabsContent>
         </Tabs>
       </div>
-    )
+    );
   } else {
     return (
       <div className="flex flex-col h-full">
@@ -168,7 +193,12 @@ export function ChangesTab({ repoId, onFileSelect, selectedFile, isMobile }: Cha
           <div className="mx-3 mt-3 p-2 rounded border bg-destructive/10 border-destructive/20 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
             <span className="text-sm text-destructive flex-1">{apiError}</span>
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setApiError(null)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={() => setApiError(null)}
+            >
               <X className="w-3 h-3" />
             </Button>
           </div>
@@ -213,8 +243,12 @@ export function ChangesTab({ repoId, onFileSelect, selectedFile, isMobile }: Cha
               onChange={(e) => setCommitMessage(e.target.value)}
               className="min-h-[80px] md:text-sm resize-none"
               onKeyDown={(e) => {
-                if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && canCommit) {
-                  handleCommit()
+                if (
+                  (e.metaKey || e.ctrlKey) &&
+                  e.key === "Enter" &&
+                  canCommit
+                ) {
+                  handleCommit();
                 }
               }}
             />
@@ -228,14 +262,16 @@ export function ChangesTab({ repoId, onFileSelect, selectedFile, isMobile }: Cha
               ) : (
                 <GitCommit className="w-4 h-4 mr-2" />
               )}
-              Commit {stagedFiles.length > 0 && `(${stagedFiles.length} staged)`}
+              Commit{" "}
+              {stagedFiles.length > 0 && `(${stagedFiles.length} staged)`}
             </Button>
             <p className="text-[10px] text-muted-foreground text-center">
-              {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+Enter to commit
+              {navigator.platform.includes("Mac") ? "⌘" : "Ctrl"}+Enter to
+              commit
             </p>
           </div>
         )}
       </div>
-    )
+    );
   }
 }

@@ -52,4 +52,4 @@ Use **bun** for installing dependencies:
 
 - This file is merged with any AGENTS.md files in individual repositories
 - Repository-specific instructions take precedence for their respective codebases
-`
+`;

@@ -24,15 +24,18 @@ export class WebSpeechSynthesizer {
   private voicesLoaded = false;
   private onEndCallbacks: (() => void)[] = [];
   private onErrorCallbacks: ((error: string) => void)[] = [];
-  private onBoundaryCallbacks: ((charIndex: number, charLength: number) => void)[] = [];
+  private onBoundaryCallbacks: ((
+    charIndex: number,
+    charLength: number,
+  ) => void)[] = [];
   private pendingResolve: (() => void) | null = null;
   private pendingReject: ((error: Error) => void) | null = null;
 
   constructor() {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
       this.synthesis = window.speechSynthesis;
       this.voicesLoaded = false;
-      
+
       // Load voices asynchronously
       this.loadVoices();
     }
@@ -121,7 +124,7 @@ export class WebSpeechSynthesizer {
    */
   hasVoice(nameOrUri: string): boolean {
     return this.getVoices().some(
-      (v) => v.name === nameOrUri || v.voiceURI === nameOrUri
+      (v) => v.name === nameOrUri || v.voiceURI === nameOrUri,
     );
   }
 
@@ -130,7 +133,7 @@ export class WebSpeechSynthesizer {
    */
   findVoice(nameOrUri: string): WebSpeechVoice | undefined {
     return this.getVoices().find(
-      (v) => v.name === nameOrUri || v.voiceURI === nameOrUri
+      (v) => v.name === nameOrUri || v.voiceURI === nameOrUri,
     );
   }
 
@@ -153,17 +156,17 @@ export class WebSpeechSynthesizer {
    */
   speak(text: string, options: WebSpeechSynthesisOptions = {}): Promise<void> {
     if (!this.synthesis) {
-      return Promise.reject(new Error('Web Speech API is not supported'));
+      return Promise.reject(new Error("Web Speech API is not supported"));
     }
 
     if (!text || !text.trim()) {
-      return Promise.reject(new Error('No text provided'));
+      return Promise.reject(new Error("No text provided"));
     }
 
     return new Promise((resolve, reject) => {
       // Reject any pending promise (for cancellation)
       if (this.pendingReject) {
-        this.pendingReject(new Error('Cancelled'));
+        this.pendingReject(new Error("Cancelled"));
       }
 
       // Stop any ongoing speech
@@ -176,9 +179,10 @@ export class WebSpeechSynthesizer {
       if (options.voice) {
         const voice = this.findVoice(options.voice);
         if (voice) {
-          utterance.voice = this.synthesis!.getVoices().find(
-            (v) => v.voiceURI === voice.voiceURI
-          ) || null;
+          utterance.voice =
+            this.synthesis
+              ?.getVoices()
+              .find((v) => v.voiceURI === voice.voiceURI) || null;
         }
       }
 
@@ -223,7 +227,7 @@ export class WebSpeechSynthesizer {
 
       utterance.onerror = (event: SpeechSynthesisErrorEvent) => {
         this.currentUtterance = null;
-        const errorMessage = event.error || 'Speech synthesis error';
+        const errorMessage = event.error || "Speech synthesis error";
         if (this.pendingReject) {
           this.pendingReject(new Error(errorMessage));
           this.pendingResolve = null;
@@ -234,9 +238,9 @@ export class WebSpeechSynthesizer {
       };
 
       utterance.onboundary = (event) => {
-        if (event.name === 'word' || event.name === 'sentence') {
+        if (event.name === "word" || event.name === "sentence") {
           this.onBoundaryCallbacks.forEach((cb) =>
-            cb(event.charIndex, event.charLength || 0)
+            cb(event.charIndex, event.charLength || 0),
           );
         }
       };
@@ -253,19 +257,19 @@ export class WebSpeechSynthesizer {
   async speakChunked(
     text: string,
     chunkSize: number = 200,
-    options: WebSpeechSynthesisOptions = {}
+    options: WebSpeechSynthesisOptions = {},
   ): Promise<void> {
     // Split text into chunks by sentences first
     const sentences = text.split(/(?<=[.!?])\s+/);
     const chunks: string[] = [];
-    let currentChunk = '';
+    let currentChunk = "";
 
     for (const sentence of sentences) {
       if (currentChunk.length + sentence.length > chunkSize && currentChunk) {
         chunks.push(currentChunk.trim());
-        currentChunk = sentence + ' ';
+        currentChunk = `${sentence} `;
       } else {
-        currentChunk += sentence + ' ';
+        currentChunk += `${sentence} `;
       }
     }
 
@@ -279,7 +283,7 @@ export class WebSpeechSynthesizer {
         await this.speak(chunk, options);
       } catch (e) {
         // If stopped (cancelled), stop the chunked sequence
-        if (e instanceof Error && e.message === 'Cancelled') {
+        if (e instanceof Error && e.message === "Cancelled") {
           return;
         }
         // Re-throw real errors
@@ -310,7 +314,7 @@ export class WebSpeechSynthesizer {
     }
     // Reject any pending promise
     if (this.pendingReject) {
-      this.pendingReject(new Error('Cancelled'));
+      this.pendingReject(new Error("Cancelled"));
       this.pendingResolve = null;
       this.pendingReject = null;
     }
@@ -402,7 +406,7 @@ export async function getBrowserVoices(): Promise<WebSpeechVoice[]> {
  * Check if Web Speech API is available
  */
 export function isWebSpeechSupported(): boolean {
-  return typeof window !== 'undefined' && 'speechSynthesis' in window;
+  return typeof window !== "undefined" && "speechSynthesis" in window;
 }
 
 /**

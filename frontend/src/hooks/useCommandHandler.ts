@@ -1,24 +1,24 @@
-import { useState, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { createOpenCodeClient } from '@/api/opencode'
-import { useCreateSession } from '@/hooks/useOpenCode'
-import { useModelSelection } from '@/hooks/useModelSelection'
-import { showToast } from '@/lib/toast'
-import type { components } from '@/api/opencode-types'
-import { useSessionStatus } from '@/stores/sessionStatusStore'
+import { useCallback, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { createOpenCodeClient } from "@/api/opencode";
+import type { components } from "@/api/opencode-types";
+import { useModelSelection } from "@/hooks/useModelSelection";
+import { useCreateSession } from "@/hooks/useOpenCode";
+import { showToast } from "@/lib/toast";
+import { useSessionStatus } from "@/stores/sessionStatusStore";
 
-type CommandType = components['schemas']['Command']
+type CommandType = components["schemas"]["Command"];
 
 interface CommandHandlerProps {
-  opcodeUrl: string
-  sessionID: string
-  directory?: string
-  onShowSessionsDialog?: () => void
-  onShowModelsDialog?: () => void
-  onShowHelpDialog?: () => void
-  onToggleDetails?: () => boolean
-  onExportSession?: () => void
-  currentAgent?: string
+  opcodeUrl: string;
+  sessionID: string;
+  directory?: string;
+  onShowSessionsDialog?: () => void;
+  onShowModelsDialog?: () => void;
+  onShowHelpDialog?: () => void;
+  onToggleDetails?: () => boolean;
+  onExportSession?: () => void;
+  currentAgent?: string;
 }
 
 export function useCommandHandler({
@@ -30,133 +30,161 @@ export function useCommandHandler({
   onShowHelpDialog,
   onToggleDetails,
   onExportSession,
-  currentAgent
+  currentAgent,
 }: CommandHandlerProps) {
-  const navigate = useNavigate()
-  const createSession = useCreateSession(opcodeUrl, directory)
-  const { model, modelString } = useModelSelection(opcodeUrl, directory)
-  const setSessionStatus = useSessionStatus((state) => state.setStatus)
-  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate();
+  const createSession = useCreateSession(opcodeUrl, directory);
+  const { model, modelString } = useModelSelection(opcodeUrl, directory);
+  const setSessionStatus = useSessionStatus((state) => state.setStatus);
+  const [loading, setLoading] = useState(false);
 
-  const executeCommand = useCallback(async (command: CommandType, args: string = '') => {
-    if (!opcodeUrl) return
+  const executeCommand = useCallback(
+    async (command: CommandType, args: string = "") => {
+      if (!opcodeUrl) return;
 
-    setLoading(true)
-    
-    try {
-      const client = createOpenCodeClient(opcodeUrl, directory)
-      
-      switch (command.name) {
-        case 'sessions':
-        case 'resume':
-        case 'continue':
-          onShowSessionsDialog?.()
-          break
-          
-        case 'models':
-          onShowModelsDialog?.()
-          break
-          
-        case 'themes':
-          await client.sendCommand(sessionID, {
-            command: command.name,
-            arguments: args,
-            agent: currentAgent,
-            model: modelString || undefined
-          })
-          break
-          
-        case 'help':
-          onShowHelpDialog?.()
-          break
-          
-        case 'new':
-        case 'clear':
-          try {
-            const newSession = await createSession.mutateAsync({
-              agent: undefined
-            })
-            if (newSession?.id) {
-              const currentPath = window.location.pathname
-              const repoMatch = currentPath.match(/\/repos\/(\d+)\/sessions\//)
-              if (repoMatch) {
-                const repoId = repoMatch[1]
-                const newPath = `/repos/${repoId}/sessions/${newSession.id}`
-                navigate(newPath)
-              } else {
-                navigate(`/session/${newSession.id}`)
+      setLoading(true);
+
+      try {
+        const client = createOpenCodeClient(opcodeUrl, directory);
+
+        switch (command.name) {
+          case "sessions":
+          case "resume":
+          case "continue":
+            onShowSessionsDialog?.();
+            break;
+
+          case "models":
+            onShowModelsDialog?.();
+            break;
+
+          case "themes":
+            await client.sendCommand(sessionID, {
+              command: command.name,
+              arguments: args,
+              agent: currentAgent,
+              model: modelString || undefined,
+            });
+            break;
+
+          case "help":
+            onShowHelpDialog?.();
+            break;
+
+          case "new":
+          case "clear":
+            try {
+              const newSession = await createSession.mutateAsync({
+                agent: undefined,
+              });
+              if (newSession?.id) {
+                const currentPath = window.location.pathname;
+                const repoMatch = currentPath.match(
+                  /\/repos\/(\d+)\/sessions\//,
+                );
+                if (repoMatch) {
+                  const repoId = repoMatch[1];
+                  const newPath = `/repos/${repoId}/sessions/${newSession.id}`;
+                  navigate(newPath);
+                } else {
+                  navigate(`/session/${newSession.id}`);
+                }
               }
+            } catch (error) {
+              console.error("Failed to create new session:", error);
             }
-          } catch (error) {
-            console.error('Failed to create new session:', error)
-          }
-          break
-          
-        case 'details':
-          if (onToggleDetails) {
-            const expanded = onToggleDetails()
-            showToast.success(expanded ? 'Tool details expanded' : 'Tool details collapsed')
-          }
-          break
-          
-        case 'export':
-          if (onExportSession) {
-            onExportSession()
-          }
-          break
+            break;
 
-        case 'compact':
-        case 'summarize': {
-          if (!model?.providerID || !model?.modelID) {
-            showToast.error('No model selected. Please select a provider and model first.')
-            break
+          case "details":
+            if (onToggleDetails) {
+              const expanded = onToggleDetails();
+              showToast.success(
+                expanded ? "Tool details expanded" : "Tool details collapsed",
+              );
+            }
+            break;
+
+          case "export":
+            if (onExportSession) {
+              onExportSession();
+            }
+            break;
+
+          case "compact":
+          case "summarize": {
+            if (!model?.providerID || !model?.modelID) {
+              showToast.error(
+                "No model selected. Please select a provider and model first.",
+              );
+              break;
+            }
+
+            showToast.loading("Compacting session...", {
+              id: `compact-${sessionID}`,
+            });
+
+            setSessionStatus(sessionID, { type: "compact" });
+
+            await client.summarizeSession(
+              sessionID,
+              model.providerID,
+              model.modelID,
+            );
+            break;
           }
 
-          showToast.loading('Compacting session...', { id: `compact-${sessionID}` })
+          case "share":
+          case "unshare":
+          case "undo":
+          case "redo":
+          case "editor":
+          case "init":
+            await client.sendCommand(sessionID, {
+              command: command.name,
+              arguments: args,
+              agent: currentAgent,
+              model: modelString || undefined,
+            });
+            break;
 
-          setSessionStatus(sessionID, { type: 'compact' })
-
-          await client.summarizeSession(
-            sessionID,
-            model.providerID,
-            model.modelID
-          )
-          break
+          default:
+            await client.sendCommand(sessionID, {
+              command: command.name,
+              arguments: args,
+              agent: currentAgent,
+              model: modelString || undefined,
+            });
         }
-          
-        case 'share':
-        case 'unshare':
-        case 'undo':
-        case 'redo':
-        case 'editor':
-        case 'init':
-          await client.sendCommand(sessionID, {
-            command: command.name,
-            arguments: args,
-            agent: currentAgent,
-            model: modelString || undefined
-          })
-          break
-
-        default:
-          await client.sendCommand(sessionID, {
-            command: command.name,
-            arguments: args,
-            agent: currentAgent,
-            model: modelString || undefined
-          })
+      } catch (error) {
+        console.error("Failed to execute command:", error);
+        showToast.error(
+          `Command failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+        setSessionStatus(sessionID, { type: "idle" });
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to execute command:', error)
-      showToast.error(`Command failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
-      setSessionStatus(sessionID, { type: 'idle' })
-    } finally {
-      setLoading(false)
-    }
-  }, [sessionID, opcodeUrl, directory, onShowSessionsDialog, onShowModelsDialog, onShowHelpDialog, onToggleDetails, onExportSession, createSession, navigate, model, modelString, currentAgent, setSessionStatus])
+    },
+    [
+      sessionID,
+      opcodeUrl,
+      directory,
+      onShowSessionsDialog,
+      onShowModelsDialog,
+      onShowHelpDialog,
+      onToggleDetails,
+      onExportSession,
+      createSession,
+      navigate,
+      model,
+      modelString,
+      currentAgent,
+      setSessionStatus,
+    ],
+  );
 
   return {
     executeCommand,
-    loading
-  }
+    loading,
+  };
 }

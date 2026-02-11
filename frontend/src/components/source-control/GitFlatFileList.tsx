@@ -1,26 +1,33 @@
-import { useMemo, useState } from 'react'
-import { ChevronDown, ChevronRight, Plus, Minus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { GitFlatFileItem } from './GitFlatFileItem'
-import { cn } from '@/lib/utils'
-import type { GitFileStatus, GitFileStatusType } from '@/types/git'
-import { GIT_STATUS_COLORS, GIT_STATUS_LABELS } from '@/lib/git-status-styles'
+import { ChevronDown, ChevronRight, Minus, Plus } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { GIT_STATUS_COLORS, GIT_STATUS_LABELS } from "@/lib/git-status-styles";
+import { cn } from "@/lib/utils";
+import type { GitFileStatus, GitFileStatusType } from "@/types/git";
+import { GitFlatFileItem } from "./GitFlatFileItem";
 
 interface GitFlatFileListProps {
-  files: GitFileStatus[]
-  staged: boolean
-  onSelect: (path: string, staged: boolean) => void
-  onStage?: (paths: string[]) => void
-  onUnstage?: (paths: string[]) => void
-  selectedFile?: string
+  files: GitFileStatus[];
+  staged: boolean;
+  onSelect: (path: string, staged: boolean) => void;
+  onStage?: (paths: string[]) => void;
+  onUnstage?: (paths: string[]) => void;
+  selectedFile?: string;
 }
 
 interface GroupedFiles {
-  status: GitFileStatusType
-  files: GitFileStatus[]
+  status: GitFileStatusType;
+  files: GitFileStatus[];
 }
 
-const statusOrder: GitFileStatusType[] = ['modified', 'added', 'deleted', 'renamed', 'copied', 'untracked']
+const statusOrder: GitFileStatusType[] = [
+  "modified",
+  "added",
+  "deleted",
+  "renamed",
+  "copied",
+  "untracked",
+];
 
 export function GitFlatFileList({
   files,
@@ -30,68 +37,70 @@ export function GitFlatFileList({
   onUnstage,
   selectedFile,
 }: GitFlatFileListProps) {
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<GitFileStatusType>>(new Set())
+  const [collapsedGroups, setCollapsedGroups] = useState<
+    Set<GitFileStatusType>
+  >(new Set());
 
   const filteredFiles = useMemo(() => {
-    return files
-  }, [files])
+    return files;
+  }, [files]);
 
   const groupedFiles = useMemo(() => {
-    const groups: GroupedFiles[] = []
+    const groups: GroupedFiles[] = [];
 
     for (const status of statusOrder) {
-      const statusFiles = filteredFiles.filter(f => f.status === status)
+      const statusFiles = filteredFiles.filter((f) => f.status === status);
       if (statusFiles.length > 0) {
-        groups.push({ status, files: statusFiles })
+        groups.push({ status, files: statusFiles });
       }
     }
 
-    return groups
-  }, [filteredFiles])
+    return groups;
+  }, [filteredFiles]);
 
   const toggleGroup = (status: GitFileStatusType) => {
-    setCollapsedGroups(prev => {
-      const next = new Set(prev)
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
       if (next.has(status)) {
-        next.delete(status)
+        next.delete(status);
       } else {
-        next.add(status)
+        next.add(status);
       }
-      return next
-    })
-  }
+      return next;
+    });
+  };
 
   const handleStageFile = (path: string) => {
-    onStage?.([path])
-  }
+    onStage?.([path]);
+  };
 
   const handleUnstageFile = (path: string) => {
-    onUnstage?.([path])
-  }
+    onUnstage?.([path]);
+  };
 
   const handleStageAll = (e: React.MouseEvent) => {
-    e.stopPropagation()
+    e.stopPropagation();
     if (onStage) {
-      onStage(filteredFiles.map(f => f.path))
+      onStage(filteredFiles.map((f) => f.path));
     }
-  }
+  };
 
   const handleUnstageAll = (e: React.MouseEvent) => {
-    e.stopPropagation()
+    e.stopPropagation();
     if (onUnstage) {
-      onUnstage(filteredFiles.map(f => f.path))
+      onUnstage(filteredFiles.map((f) => f.path));
     }
-  }
+  };
 
   if (filteredFiles.length === 0) {
-    return null
+    return null;
   }
 
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between px-2 py-1">
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          {staged ? 'Staged Changes' : 'Changes'} ({filteredFiles.length})
+          {staged ? "Staged Changes" : "Changes"} ({filteredFiles.length})
         </span>
         <Button
           variant="ghost"
@@ -114,7 +123,7 @@ export function GitFlatFileList({
       </div>
 
       {groupedFiles.map(({ status, files: groupFiles }) => {
-        const isCollapsed = collapsedGroups.has(status)
+        const isCollapsed = collapsedGroups.has(status);
 
         return (
           <div key={status}>
@@ -127,7 +136,9 @@ export function GitFlatFileList({
               ) : (
                 <ChevronDown className="w-3 h-3 text-muted-foreground" />
               )}
-              <span className={cn('text-xs font-medium', GIT_STATUS_COLORS[status])}>
+              <span
+                className={cn("text-xs font-medium", GIT_STATUS_COLORS[status])}
+              >
                 {GIT_STATUS_LABELS[status]}
               </span>
               <span className="text-xs text-muted-foreground">
@@ -137,7 +148,7 @@ export function GitFlatFileList({
 
             {!isCollapsed && (
               <div className="ml-4">
-                {groupFiles.map(file => (
+                {groupFiles.map((file) => (
                   <GitFlatFileItem
                     key={file.path}
                     file={file}
@@ -150,8 +161,8 @@ export function GitFlatFileList({
               </div>
             )}
           </div>
-        )
+        );
       })}
     </div>
-  )
+  );
 }

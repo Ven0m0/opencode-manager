@@ -1,6 +1,6 @@
-import { Input } from "@/components/ui/input";
+import { Check, GripVertical, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Trash2, Search, GripVertical, Check } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 interface ListToolbarProps {
   searchQuery: string;

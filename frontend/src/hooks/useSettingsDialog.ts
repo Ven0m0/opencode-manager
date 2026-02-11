@@ -1,5 +1,5 @@
-import { useSettingsDialogUrl } from './useSettingsDialogUrl'
+import { useSettingsDialogUrl } from "./useSettingsDialogUrl";
 
 export const useSettingsDialog = () => {
-  return useSettingsDialogUrl()
-}
+  return useSettingsDialogUrl();
+};

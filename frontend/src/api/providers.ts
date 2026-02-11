@@ -1,6 +1,6 @@
 import { API_BASE_URL } from "@/config";
-import { settingsApi } from "./settings";
 import { fetchWrapper } from "./fetchWrapper";
+import { settingsApi } from "./settings";
 
 export type ProviderSource = "configured" | "local" | "builtin";
 
@@ -137,12 +137,14 @@ interface ConfigModel {
 
 const LOCAL_PROVIDER_IDS = ["ollama", "lmstudio", "llamacpp", "jan"];
 
-function classifyProviderSource(providerId: string, isFromConfig: boolean): ProviderSource {
+function classifyProviderSource(
+  providerId: string,
+  isFromConfig: boolean,
+): ProviderSource {
   if (!isFromConfig) return "builtin";
   if (LOCAL_PROVIDER_IDS.includes(providerId.toLowerCase())) return "local";
   return "configured";
 }
-
 
 interface OpenCodeProviderResponse {
   all: OpenCodeProvider[];
@@ -150,58 +152,73 @@ interface OpenCodeProviderResponse {
   default: Record<string, string>;
 }
 
-async function getProvidersFromOpenCodeServer(): Promise<{ providers: Provider[]; connected: string[] }> {
+async function getProvidersFromOpenCodeServer(): Promise<{
+  providers: Provider[];
+  connected: string[];
+}> {
   try {
-    const response = await fetchWrapper<OpenCodeProviderResponse>(`${API_BASE_URL}/api/opencode/provider`);
+    const response = await fetchWrapper<OpenCodeProviderResponse>(
+      `${API_BASE_URL}/api/opencode/provider`,
+    );
 
     if (response?.all && Array.isArray(response.all)) {
       const connectedSet = new Set(response.connected || []);
 
-      const providers = response.all.map((openCodeProvider: OpenCodeProvider) => {
-        const models: Record<string, Model> = {};
+      const providers = response.all.map(
+        (openCodeProvider: OpenCodeProvider) => {
+          const models: Record<string, Model> = {};
 
-        Object.entries(openCodeProvider.models).forEach(([modelId, openCodeModel]) => {
-          models[modelId] = {
-            id: modelId,
-            name: openCodeModel.name,
-            attachment: openCodeModel.capabilities.attachment,
-            reasoning: openCodeModel.capabilities.reasoning,
-            temperature: openCodeModel.capabilities.temperature,
-            tool_call: openCodeModel.capabilities.toolcall,
-            cost: {
-              input: openCodeModel.cost.input,
-              output: openCodeModel.cost.output,
-              cache_read: openCodeModel.cost.cache.read,
-              cache_write: openCodeModel.cost.cache.write,
+          Object.entries(openCodeProvider.models).forEach(
+            ([modelId, openCodeModel]) => {
+              models[modelId] = {
+                id: modelId,
+                name: openCodeModel.name,
+                attachment: openCodeModel.capabilities.attachment,
+                reasoning: openCodeModel.capabilities.reasoning,
+                temperature: openCodeModel.capabilities.temperature,
+                tool_call: openCodeModel.capabilities.toolcall,
+                cost: {
+                  input: openCodeModel.cost.input,
+                  output: openCodeModel.cost.output,
+                  cache_read: openCodeModel.cost.cache.read,
+                  cache_write: openCodeModel.cost.cache.write,
+                },
+                limit: {
+                  context: openCodeModel.limit.context,
+                  output: openCodeModel.limit.output,
+                },
+                modalities: {
+                  input: Object.keys(openCodeModel.capabilities.input).filter(
+                    (key) =>
+                      openCodeModel.capabilities.input[
+                        key as keyof typeof openCodeModel.capabilities.input
+                      ],
+                  ) as ("text" | "audio" | "image" | "video" | "pdf")[],
+                  output: Object.keys(openCodeModel.capabilities.output).filter(
+                    (key) =>
+                      openCodeModel.capabilities.output[
+                        key as keyof typeof openCodeModel.capabilities.output
+                      ],
+                  ) as ("text" | "audio" | "image" | "video" | "pdf")[],
+                },
+                provider: {
+                  npm: openCodeModel.api.npm,
+                },
+                variants: openCodeModel.variants,
+              };
             },
-            limit: {
-              context: openCodeModel.limit.context,
-              output: openCodeModel.limit.output,
-            },
-            modalities: {
-              input: Object.keys(openCodeModel.capabilities.input).filter(
-                (key) => openCodeModel.capabilities.input[key as keyof typeof openCodeModel.capabilities.input]
-              ) as ("text" | "audio" | "image" | "video" | "pdf")[],
-              output: Object.keys(openCodeModel.capabilities.output).filter(
-                (key) => openCodeModel.capabilities.output[key as keyof typeof openCodeModel.capabilities.output]
-              ) as ("text" | "audio" | "image" | "video" | "pdf")[],
-            },
-            provider: {
-              npm: openCodeModel.api.npm,
-            },
-            variants: openCodeModel.variants,
+          );
+
+          return {
+            id: openCodeProvider.id,
+            name: openCodeProvider.name,
+            env: openCodeProvider.env,
+            models,
+            options: openCodeProvider.options,
+            isConnected: connectedSet.has(openCodeProvider.id),
           };
-        });
-
-        return {
-          id: openCodeProvider.id,
-          name: openCodeProvider.name,
-          env: openCodeProvider.env,
-          models,
-          options: openCodeProvider.options,
-          isConnected: connectedSet.has(openCodeProvider.id),
-        };
-      });
+        },
+      );
 
       return { providers, connected: response.connected || [] };
     }
@@ -212,35 +229,49 @@ async function getProvidersFromOpenCodeServer(): Promise<{ providers: Provider[]
   return { providers: [], connected: [] };
 }
 
-export async function getProviders(): Promise<{ providers: Provider[]; connected: string[] }> {
+export async function getProviders(): Promise<{
+  providers: Provider[];
+  connected: string[];
+}> {
   return await getProvidersFromOpenCodeServer();
 }
 
-async function getConfiguredProviders(connectedIds: Set<string>): Promise<ProviderWithModels[]> {
+async function getConfiguredProviders(
+  connectedIds: Set<string>,
+): Promise<ProviderWithModels[]> {
   try {
     const config = await settingsApi.getDefaultOpenCodeConfig();
     if (!config?.content?.provider) return [];
 
-    const configProviders = config.content.provider as Record<string, ConfigProvider>;
+    const configProviders = config.content.provider as Record<
+      string,
+      ConfigProvider
+    >;
     const result: ProviderWithModels[] = [];
 
-    for (const [providerId, providerConfig] of Object.entries(configProviders)) {
+    for (const [providerId, providerConfig] of Object.entries(
+      configProviders,
+    )) {
       if (!providerConfig || typeof providerConfig !== "object") continue;
 
       const source = classifyProviderSource(providerId, true);
       const models: Model[] = [];
 
       if (providerConfig.models) {
-        for (const [modelId, modelConfig] of Object.entries(providerConfig.models)) {
+        for (const [modelId, modelConfig] of Object.entries(
+          providerConfig.models,
+        )) {
           if (!modelConfig || typeof modelConfig !== "object") continue;
 
           models.push({
             id: modelId,
             name: modelConfig.name || modelId,
-            limit: modelConfig.limit ? {
-              context: modelConfig.limit.context || 0,
-              output: modelConfig.limit.output || 0,
-            } : undefined,
+            limit: modelConfig.limit
+              ? {
+                  context: modelConfig.limit.context || 0,
+                  output: modelConfig.limit.output || 0,
+                }
+              : undefined,
           });
         }
       }
@@ -274,11 +305,13 @@ export async function getProvidersWithModels(): Promise<ProviderWithModels[]> {
   const builtinResult: ProviderWithModels[] = builtinProviders
     .filter((provider) => !configuredIds.has(provider.id))
     .map((provider) => {
-      const models = Object.entries(provider.models || {}).map(([id, model]) => ({
-        ...model,
-        id: id,
-        name: model.name || id,
-      }));
+      const models = Object.entries(provider.models || {}).map(
+        ([id, model]) => ({
+          ...model,
+          id: id,
+          name: model.name || id,
+        }),
+      );
       return {
         id: provider.id,
         name: provider.name,
@@ -326,28 +359,36 @@ export function formatProviderName(
 
 export const providerCredentialsApi = {
   list: async (): Promise<string[]> => {
-    const { providers } = await fetchWrapper<{ providers: string[] }>(`${API_BASE_URL}/api/providers/credentials`);
+    const { providers } = await fetchWrapper<{ providers: string[] }>(
+      `${API_BASE_URL}/api/providers/credentials`,
+    );
     return providers;
   },
 
   getStatus: async (providerId: string): Promise<boolean> => {
     const { hasCredentials } = await fetchWrapper<{ hasCredentials: boolean }>(
-      `${API_BASE_URL}/api/providers/${providerId}/credentials/status`
+      `${API_BASE_URL}/api/providers/${providerId}/credentials/status`,
     );
     return hasCredentials;
   },
 
   set: async (providerId: string, apiKey: string): Promise<void> => {
-    await fetchWrapper(`${API_BASE_URL}/api/providers/${providerId}/credentials`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ apiKey }),
-    });
+    await fetchWrapper(
+      `${API_BASE_URL}/api/providers/${providerId}/credentials`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey }),
+      },
+    );
   },
 
   delete: async (providerId: string): Promise<void> => {
-    await fetchWrapper(`${API_BASE_URL}/api/providers/${providerId}/credentials`, {
-      method: 'DELETE',
-    });
+    await fetchWrapper(
+      `${API_BASE_URL}/api/providers/${providerId}/credentials`,
+      {
+        method: "DELETE",
+      },
+    );
   },
 };

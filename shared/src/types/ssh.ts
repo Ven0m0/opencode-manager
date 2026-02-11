@@ -1,1 +1,5 @@
-export type { SSHHostKeyRequest, SSHHostKeyResponse, TrustedSSHHost } from '../schemas/ssh'
+export type {
+  SSHHostKeyRequest,
+  SSHHostKeyResponse,
+  TrustedSSHHost,
+} from "../schemas/ssh";

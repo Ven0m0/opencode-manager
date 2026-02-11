@@ -1,109 +1,115 @@
 export class FetchError extends Error {
-  statusCode?: number
-  code?: string
+  statusCode?: number;
+  code?: string;
 
   constructor(message: string, statusCode?: number, code?: string) {
-    super(message)
-    this.name = 'FetchError'
-    this.statusCode = statusCode
-    this.code = code
+    super(message);
+    this.name = "FetchError";
+    this.statusCode = statusCode;
+    this.code = code;
   }
 }
 
 interface ApiError {
-  error?: string
-  code?: string
-  message?: string
+  error?: string;
+  code?: string;
+  message?: string;
 }
 
 interface FetchWrapperOptions extends RequestInit {
-  timeout?: number
-  params?: Record<string, string | number | boolean | undefined | unknown>
+  timeout?: number;
+  params?: Record<string, string | number | boolean | undefined | unknown>;
 }
 
 async function handleResponse(response: Response): Promise<never> {
-  const data: ApiError = await response.json().catch(() => ({ error: 'An error occurred' }))
-  throw new FetchError(data.error || data.message || 'Request failed', response.status, data.code)
+  const data: ApiError = await response
+    .json()
+    .catch(() => ({ error: "An error occurred" }));
+  throw new FetchError(
+    data.error || data.message || "Request failed",
+    response.status,
+    data.code,
+  );
 }
 
 async function fetchWrapper<T = unknown>(
   url: string,
-  options: FetchWrapperOptions = {}
+  options: FetchWrapperOptions = {},
 ): Promise<T> {
-  const { timeout = 30000, params, ...fetchOptions } = options
+  const { timeout = 30000, params, ...fetchOptions } = options;
 
-  const urlObj = new URL(url, window.location.origin)
+  const urlObj = new URL(url, window.location.origin);
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) {
-        urlObj.searchParams.append(key, String(value))
+        urlObj.searchParams.append(key, String(value));
       }
-    })
+    });
   }
 
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), timeout)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
     const response = await fetch(urlObj.toString(), {
       ...fetchOptions,
       signal: controller.signal,
-    })
+    });
 
-    clearTimeout(timeoutId)
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
-      await handleResponse(response)
+      await handleResponse(response);
     }
 
-    return response.json()
+    return response.json();
   } catch (error) {
-    clearTimeout(timeoutId)
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new FetchError('Request timeout', 408, 'TIMEOUT')
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new FetchError("Request timeout", 408, "TIMEOUT");
     }
-    throw error
+    throw error;
   }
 }
 
 async function fetchWrapperBlob(
   url: string,
-  options: FetchWrapperOptions = {}
+  options: FetchWrapperOptions = {},
 ): Promise<Blob> {
-  const { timeout = 30000, params, ...fetchOptions } = options
+  const { timeout = 30000, params, ...fetchOptions } = options;
 
-  const urlObj = new URL(url, window.location.origin)
+  const urlObj = new URL(url, window.location.origin);
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) {
-        urlObj.searchParams.append(key, String(value))
+        urlObj.searchParams.append(key, String(value));
       }
-    })
+    });
   }
 
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), timeout)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
     const response = await fetch(urlObj.toString(), {
       ...fetchOptions,
       signal: controller.signal,
-    })
+    });
 
-    clearTimeout(timeoutId)
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
-      await handleResponse(response)
+      await handleResponse(response);
     }
 
-    return response.blob()
+    return response.blob();
   } catch (error) {
-    clearTimeout(timeoutId)
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new FetchError('Request timeout', 408, 'TIMEOUT')
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new FetchError("Request timeout", 408, "TIMEOUT");
     }
-    throw error
+    throw error;
   }
 }
 
-export { fetchWrapper, fetchWrapperBlob }
+export { fetchWrapper, fetchWrapperBlob };

@@ -1,88 +1,109 @@
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2 } from 'lucide-react'
-import { Switch } from '@/components/ui/switch'
-import { useMcpServers } from '@/hooks/useMcpServers'
-import { settingsApi } from '@/api/settings'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
+import { settingsApi } from "@/api/settings";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { useMcpServers } from "@/hooks/useMcpServers";
 
 interface AddMcpServerDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  configName?: string
-  onUpdate?: (configName: string, content: Record<string, unknown>) => Promise<void>
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  configName?: string;
+  onUpdate?: (
+    configName: string,
+    content: Record<string, unknown>,
+  ) => Promise<void>;
 }
 
 interface EnvironmentVariable {
-  key: string
-  value: string
+  key: string;
+  value: string;
 }
 
-export function AddMcpServerDialog({ open, onOpenChange, onUpdate }: AddMcpServerDialogProps) {
-  const [serverId, setServerId] = useState('')
-  const [serverType, setServerType] = useState<'local' | 'remote'>('local')
-  const [command, setCommand] = useState('')
-  const [url, setUrl] = useState('')
-  const [environment, setEnvironment] = useState<EnvironmentVariable[]>([])
-  const [timeout, setTimeout] = useState('')
-  const [enabled, setEnabled] = useState(true)
-  const [oauthEnabled, setOauthEnabled] = useState(false)
-  const [oauthClientId, setOauthClientId] = useState('')
-  const [oauthClientSecret, setOauthClientSecret] = useState('')
-  const [oauthScope, setOauthScope] = useState('')
-  
-  const queryClient = useQueryClient()
-  const { addServerAsync, isAddingServer } = useMcpServers()
+export function AddMcpServerDialog({
+  open,
+  onOpenChange,
+  onUpdate,
+}: AddMcpServerDialogProps) {
+  const [serverId, setServerId] = useState("");
+  const [serverType, setServerType] = useState<"local" | "remote">("local");
+  const [command, setCommand] = useState("");
+  const [url, setUrl] = useState("");
+  const [environment, setEnvironment] = useState<EnvironmentVariable[]>([]);
+  const [timeout, setTimeout] = useState("");
+  const [enabled, setEnabled] = useState(true);
+  const [oauthEnabled, setOauthEnabled] = useState(false);
+  const [oauthClientId, setOauthClientId] = useState("");
+  const [oauthClientSecret, setOauthClientSecret] = useState("");
+  const [oauthScope, setOauthScope] = useState("");
+
+  const queryClient = useQueryClient();
+  const { addServerAsync, isAddingServer } = useMcpServers();
 
   const addMcpServerMutation = useMutation({
     mutationFn: async () => {
-      const config = await settingsApi.getDefaultOpenCodeConfig()
-      if (!config) throw new Error('No default config found')
-      
-      const currentMcp = (config.content?.mcp as Record<string, unknown>) || {}
-      
+      const config = await settingsApi.getDefaultOpenCodeConfig();
+      if (!config) throw new Error("No default config found");
+
+      const currentMcp = (config.content?.mcp as Record<string, unknown>) || {};
+
       const mcpConfig: Record<string, unknown> = {
         type: serverType,
         enabled,
-      }
+      };
 
-      if (serverType === 'local') {
-        const commandArray = command.split(' ').filter(arg => arg.trim())
+      if (serverType === "local") {
+        const commandArray = command.split(" ").filter((arg) => arg.trim());
         if (commandArray.length === 0) {
-          throw new Error('Command is required for local MCP servers')
+          throw new Error("Command is required for local MCP servers");
         }
-        mcpConfig.command = commandArray
-        
-        const envVars: Record<string, string> = {}
-        environment.forEach(env => {
+        mcpConfig.command = commandArray;
+
+        const envVars: Record<string, string> = {};
+        environment.forEach((env) => {
           if (env.key.trim() && env.value.trim()) {
-            envVars[env.key.trim()] = env.value.trim()
+            envVars[env.key.trim()] = env.value.trim();
           }
-        })
+        });
         if (Object.keys(envVars).length > 0) {
-          mcpConfig.environment = envVars
+          mcpConfig.environment = envVars;
         }
       } else {
         if (!url.trim()) {
-          throw new Error('URL is required for remote MCP servers')
+          throw new Error("URL is required for remote MCP servers");
         }
-        mcpConfig.url = url.trim()
-        
+        mcpConfig.url = url.trim();
+
         if (oauthEnabled) {
-          const oauthConfig: Record<string, string> = {}
-          if (oauthClientId.trim()) oauthConfig.clientId = oauthClientId.trim()
-          if (oauthClientSecret.trim()) oauthConfig.clientSecret = oauthClientSecret.trim()
-          if (oauthScope.trim()) oauthConfig.scope = oauthScope.trim()
-          mcpConfig.oauth = Object.keys(oauthConfig).length > 0 ? oauthConfig : true
+          const oauthConfig: Record<string, string> = {};
+          if (oauthClientId.trim()) oauthConfig.clientId = oauthClientId.trim();
+          if (oauthClientSecret.trim())
+            oauthConfig.clientSecret = oauthClientSecret.trim();
+          if (oauthScope.trim()) oauthConfig.scope = oauthScope.trim();
+          mcpConfig.oauth =
+            Object.keys(oauthConfig).length > 0 ? oauthConfig : true;
         }
       }
 
-      if (timeout && parseInt(timeout)) {
-        mcpConfig.timeout = parseInt(timeout)
+      if (timeout && parseInt(timeout, 10)) {
+        mcpConfig.timeout = parseInt(timeout, 10);
       }
 
       const updatedConfig = {
@@ -91,95 +112,115 @@ export function AddMcpServerDialog({ open, onOpenChange, onUpdate }: AddMcpServe
           ...currentMcp,
           [serverId]: mcpConfig,
         },
-      }
+      };
 
-      await settingsApi.updateOpenCodeConfig(config.name, { content: updatedConfig })
-      
+      await settingsApi.updateOpenCodeConfig(config.name, {
+        content: updatedConfig,
+      });
+
       if (enabled) {
         const buildOauthField = () => {
-          if (serverType !== 'remote' || !oauthEnabled) return undefined
-          const cfg: Record<string, string> = {}
-          if (oauthClientId.trim()) cfg.clientId = oauthClientId.trim()
-          if (oauthClientSecret.trim()) cfg.clientSecret = oauthClientSecret.trim()
-          if (oauthScope.trim()) cfg.scope = oauthScope.trim()
-          return Object.keys(cfg).length > 0 ? cfg : true
-        }
+          if (serverType !== "remote" || !oauthEnabled) return undefined;
+          const cfg: Record<string, string> = {};
+          if (oauthClientId.trim()) cfg.clientId = oauthClientId.trim();
+          if (oauthClientSecret.trim())
+            cfg.clientSecret = oauthClientSecret.trim();
+          if (oauthScope.trim()) cfg.scope = oauthScope.trim();
+          return Object.keys(cfg).length > 0 ? cfg : true;
+        };
 
-        await addServerAsync({ 
-          name: serverId, 
+        await addServerAsync({
+          name: serverId,
           config: {
             type: serverType,
             enabled,
-            command: serverType === 'local' ? command.split(' ').filter(arg => arg.trim()) : undefined,
-            url: serverType === 'remote' ? url.trim() : undefined,
-            environment: serverType === 'local' && Object.keys(environment).length > 0 
-              ? environment.reduce((acc, env) => {
-                  if (env.key.trim() && env.value.trim()) {
-                    acc[env.key.trim()] = env.value.trim()
-                  }
-                  return acc
-                }, {} as Record<string, string>)
-              : undefined,
-            timeout: timeout && parseInt(timeout) ? parseInt(timeout) : undefined,
+            command:
+              serverType === "local"
+                ? command.split(" ").filter((arg) => arg.trim())
+                : undefined,
+            url: serverType === "remote" ? url.trim() : undefined,
+            environment:
+              serverType === "local" && Object.keys(environment).length > 0
+                ? environment.reduce(
+                    (acc, env) => {
+                      if (env.key.trim() && env.value.trim()) {
+                        acc[env.key.trim()] = env.value.trim();
+                      }
+                      return acc;
+                    },
+                    {} as Record<string, string>,
+                  )
+                : undefined,
+            timeout:
+              timeout && parseInt(timeout, 10)
+                ? parseInt(timeout, 10)
+                : undefined,
             oauth: buildOauthField(),
-          }
-        })
+          },
+        });
       }
     },
     onSuccess: async () => {
       if (onUpdate) {
-        const config = await settingsApi.getDefaultOpenCodeConfig()
+        const config = await settingsApi.getDefaultOpenCodeConfig();
         if (config) {
-          await onUpdate(config.name, config.content)
+          await onUpdate(config.name, config.content);
         }
       } else {
-        queryClient.invalidateQueries({ queryKey: ['opencode-config'] })
+        queryClient.invalidateQueries({ queryKey: ["opencode-config"] });
       }
-      queryClient.invalidateQueries({ queryKey: ['mcp-status'] })
-      handleClose()
+      queryClient.invalidateQueries({ queryKey: ["mcp-status"] });
+      handleClose();
     },
-  })
+  });
 
   const handleAddEnvironmentVar = () => {
-    setEnvironment([...environment, { key: '', value: '' }])
-  }
+    setEnvironment([...environment, { key: "", value: "" }]);
+  };
 
   const handleRemoveEnvironmentVar = (index: number) => {
-    setEnvironment(environment.filter((_, i) => i !== index))
-  }
+    setEnvironment(environment.filter((_, i) => i !== index));
+  };
 
-  const handleUpdateEnvironmentVar = (index: number, field: 'key' | 'value', value: string) => {
-    const updated = [...environment]
-    updated[index][field] = value
-    setEnvironment(updated)
-  }
+  const handleUpdateEnvironmentVar = (
+    index: number,
+    field: "key" | "value",
+    value: string,
+  ) => {
+    const updated = [...environment];
+    updated[index][field] = value;
+    setEnvironment(updated);
+  };
 
   const handleAdd = () => {
     if (serverId) {
-      addMcpServerMutation.mutate()
+      addMcpServerMutation.mutate();
     }
-  }
+  };
 
   const handleClose = () => {
-    setServerId('')
-    setServerType('local')
-    setCommand('')
-    setUrl('')
-    setEnvironment([])
-    setTimeout('')
-    setEnabled(true)
-    setOauthEnabled(false)
-    setOauthClientId('')
-    setOauthClientSecret('')
-    setOauthScope('')
-    onOpenChange(false)
-  }
+    setServerId("");
+    setServerType("local");
+    setCommand("");
+    setUrl("");
+    setEnvironment([]);
+    setTimeout("");
+    setEnabled(true);
+    setOauthEnabled(false);
+    setOauthClientId("");
+    setOauthClientSecret("");
+    setOauthScope("");
+    onOpenChange(false);
+  };
 
-  const isPending = addMcpServerMutation.isPending || isAddingServer
+  const isPending = addMcpServerMutation.isPending || isAddingServer;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] sm:max-h-[85vh] gap-0 flex flex-col p-0 md:p-6 z-[200]" overlayClassName="z-[200]">
+      <DialogContent
+        className="max-w-3xl max-h-[90vh] sm:max-h-[85vh] gap-0 flex flex-col p-0 md:p-6 z-[200]"
+        overlayClassName="z-[200]"
+      >
         <DialogHeader className="p-4 sm:p-6 border-b flex flex-row items-center justify-between space-y-0">
           <DialogTitle>Add MCP Server</DialogTitle>
         </DialogHeader>
@@ -202,7 +243,12 @@ export function AddMcpServerDialog({ open, onOpenChange, onUpdate }: AddMcpServe
 
             <div>
               <Label htmlFor="serverType">Server Type</Label>
-              <Select value={serverType} onValueChange={(value: 'local' | 'remote') => setServerType(value)}>
+              <Select
+                value={serverType}
+                onValueChange={(value: "local" | "remote") =>
+                  setServerType(value)
+                }
+              >
                 <SelectTrigger className="bg-background border-border">
                   <SelectValue />
                 </SelectTrigger>
@@ -213,7 +259,7 @@ export function AddMcpServerDialog({ open, onOpenChange, onUpdate }: AddMcpServe
               </Select>
             </div>
 
-            {serverType === 'local' ? (
+            {serverType === "local" ? (
               <div>
                 <Label htmlFor="command">Command</Label>
                 <Input
@@ -243,7 +289,7 @@ export function AddMcpServerDialog({ open, onOpenChange, onUpdate }: AddMcpServe
               </div>
             )}
 
-            {serverType === 'remote' && (
+            {serverType === "remote" && (
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
                   <Switch
@@ -256,7 +302,8 @@ export function AddMcpServerDialog({ open, onOpenChange, onUpdate }: AddMcpServe
                 {oauthEnabled && (
                   <div className="space-y-3 pl-4 border-l-2 border-border">
                     <p className="text-xs text-muted-foreground">
-                      Leave fields blank to use the server's default OAuth discovery
+                      Leave fields blank to use the server's default OAuth
+                      discovery
                     </p>
                     <div>
                       <Label htmlFor="oauthClientId">Client ID</Label>
@@ -294,7 +341,7 @@ export function AddMcpServerDialog({ open, onOpenChange, onUpdate }: AddMcpServe
               </div>
             )}
 
-            {serverType === 'local' && (
+            {serverType === "local" && (
               <div>
                 <div className="flex items-center justify-between">
                   <Label>Environment Variables</Label>
@@ -302,7 +349,7 @@ export function AddMcpServerDialog({ open, onOpenChange, onUpdate }: AddMcpServe
                     type="button"
                     variant="outline"
                     size="sm"
-                    className='h-6'
+                    className="h-6"
                     onClick={handleAddEnvironmentVar}
                   >
                     +
@@ -312,13 +359,21 @@ export function AddMcpServerDialog({ open, onOpenChange, onUpdate }: AddMcpServe
                   <div key={index} className="flex gap-2">
                     <Input
                       value={env.key}
-                      onChange={(e) => handleUpdateEnvironmentVar(index, 'key', e.target.value)}
+                      onChange={(e) =>
+                        handleUpdateEnvironmentVar(index, "key", e.target.value)
+                      }
                       placeholder="API_KEY"
                       className="bg-background border-border font-mono"
                     />
                     <Input
                       value={env.value}
-                      onChange={(e) => handleUpdateEnvironmentVar(index, 'value', e.target.value)}
+                      onChange={(e) =>
+                        handleUpdateEnvironmentVar(
+                          index,
+                          "value",
+                          e.target.value,
+                        )
+                      }
                       placeholder="your-api-key-here"
                       className="bg-background border-border font-mono"
                     />
@@ -369,15 +424,12 @@ export function AddMcpServerDialog({ open, onOpenChange, onUpdate }: AddMcpServe
           <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
-          <Button
-            onClick={handleAdd}
-            disabled={!serverId || isPending}
-          >
+          <Button onClick={handleAdd} disabled={!serverId || isPending}>
             {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Add MCP Server
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

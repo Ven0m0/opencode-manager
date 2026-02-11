@@ -1,106 +1,121 @@
-import { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Loader2, ExternalLink, Key, XCircle } from 'lucide-react'
-import type { McpAuthStartResponse } from '@/api/mcp'
+import { ExternalLink, Key, Loader2, XCircle } from "lucide-react";
+import { useState } from "react";
+import type { McpAuthStartResponse } from "@/api/mcp";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface McpOAuthDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  serverName: string
-  onAutoAuth: () => Promise<void>
-  onStartAuth: () => Promise<McpAuthStartResponse>
-  onCompleteAuth: (code: string) => Promise<void>
-  directory?: string
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  serverName: string;
+  onAutoAuth: () => Promise<void>;
+  onStartAuth: () => Promise<McpAuthStartResponse>;
+  onCompleteAuth: (code: string) => Promise<void>;
+  directory?: string;
 }
 
-export function McpOAuthDialog({ 
-  open, 
-  onOpenChange, 
+export function McpOAuthDialog({
+  open,
+  onOpenChange,
   serverName,
   onAutoAuth,
   onStartAuth,
   onCompleteAuth,
-  directory
+  directory,
 }: McpOAuthDialogProps) {
-  const [step, setStep] = useState<'method' | 'auto' | 'manual' | 'enter_code'>('method')
-  const [loading, setLoading] = useState(false)
-  const [authUrl, setAuthUrl] = useState<string | null>(null)
-  const [authCode, setAuthCode] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [step, setStep] = useState<"method" | "auto" | "manual" | "enter_code">(
+    "method",
+  );
+  const [loading, setLoading] = useState(false);
+  const [authUrl, setAuthUrl] = useState<string | null>(null);
+  const [authCode, setAuthCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const handleAutoAuth = async () => {
-    setLoading(true)
-    setError(null)
-    setStep('auto')
+    setLoading(true);
+    setError(null);
+    setStep("auto");
     try {
-      await onAutoAuth()
-      onOpenChange(false)
-      resetState()
+      await onAutoAuth();
+      onOpenChange(false);
+      resetState();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to authenticate')
-      setStep('method')
+      setError(err instanceof Error ? err.message : "Failed to authenticate");
+      setStep("method");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleStartManualAuth = async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
-      const result = await onStartAuth()
-      setAuthUrl(result.authorizationUrl)
-      setStep('manual')
+      const result = await onStartAuth();
+      setAuthUrl(result.authorizationUrl);
+      setStep("manual");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start authentication')
+      setError(
+        err instanceof Error ? err.message : "Failed to start authentication",
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleCompleteAuth = async () => {
-    if (!authCode.trim()) return
-    
-    setLoading(true)
-    setError(null)
+    if (!authCode.trim()) return;
+
+    setLoading(true);
+    setError(null);
     try {
-      await onCompleteAuth(authCode.trim())
-      onOpenChange(false)
-      resetState()
+      await onCompleteAuth(authCode.trim());
+      onOpenChange(false);
+      resetState();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to complete authentication')
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to complete authentication",
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleOpenAuthUrl = () => {
     if (authUrl) {
-      window.open(authUrl, '_blank')
-      setStep('enter_code')
+      window.open(authUrl, "_blank");
+      setStep("enter_code");
     }
-  }
+  };
 
   const resetState = () => {
-    setStep('method')
-    setAuthUrl(null)
-    setAuthCode('')
-    setError(null)
-    setLoading(false)
-  }
+    setStep("method");
+    setAuthUrl(null);
+    setAuthCode("");
+    setError(null);
+    setLoading(false);
+  };
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
-      resetState()
+      resetState();
     }
-    onOpenChange(newOpen)
-  }
+    onOpenChange(newOpen);
+  };
 
-  const scopes = directory ? 'this location' : 'global'
+  const scopes = directory ? "this location" : "global";
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -123,9 +138,11 @@ export function McpOAuthDialog({
             </Alert>
           )}
 
-          {step === 'method' && (
+          {step === "method" && (
             <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">Choose an authentication method:</p>
+              <p className="text-sm text-muted-foreground">
+                Choose an authentication method:
+              </p>
               <div className="flex flex-col gap-2">
                 <Button
                   onClick={handleAutoAuth}
@@ -177,7 +194,7 @@ export function McpOAuthDialog({
             </div>
           )}
 
-          {step === 'auto' && (
+          {step === "auto" && (
             <div className="flex items-center justify-center py-8">
               <div className="flex flex-col items-center gap-3">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -188,15 +205,13 @@ export function McpOAuthDialog({
             </div>
           )}
 
-          {step === 'manual' && authUrl && (
+          {step === "manual" && authUrl && (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Open the authorization link in your browser to begin the flow. Then paste the code below.
+                Open the authorization link in your browser to begin the flow.
+                Then paste the code below.
               </p>
-              <Button
-                onClick={handleOpenAuthUrl}
-                className="w-full"
-              >
+              <Button onClick={handleOpenAuthUrl} className="w-full">
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Open Auth Page
               </Button>
@@ -206,7 +221,7 @@ export function McpOAuthDialog({
             </div>
           )}
 
-          {step === 'enter_code' && (
+          {step === "enter_code" && (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
                 Paste the authorization code from the browser:
@@ -226,11 +241,11 @@ export function McpOAuthDialog({
         </div>
 
         <DialogFooter>
-          {step === 'enter_code' && (
+          {step === "enter_code" && (
             <>
               <Button
                 variant="outline"
-                onClick={() => setStep('method')}
+                onClick={() => setStep("method")}
                 disabled={loading}
               >
                 Back
@@ -245,12 +260,12 @@ export function McpOAuthDialog({
                     Authenticating...
                   </>
                 ) : (
-                  'Complete Authentication'
+                  "Complete Authentication"
                 )}
               </Button>
             </>
           )}
-          {(step === 'method' || step === 'manual') && (
+          {(step === "method" || step === "manual") && (
             <Button
               variant="outline"
               onClick={() => handleOpenChange(false)}
@@ -262,5 +277,5 @@ export function McpOAuthDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

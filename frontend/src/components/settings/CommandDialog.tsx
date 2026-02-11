@@ -1,15 +1,14 @@
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -19,8 +18,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 
 const commandFormSchema = z.object({
   name: z
@@ -99,7 +99,10 @@ export function CommandDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] sm:max-h-[85vh] gap-0 flex flex-col p-0 md:p-6 z-[200]" overlayClassName="z-[200]">
+      <DialogContent
+        className="max-w-3xl max-h-[90vh] sm:max-h-[85vh] gap-0 flex flex-col p-0 md:p-6 z-[200]"
+        overlayClassName="z-[200]"
+      >
         <DialogHeader className="p-4 sm:p-6 border-b flex flex-row items-center justify-between space-y-0">
           <DialogTitle>
             {editingCommand ? "Edit Command" : "Create Command"}
@@ -232,7 +235,9 @@ export function CommandDialog({
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-base">Run as subtask</FormLabel>
+                      <FormLabel className="text-base">
+                        Run as subtask
+                      </FormLabel>
                       <FormDescription>
                         Execute this command as a separate subtask
                       </FormDescription>
@@ -254,7 +259,10 @@ export function CommandDialog({
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={() => form.handleSubmit(handleSubmit)()} disabled={!form.formState.isValid}>
+          <Button
+            onClick={() => form.handleSubmit(handleSubmit)()}
+            disabled={!form.formState.isValid}
+          >
             {editingCommand ? "Update" : "Create"}
           </Button>
         </DialogFooter>
@@ -262,4 +270,3 @@ export function CommandDialog({
     </Dialog>
   );
 }
-

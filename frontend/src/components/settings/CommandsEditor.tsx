@@ -1,53 +1,56 @@
-import { useState } from 'react'
-import { Plus, Trash2, Edit } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogTrigger } from '@/components/ui/dialog'
-import { CommandDialog } from './CommandDialog'
+import { Edit, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { CommandDialog } from "./CommandDialog";
 
 interface Command {
-  template: string
-  description?: string
-  agent?: string
-  model?: string
-  subtask?: boolean
-  topP?: number
+  template: string;
+  description?: string;
+  agent?: string;
+  model?: string;
+  subtask?: boolean;
+  topP?: number;
 }
 
 interface CommandsEditorProps {
-  commands: Record<string, Command>
-  onChange: (commands: Record<string, Command>) => void
+  commands: Record<string, Command>;
+  onChange: (commands: Record<string, Command>) => void;
 }
 
 export function CommandsEditor({ commands, onChange }: CommandsEditorProps) {
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [editingCommand, setEditingCommand] = useState<{ name: string; command: Command } | null>(null)
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editingCommand, setEditingCommand] = useState<{
+    name: string;
+    command: Command;
+  } | null>(null);
 
   const handleCommandSubmit = (name: string, command: Command) => {
     if (editingCommand) {
-      const updatedCommands = { ...commands }
-      delete updatedCommands[editingCommand.name]
-      updatedCommands[name] = command
-      onChange(updatedCommands)
-      setEditingCommand(null)
+      const updatedCommands = { ...commands };
+      delete updatedCommands[editingCommand.name];
+      updatedCommands[name] = command;
+      onChange(updatedCommands);
+      setEditingCommand(null);
     } else {
       const updatedCommands = {
         ...commands,
-        [name]: command
-      }
-      onChange(updatedCommands)
+        [name]: command,
+      };
+      onChange(updatedCommands);
     }
-  }
+  };
 
   const deleteCommand = (name: string) => {
-    const updatedCommands = { ...commands }
-    delete updatedCommands[name]
-    onChange(updatedCommands)
-  }
+    const updatedCommands = { ...commands };
+    delete updatedCommands[name];
+    onChange(updatedCommands);
+  };
 
   const startEdit = (name: string, command: Command) => {
-    setEditingCommand({ name, command })
-  }
+    setEditingCommand({ name, command });
+  };
 
   return (
     <div className="space-y-4">
@@ -55,9 +58,8 @@ export function CommandsEditor({ commands, onChange }: CommandsEditorProps) {
         <h3 className="text-lg font-semibold">Commands</h3>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className='mr-1 h-6'>
+            <Button className="mr-1 h-6">
               <Plus className="h-4 w-4" />
-             
             </Button>
           </DialogTrigger>
           <CommandDialog
@@ -71,7 +73,9 @@ export function CommandsEditor({ commands, onChange }: CommandsEditorProps) {
       {Object.keys(commands).length === 0 ? (
         <Card>
           <CardContent className="p-2 sm:p-8 text-center">
-            <p className="text-muted-foreground">No commands configured. Add your first command to get started.</p>
+            <p className="text-muted-foreground">
+              No commands configured. Add your first command to get started.
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -100,17 +104,19 @@ export function CommandsEditor({ commands, onChange }: CommandsEditorProps) {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className='p-2'>
+              <CardContent className="p-2">
                 <div className="space-y-2">
                   {command.description && (
-                    <p className="text-sm text-muted-foreground">{command.description}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {command.description}
+                    </p>
                   )}
-<div className="text-xs text-muted-foreground space-y-1">
-                     {command.agent && <p>Agent: {command.agent}</p>}
-                     {command.model && <p>Model: {command.model}</p>}
-                     {command.topP !== undefined && <p>Top P: {command.topP}</p>}
-                     {command.subtask && <p>Subtask: Yes</p>}
-                   </div>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    {command.agent && <p>Agent: {command.agent}</p>}
+                    {command.model && <p>Model: {command.model}</p>}
+                    {command.topP !== undefined && <p>Top P: {command.topP}</p>}
+                    {command.subtask && <p>Subtask: Yes</p>}
+                  </div>
                   <div className="mt-2 bg-muted rounded text-xs font-mono overflow-y-auto p-1 rounded-lg">
                     {command.template}
                   </div>
@@ -128,5 +134,5 @@ export function CommandsEditor({ commands, onChange }: CommandsEditorProps) {
         editingCommand={editingCommand}
       />
     </div>
-  )
+  );
 }

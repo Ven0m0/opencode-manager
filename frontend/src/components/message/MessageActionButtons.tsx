@@ -1,36 +1,38 @@
-import { memo } from 'react'
-import { X, Loader2 } from 'lucide-react'
-import { useRemoveMessage } from '@/hooks/useRemoveMessage'
-import { useMobile } from '@/hooks/useMobile'
-import type { MessageWithParts } from '@/api/types'
+import { Loader2, X } from "lucide-react";
+import { memo } from "react";
+import type { MessageWithParts } from "@/api/types";
+import { useMobile } from "@/hooks/useMobile";
+import { useRemoveMessage } from "@/hooks/useRemoveMessage";
 
 interface MessageActionButtonsProps {
-  opcodeUrl: string
-  sessionId: string
-  directory?: string
-  message: MessageWithParts
+  opcodeUrl: string;
+  sessionId: string;
+  directory?: string;
+  message: MessageWithParts;
 }
 
 export const MessageActionButtons = memo(function MessageActionButtons({
   opcodeUrl,
   sessionId,
   directory,
-  message
+  message,
 }: MessageActionButtonsProps) {
-  const isMobile = useMobile()
-  const removeMessage = useRemoveMessage({ opcodeUrl, sessionId, directory })
+  const isMobile = useMobile();
+  const removeMessage = useRemoveMessage({ opcodeUrl, sessionId, directory });
 
   const handleRemove = () => {
-    if (removeMessage.isPending) return
-    removeMessage.mutate({ messageID: message.info.id })
-  }
+    if (removeMessage.isPending) return;
+    removeMessage.mutate({ messageID: message.info.id });
+  };
 
-  if (message.info.role !== 'assistant') {
-    return null
+  if (message.info.role !== "assistant") {
+    return null;
   }
 
   return (
-    <div className={`flex items-center gap-1 ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
+    <div
+      className={`flex items-center gap-1 ${isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
+    >
       <button
         onClick={handleRemove}
         disabled={removeMessage.isPending}
@@ -44,5 +46,5 @@ export const MessageActionButtons = memo(function MessageActionButtons({
         )}
       </button>
     </div>
-  )
-})
+  );
+});

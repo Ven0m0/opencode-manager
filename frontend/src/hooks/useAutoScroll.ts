@@ -1,159 +1,165 @@
-import { useRef, useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useRef } from "react";
 
-const SCROLL_LOCK_MS = 300
+const SCROLL_LOCK_MS = 300;
 
 interface MessageInfo {
-  role: string
+  role: string;
 }
 
 interface Message {
-  info: MessageInfo
+  info: MessageInfo;
 }
 
 interface UseAutoScrollOptions<T extends Message> {
-  containerRef?: React.RefObject<HTMLDivElement | null>
-  messages?: T[]
-  sessionId?: string
-  onScrollStateChange?: (isScrolledUp: boolean) => void
+  containerRef?: React.RefObject<HTMLDivElement | null>;
+  messages?: T[];
+  sessionId?: string;
+  onScrollStateChange?: (isScrolledUp: boolean) => void;
 }
 
 interface UseAutoScrollReturn {
-  scrollToBottom: () => void
+  scrollToBottom: () => void;
 }
 
 export function useAutoScroll<T extends Message>({
   containerRef,
   messages,
   sessionId,
-  onScrollStateChange
+  onScrollStateChange,
 }: UseAutoScrollOptions<T>): UseAutoScrollReturn {
-  const lastMessageCountRef = useRef(0)
-  const hasInitialScrolledRef = useRef(false)
-  const userScrolledAtRef = useRef(0)
-  const userDisengagedRef = useRef(false)
-  const pointerStartYRef = useRef<number | null>(null)
-  const onScrollStateChangeRef = useRef(onScrollStateChange)
-  
-  onScrollStateChangeRef.current = onScrollStateChange
+  const lastMessageCountRef = useRef(0);
+  const hasInitialScrolledRef = useRef(false);
+  const userScrolledAtRef = useRef(0);
+  const userDisengagedRef = useRef(false);
+  const pointerStartYRef = useRef<number | null>(null);
+  const onScrollStateChangeRef = useRef(onScrollStateChange);
+
+  onScrollStateChangeRef.current = onScrollStateChange;
 
   const scrollToBottom = useCallback(() => {
-    if (!containerRef?.current) return
-    userScrolledAtRef.current = 0
-    userDisengagedRef.current = false
-    containerRef.current.scrollTop = containerRef.current.scrollHeight
-    onScrollStateChangeRef.current?.(false)
-  }, [containerRef])
+    if (!containerRef?.current) return;
+    userScrolledAtRef.current = 0;
+    userDisengagedRef.current = false;
+    containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    onScrollStateChangeRef.current?.(false);
+  }, [containerRef]);
 
   useEffect(() => {
-    lastMessageCountRef.current = 0
-    hasInitialScrolledRef.current = false
-    userScrolledAtRef.current = 0
-    userDisengagedRef.current = false
-  }, [sessionId])
+    lastMessageCountRef.current = 0;
+    hasInitialScrolledRef.current = false;
+    userScrolledAtRef.current = 0;
+    userDisengagedRef.current = false;
+  }, []);
 
   useEffect(() => {
-    const container = containerRef?.current
-    if (!container) return
-    
+    const container = containerRef?.current;
+    if (!container) return;
+
     const markDisengaged = () => {
-      userScrolledAtRef.current = Date.now()
-      userDisengagedRef.current = true
-      onScrollStateChangeRef.current?.(true)
-    }
+      userScrolledAtRef.current = Date.now();
+      userDisengagedRef.current = true;
+      onScrollStateChangeRef.current?.(true);
+    };
 
     const handlePointerDown = (e: PointerEvent) => {
-      pointerStartYRef.current = e.clientY
-    }
+      pointerStartYRef.current = e.clientY;
+    };
 
     const handlePointerMove = (e: PointerEvent) => {
-      if (pointerStartYRef.current === null) return
+      if (pointerStartYRef.current === null) return;
       if (e.clientY > pointerStartYRef.current) {
-        markDisengaged()
+        markDisengaged();
       }
-    }
+    };
 
     const handlePointerUp = () => {
-      pointerStartYRef.current = null
-    }
+      pointerStartYRef.current = null;
+    };
 
     const handleWheel = (e: WheelEvent) => {
       if (e.deltaY < 0) {
-        markDisengaged()
+        markDisengaged();
       }
-    }
+    };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (['PageUp', 'ArrowUp', 'Home'].includes(e.key)) {
-        markDisengaged()
+      if (["PageUp", "ArrowUp", "Home"].includes(e.key)) {
+        markDisengaged();
       }
-    }
+    };
 
     const handleScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = container
-      const isAtBottom = scrollHeight - scrollTop - clientHeight < 50
-      
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+
       if (isAtBottom) {
         if (userDisengagedRef.current) {
-          userScrolledAtRef.current = 0
-          userDisengagedRef.current = false
-          onScrollStateChangeRef.current?.(false)
+          userScrolledAtRef.current = 0;
+          userDisengagedRef.current = false;
+          onScrollStateChangeRef.current?.(false);
         }
       } else if (!userDisengagedRef.current) {
-        userScrolledAtRef.current = Date.now()
-        userDisengagedRef.current = true
-        onScrollStateChangeRef.current?.(true)
+        userScrolledAtRef.current = Date.now();
+        userDisengagedRef.current = true;
+        onScrollStateChangeRef.current?.(true);
       }
-    }
-    
-    container.addEventListener('pointerdown', handlePointerDown, { passive: true })
-    container.addEventListener('pointermove', handlePointerMove, { passive: true })
-    container.addEventListener('pointerup', handlePointerUp, { passive: true })
-    container.addEventListener('pointercancel', handlePointerUp, { passive: true })
-    container.addEventListener('wheel', handleWheel, { passive: true })
-    container.addEventListener('keydown', handleKeyDown)
-    container.addEventListener('scroll', handleScroll, { passive: true })
-    
+    };
+
+    container.addEventListener("pointerdown", handlePointerDown, {
+      passive: true,
+    });
+    container.addEventListener("pointermove", handlePointerMove, {
+      passive: true,
+    });
+    container.addEventListener("pointerup", handlePointerUp, { passive: true });
+    container.addEventListener("pointercancel", handlePointerUp, {
+      passive: true,
+    });
+    container.addEventListener("wheel", handleWheel, { passive: true });
+    container.addEventListener("keydown", handleKeyDown);
+    container.addEventListener("scroll", handleScroll, { passive: true });
+
     return () => {
-      container.removeEventListener('pointerdown', handlePointerDown)
-      container.removeEventListener('pointermove', handlePointerMove)
-      container.removeEventListener('pointerup', handlePointerUp)
-      container.removeEventListener('pointercancel', handlePointerUp)
-      container.removeEventListener('wheel', handleWheel)
-      container.removeEventListener('keydown', handleKeyDown)
-      container.removeEventListener('scroll', handleScroll)
-    }
-  }, [containerRef, sessionId, messages])
+      container.removeEventListener("pointerdown", handlePointerDown);
+      container.removeEventListener("pointermove", handlePointerMove);
+      container.removeEventListener("pointerup", handlePointerUp);
+      container.removeEventListener("pointercancel", handlePointerUp);
+      container.removeEventListener("wheel", handleWheel);
+      container.removeEventListener("keydown", handleKeyDown);
+      container.removeEventListener("scroll", handleScroll);
+    };
+  }, [containerRef]);
 
   useEffect(() => {
-    if (!containerRef?.current || !messages) return
+    if (!containerRef?.current || !messages) return;
 
-    const currentCount = messages.length
-    const prevCount = lastMessageCountRef.current
-    lastMessageCountRef.current = currentCount
+    const currentCount = messages.length;
+    const prevCount = lastMessageCountRef.current;
+    lastMessageCountRef.current = currentCount;
 
     if (!hasInitialScrolledRef.current && currentCount > 0) {
-      hasInitialScrolledRef.current = true
-      scrollToBottom()
-      return
+      hasInitialScrolledRef.current = true;
+      scrollToBottom();
+      return;
     }
 
     if (currentCount > prevCount) {
-      const newMessage = messages[currentCount - 1]
-      if (newMessage?.info.role === 'user') {
-        scrollToBottom()
-        return
+      const newMessage = messages[currentCount - 1];
+      if (newMessage?.info.role === "user") {
+        scrollToBottom();
+        return;
       }
     }
 
-    const timeSinceUserScroll = Date.now() - userScrolledAtRef.current
-    const recentlyScrolled = timeSinceUserScroll < SCROLL_LOCK_MS
-    
+    const timeSinceUserScroll = Date.now() - userScrolledAtRef.current;
+    const recentlyScrolled = timeSinceUserScroll < SCROLL_LOCK_MS;
+
     if (recentlyScrolled || userDisengagedRef.current) {
-      return
+      return;
     }
 
-    scrollToBottom()
-  }, [messages, containerRef, scrollToBottom])
+    scrollToBottom();
+  }, [messages, containerRef, scrollToBottom]);
 
-  return { scrollToBottom }
+  return { scrollToBottom };
 }

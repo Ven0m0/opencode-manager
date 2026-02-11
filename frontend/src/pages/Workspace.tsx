@@ -1,5 +1,5 @@
-import { FileBrowser } from '@/components/file-browser/FileBrowser'
-import { Header } from '@/components/ui/header'
+import { FileBrowser } from "@/components/file-browser/FileBrowser";
+import { Header } from "@/components/ui/header";
 
 export function Workspace() {
   return (
@@ -13,5 +13,5 @@ export function Workspace() {
         <FileBrowser />
       </div>
     </div>
-  )
+  );
 }

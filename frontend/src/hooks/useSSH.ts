@@ -1,6 +1,6 @@
-import { useEventContext } from '@/contexts/EventContext'
+import { useEventContext } from "@/contexts/EventContext";
 
 export function useSSH() {
-  const { sshHostKey } = useEventContext()
-  return sshHostKey
+  const { sshHostKey } = useEventContext();
+  return sshHostKey;
 }

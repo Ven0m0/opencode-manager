@@ -1,17 +1,17 @@
-import { Database } from "bun:sqlite";
-import webpush from "web-push";
-import { logger } from "../utils/logger";
-import type { PushSubscriptionRecord } from "../types/settings";
-import type { PushNotificationPayload } from "@opencode-manager/shared/types";
-import {
-  NotificationEventType,
-  DEFAULT_NOTIFICATION_PREFERENCES,
-} from "@opencode-manager/shared/schemas";
-import { SettingsService } from "./settings";
-import { sseAggregator, type SSEEvent } from "./sse-aggregator";
-import { getRepoByLocalPath } from "../db/queries";
+import type { Database } from "bun:sqlite";
+import path from "node:path";
 import { getReposPath } from "@opencode-manager/shared/config/env";
-import path from "path";
+import {
+  DEFAULT_NOTIFICATION_PREFERENCES,
+  NotificationEventType,
+} from "@opencode-manager/shared/schemas";
+import type { PushNotificationPayload } from "@opencode-manager/shared/types";
+import webpush from "web-push";
+import { getRepoByLocalPath } from "../db/queries";
+import type { PushSubscriptionRecord } from "../types/settings";
+import { logger } from "../utils/logger";
+import { SettingsService } from "./settings";
+import { type SSEEvent, sseAggregator } from "./sse-aggregator";
 
 interface VapidConfig {
   publicKey: string;
@@ -21,7 +21,11 @@ interface VapidConfig {
 
 const EVENT_CONFIG: Record<
   string,
-  { preferencesKey: keyof typeof DEFAULT_NOTIFICATION_PREFERENCES.events; title: string; bodyFn: (props: Record<string, unknown>) => string }
+  {
+    preferencesKey: keyof typeof DEFAULT_NOTIFICATION_PREFERENCES.events;
+    title: string;
+    bodyFn: (props: Record<string, unknown>) => string;
+  }
 > = {
   [NotificationEventType.PERMISSION_ASKED]: {
     preferencesKey: "permissionAsked",
@@ -71,16 +75,20 @@ export class NotificationService {
       )
     `);
     this.db.run(
-      "CREATE INDEX IF NOT EXISTS idx_push_sub_user ON push_subscriptions(user_id)"
+      "CREATE INDEX IF NOT EXISTS idx_push_sub_user ON push_subscriptions(user_id)",
     );
     this.db.run(
-      "CREATE UNIQUE INDEX IF NOT EXISTS idx_push_sub_endpoint ON push_subscriptions(endpoint)"
+      "CREATE UNIQUE INDEX IF NOT EXISTS idx_push_sub_endpoint ON push_subscriptions(endpoint)",
     );
   }
 
   configureVapid(config: VapidConfig): void {
     this.vapidConfig = config;
-    webpush.setVapidDetails(config.subject, config.publicKey, config.privateKey);
+    webpush.setVapidDetails(
+      config.subject,
+      config.publicKey,
+      config.privateKey,
+    );
   }
 
   getVapidPublicKey(): string | null {
@@ -96,7 +104,7 @@ export class NotificationService {
     endpoint: string,
     p256dh: string,
     auth: string,
-    deviceName?: string
+    deviceName?: string,
   ): PushSubscriptionRecord {
     const now = Date.now();
 
@@ -109,7 +117,7 @@ export class NotificationService {
            p256dh = excluded.p256dh,
            auth = excluded.auth,
            device_name = excluded.device_name,
-           last_used_at = excluded.last_used_at`
+           last_used_at = excluded.last_used_at`,
       )
       .run(userId, endpoint, p256dh, auth, deviceName ?? null, now, now);
 
@@ -141,7 +149,9 @@ export class NotificationService {
   removeSubscription(endpoint: string, userId?: string): boolean {
     if (userId) {
       const result = this.db
-        .prepare("DELETE FROM push_subscriptions WHERE endpoint = ? AND user_id = ?")
+        .prepare(
+          "DELETE FROM push_subscriptions WHERE endpoint = ? AND user_id = ?",
+        )
         .run(endpoint, userId);
       return result.changes > 0;
     }
@@ -160,7 +170,9 @@ export class NotificationService {
 
   getSubscriptions(userId: string): PushSubscriptionRecord[] {
     const rows = this.db
-      .prepare("SELECT * FROM push_subscriptions WHERE user_id = ? ORDER BY created_at DESC")
+      .prepare(
+        "SELECT * FROM push_subscriptions WHERE user_id = ? ORDER BY created_at DESC",
+      )
       .all(userId) as Array<{
       id: number;
       user_id: string;
@@ -195,10 +207,7 @@ export class NotificationService {
     return sseAggregator.hasVisibleClients();
   }
 
-  async handleSSEEvent(
-    _directory: string,
-    event: SSEEvent
-  ): Promise<void> {
+  async handleSSEEvent(_directory: string, event: SSEEvent): Promise<void> {
     const config = EVENT_CONFIG[event.type];
     if (!config) return;
 
@@ -223,7 +232,7 @@ export class NotificationService {
         const reposBasePath = getReposPath();
         const localPath = path.relative(reposBasePath, _directory);
         const repo = getRepoByLocalPath(this.db, localPath);
-        
+
         if (repo) {
           notificationUrl = `/repos/${repo.id}/sessions/${sessionId}`;
         }
@@ -256,7 +265,7 @@ export class NotificationService {
 
   private async sendToUser(
     userId: string,
-    payload: PushNotificationPayload
+    payload: PushNotificationPayload,
   ): Promise<void> {
     const subscriptions = this.getSubscriptions(userId);
     const expiredEndpoints: string[] = [];
@@ -269,12 +278,12 @@ export class NotificationService {
               endpoint: sub.endpoint,
               keys: { p256dh: sub.p256dh, auth: sub.auth },
             },
-            JSON.stringify(payload)
+            JSON.stringify(payload),
           );
 
           this.db
             .prepare(
-              "UPDATE push_subscriptions SET last_used_at = ? WHERE id = ?"
+              "UPDATE push_subscriptions SET last_used_at = ? WHERE id = ?",
             )
             .run(Date.now(), sub.id);
         } catch (error) {
@@ -283,10 +292,13 @@ export class NotificationService {
           if (statusCode === 404 || statusCode === 410) {
             expiredEndpoints.push(sub.endpoint);
           } else {
-            logger.error(`Push delivery failed for ${sub.endpoint.slice(0, 50)}:`, error);
+            logger.error(
+              `Push delivery failed for ${sub.endpoint.slice(0, 50)}:`,
+              error,
+            );
           }
         }
-      })
+      }),
     );
 
     for (const endpoint of expiredEndpoints) {

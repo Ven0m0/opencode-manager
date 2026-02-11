@@ -1,25 +1,25 @@
-import { useState, useCallback } from "react";
+import { ExternalLink, Key, Loader2 } from "lucide-react";
+import { useCallback, useState } from "react";
+import type { ProviderWithModels } from "@/api/providers";
+import { providerCredentialsApi } from "@/api/providers";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Key, ExternalLink } from "lucide-react";
-import { providerCredentialsApi } from "@/api/providers";
-import type { ProviderWithModels } from "@/api/providers";
 
 interface ApiKeyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   provider: ProviderWithModels | null;
   onSuccess: () => void;
-  mode?: 'add' | 'edit';
+  mode?: "add" | "edit";
 }
 
 export function ApiKeyDialog({
@@ -27,7 +27,7 @@ export function ApiKeyDialog({
   onOpenChange,
   provider,
   onSuccess,
-  mode = 'add',
+  mode = "add",
 }: ApiKeyDialogProps) {
   const [apiKey, setApiKey] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -59,8 +59,9 @@ export function ApiKeyDialog({
 
   if (!provider) return null;
 
-  const envVarName = provider.env?.[0] || `${provider.id.toUpperCase()}_API_KEY`;
-  const isEditMode = mode === 'edit';
+  const envVarName =
+    provider.env?.[0] || `${provider.id.toUpperCase()}_API_KEY`;
+  const isEditMode = mode === "edit";
 
   return (
     <Dialog open={open} onOpenChange={handleClose} modal={false}>
@@ -68,13 +69,14 @@ export function ApiKeyDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Key className="h-5 w-5" />
-            {isEditMode ? `Update ${provider.name} API Key` : `Connect ${provider.name}`}
+            {isEditMode
+              ? `Update ${provider.name} API Key`
+              : `Connect ${provider.name}`}
           </DialogTitle>
           <DialogDescription>
-            {isEditMode 
+            {isEditMode
               ? `Enter a new API key for ${provider.name}.`
-              : `Enter your API key to use models from ${provider.name}.`
-            }
+              : `Enter your API key to use models from ${provider.name}.`}
           </DialogDescription>
         </DialogHeader>
 
@@ -95,13 +97,12 @@ export function ApiKeyDialog({
               autoFocus
             />
             <p className="text-xs text-muted-foreground">
-              Environment variable: <code className="bg-muted px-1 py-0.5 rounded">{envVarName}</code>
+              Environment variable:{" "}
+              <code className="bg-muted px-1 py-0.5 rounded">{envVarName}</code>
             </p>
           </div>
 
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
 
           {provider.api && (
             <a
@@ -117,17 +118,26 @@ export function ApiKeyDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
+          <Button
+            variant="outline"
+            onClick={handleClose}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!apiKey.trim() || isSubmitting}>
+          <Button
+            onClick={handleSubmit}
+            disabled={!apiKey.trim() || isSubmitting}
+          >
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                {isEditMode ? 'Updating...' : 'Connecting...'}
+                {isEditMode ? "Updating..." : "Connecting..."}
               </>
+            ) : isEditMode ? (
+              "Update"
             ) : (
-              isEditMode ? 'Update' : 'Connect'
+              "Connect"
             )}
           </Button>
         </DialogFooter>

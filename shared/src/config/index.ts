@@ -1,2 +1,2 @@
-export * from './defaults'
-export * from './client'
+export * from "./client";
+export * from "./defaults";

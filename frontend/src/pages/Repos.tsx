@@ -1,11 +1,11 @@
+import { FolderOpen, Plus } from "lucide-react";
 import { useState } from "react";
-import { RepoList } from "@/components/repo/RepoList";
-import { AddRepoDialog } from "@/components/repo/AddRepoDialog";
 import { FileBrowserSheet } from "@/components/file-browser/FileBrowserSheet";
-import { Header } from "@/components/ui/header";
-import { Button } from "@/components/ui/button";
-import { Plus, FolderOpen } from "lucide-react";
 import { PendingActionsGroup } from "@/components/notifications/PendingActionsGroup";
+import { AddRepoDialog } from "@/components/repo/AddRepoDialog";
+import { RepoList } from "@/components/repo/RepoList";
+import { Button } from "@/components/ui/button";
+import { Header } from "@/components/ui/header";
 
 export function Repos() {
   const [addRepoOpen, setAddRepoOpen] = useState(false);
@@ -39,7 +39,6 @@ export function Repos() {
         </Header.Actions>
       </Header>
       <div className="container mx-auto flex-1 pt-2 px-2 min-h-0 overflow-auto">
-
         <RepoList />
       </div>
       <AddRepoDialog open={addRepoOpen} onOpenChange={setAddRepoOpen} />

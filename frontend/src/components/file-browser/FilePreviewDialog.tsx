@@ -1,60 +1,69 @@
-import { useState, useEffect } from 'react'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { FilePreview } from './FilePreview'
-import { Loader2, FileText } from 'lucide-react'
-import { API_BASE_URL } from '@/config'
-import type { FileInfo } from '@/types/files'
+import { FileText, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { API_BASE_URL } from "@/config";
+import type { FileInfo } from "@/types/files";
+import { FilePreview } from "./FilePreview";
 
 interface FilePreviewDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  filePath: string
-  repoBasePath?: string
-  onFileSaved?: () => void
-  initialLineNumber?: number
+  isOpen: boolean;
+  onClose: () => void;
+  filePath: string;
+  repoBasePath?: string;
+  onFileSaved?: () => void;
+  initialLineNumber?: number;
 }
 
-export function FilePreviewDialog({ isOpen, onClose, filePath, repoBasePath, onFileSaved, initialLineNumber }: FilePreviewDialogProps) {
-  const [file, setFile] = useState<FileInfo | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+export function FilePreviewDialog({
+  isOpen,
+  onClose,
+  filePath,
+  repoBasePath,
+  onFileSaved,
+  initialLineNumber,
+}: FilePreviewDialogProps) {
+  const [file, setFile] = useState<FileInfo | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen || !filePath) {
-      setFile(null)
-      setError(null)
-      return
+      setFile(null);
+      setError(null);
+      return;
     }
 
     const fetchFile = async () => {
-      setIsLoading(true)
-      setError(null)
+      setIsLoading(true);
+      setError(null);
 
       try {
-        const fullPath = repoBasePath ? `${repoBasePath}/${filePath}` : filePath
-        const response = await fetch(`${API_BASE_URL}/api/files/${fullPath}`)
-        
+        const fullPath = repoBasePath
+          ? `${repoBasePath}/${filePath}`
+          : filePath;
+        const response = await fetch(`${API_BASE_URL}/api/files/${fullPath}`);
+
         if (!response.ok) {
-          throw new Error(`Failed to load file: ${response.statusText}`)
+          throw new Error(`Failed to load file: ${response.statusText}`);
         }
 
-        const data = await response.json()
-        setFile(data)
+        const data = await response.json();
+        setFile(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load file')
+        setError(err instanceof Error ? err.message : "Failed to load file");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchFile()
-  }, [isOpen, filePath, repoBasePath])
+    fetchFile();
+  }, [isOpen, filePath, repoBasePath]);
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      onClose()
+      onClose();
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -75,9 +84,9 @@ export function FilePreviewDialog({ isOpen, onClose, filePath, repoBasePath, onF
               <p className="text-xs mt-1">{error}</p>
             </div>
           ) : file ? (
-            <FilePreview 
+            <FilePreview
               key={file.path}
-              file={file} 
+              file={file}
               hideHeader={false}
               isMobileModal={true}
               onCloseModal={onClose}
@@ -88,5 +97,5 @@ export function FilePreviewDialog({ isOpen, onClose, filePath, repoBasePath, onF
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
