@@ -3,13 +3,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: opencode-manager:latest
     container_name: opencode-manager
     ports:
       - "5003:5003"
-      - "5100:5100"
-      - "5101:5101"
-      - "5102:5102"
-      - "5103:5103"
+      - "5100-5103:5100-5103"
+    env_file: .env
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - HOST=0.0.0.0
@@ -52,6 +51,30 @@ services:
       timeout: 3s
       retries: 3
       start_period: 40s
+
+  slim:
+    profiles: ["slim"]
+    image: dslim/slim
+    container_name: opencode-slim
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: >
+      build
+        --target opencode-manager:latest
+        --tag opencode-manager:slim
+        --http-probe=false
+        --continue-after=1
+        --include-path=/app
+        --include-path=/workspace
+        --include-path=/opt/opencode
+        --include-path=/opt/bun
+        --include-path=/usr/local/bin
+        --include-shell
+        --include-cert-all
+        --include-oslibs-net
+    depends_on:
+      app:
+        condition: service_started
 
 volumes:
   opencode-workspace:
