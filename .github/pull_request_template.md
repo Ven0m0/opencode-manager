@@ -12,5 +12,5 @@
 - [ ] Code follows project style (no comments, named imports)
 - [ ] TypeScript types are properly defined
 - [ ] Tests added/updated (80% coverage target)
-- [ ] `pnpm lint` passes locally
-- [ ] `pnpm typecheck` passes locally
+- [ ] `bun lint` passes locally
+- [ ] `bun typecheck` passes locally

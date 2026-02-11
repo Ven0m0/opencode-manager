@@ -22,7 +22,7 @@ paths-ignore:
 files-ignore:
   - 'package-lock.json'
   - 'yarn.lock'
-  - 'pnpm-lock.yaml'
+  - 'bun.lockb'
 
 # Ignore common test/dev files
 secrets-filter:

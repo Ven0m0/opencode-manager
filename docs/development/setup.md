@@ -4,10 +4,8 @@ Guide for setting up a local development environment.
 
 ## Prerequisites
 
-- [pnpm](https://pnpm.io/installation) - Package manager (required for workspaces)
-- [Bun](https://bun.sh) - Backend runtime
+- [Bun](https://bun.sh) - Package manager and runtime
 - [OpenCode TUI](https://opencode.ai) - `npm install -g @opencode/tui`
-- [Node.js 24+](https://nodejs.org/en/about/previous-releases)
 
 ## Installation
 
@@ -17,13 +15,13 @@ git clone https://github.com/chriswritescode-dev/opencode-manager.git
 cd opencode-manager
 
 # Install dependencies
-pnpm install
+bun install
 
 # Copy environment configuration
 cp .env.example .env
 
 # Start development servers
-pnpm dev
+bun dev
 ```
 
 This starts:
@@ -61,10 +59,10 @@ opencode-manager/
 ### Root Level
 
 ```bash
-pnpm dev          # Start both backend and frontend
-pnpm build        # Build both packages
-pnpm lint         # Lint both packages
-pnpm test         # Run all tests
+bun dev          # Start both backend and frontend
+bun build        # Build both packages
+bun lint         # Lint both packages
+bun test         # Run all tests
 ```
 
 ### Backend
@@ -82,10 +80,10 @@ bun run typecheck # TypeScript check
 
 ```bash
 cd frontend
-pnpm dev          # Start Vite dev server
-pnpm build        # Production build
-pnpm lint         # ESLint
-pnpm typecheck    # TypeScript check
+bun dev          # Start Vite dev server
+bun build        # Production build
+bun lint         # ESLint
+bun typecheck    # TypeScript check
 ```
 
 ## Database
@@ -150,7 +148,7 @@ Minimum 80% coverage is enforced.
 
 ### Backend
 
-Logs output to terminal when running `pnpm dev`.
+Logs output to terminal when running `bun dev`.
 
 For more detailed debugging:
 
@@ -178,13 +176,13 @@ Launch configurations are provided in `.vscode/launch.json`:
 ### Development Build
 
 ```bash
-pnpm build
+bun build
 ```
 
 ### Production Build
 
 ```bash
-NODE_ENV=production pnpm build
+NODE_ENV=production bun build
 ```
 
 ### Docker Build
@@ -211,14 +209,14 @@ kill -9 <PID>
 # Clear node_modules and reinstall
 rm -rf node_modules
 rm -rf */node_modules
-pnpm install
+bun install
 ```
 
 ### TypeScript Errors
 
 ```bash
 # Check types
-pnpm typecheck
+bun typecheck
 
 # Clear TypeScript cache
 rm -rf */tsconfig.tsbuildinfo
@@ -229,5 +227,5 @@ rm -rf */tsconfig.tsbuildinfo
 ```bash
 # Reset database
 rm -f backend/data/opencode.db
-pnpm dev  # Database is recreated
+bun dev  # Database is recreated
 ```
