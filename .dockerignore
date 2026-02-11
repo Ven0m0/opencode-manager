@@ -1,45 +1,108 @@
-node_modules
-__pycache__
-*.log
-*.tmp
-.env
-.env.local
-dist
-target
-build
-coverage
-test
-.DS_Store
-*.db
-*.db-shm
-*.db-wal
-.vscode
-.idea
-
-data
-workspace
-config
-
-opencode-src
-temp
-
+# --- VCS ---
 .git
 .github
 .gitignore
+.gitmodules
+.gitattributes
 
-*.md
-!README.md
-LICENCE
-
-backend/data
-frontend/dist
-backend/dist
-
+# --- Dependencies (rebuilt in container) ---
+node_modules
+.pnp.*
+.yarn
+.npm
+.bun
 .cache
 .turbo
+.parcel-cache
+
+# --- Build artifacts (rebuilt in container) ---
+dist
+build
+target
+coverage
+frontend/dist
+backend/dist
+backend/data
+*.tsbuildinfo
+
+# --- Runtime data ---
+data
+workspace
+config
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Logs / temp ---
+*.log
+*.tmp
 *.swp
 *.swo
 *~
-.npm
-.yarn
-.bun
+temp
+tmp
+
+# --- OS junk ---
+.DS_Store
+Thumbs.db
+desktop.ini
+._*
+
+# --- IDE / editor ---
+.vscode
+.idea
+*.code-workspace
+.editorconfig
+
+# --- Python ---
+__pycache__
+*.pyc
+*.pyo
+.venv
+venv
+
+# --- Test / QA ---
+test
+tests
+__tests__
+*.test.*
+*.spec.*
+jest.config.*
+vitest.config.*
+.nyc_output
+playwright-report
+
+# --- Docker meta (avoid recursive context) ---
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+slim.report.json
+.slim-state
+
+# --- Docs (keep README for potential build use) ---
+*.md
+!README.md
+LICENSE
+LICENCE
+CHANGELOG*
+CONTRIBUTING*
+docs
+
+# --- CI/CD ---
+.github
+.gitlab-ci.yml
+.circleci
+Jenkinsfile
+Makefile
+
+# --- Misc source dirs not needed in image ---
+opencode-src
+scripts/docker-slim.sh
