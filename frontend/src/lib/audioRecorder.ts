@@ -234,19 +234,19 @@ export class AudioRecorder {
   }
 
   private processRecording(): void {
-    if (this.isAborted || !this.audioBuffer || this.recordingLength === 0) {
+    if (this.isAborted || !this.audioBuffer || this.recordingLength === 0 || !this.audioContext) {
       return;
     }
 
     try {
-      const audioBuffer = this.audioContext?.createBuffer(
+      const audioBuffer = this.audioContext.createBuffer(
         1,
         this.recordingLength,
-        this.audioContext?.sampleRate,
+        this.audioContext.sampleRate,
       );
 
       const channelData = new Float32Array(this.recordingLength);
-      channelData.set(this.audioBuffer?.subarray(0, this.recordingLength));
+      channelData.set(this.audioBuffer.subarray(0, this.recordingLength));
       audioBuffer.copyToChannel(channelData, 0);
 
       const wavBlob = encodeWAV(audioBuffer);

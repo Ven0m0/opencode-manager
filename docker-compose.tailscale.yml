@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  app:
+    extends:
+      file: docker-compose.yml
+      service: app
+    # Remove explicit port publishing to allow Tailscale to handle access
+    ports: []  # Ports will be accessed via Tailscale VPN
+    
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: opencode-tailscale
+    hostname: opencode-manager  # Customize as needed
+    restart: unless-stopped
+    network_mode: bridge
+    pid: host  # Required for accessing Docker daemon
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - tailscale-data:/var/lib/tailscale
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY:-}  # Set your auth key in .env
+      - TS_HOSTNAME=${TS_HOSTNAME:-opencode-manager}
+      - TS_ROUTES=${TS_ROUTES:-}  # Optional subnet routes
+      - TS_EXTRA_ARGS=${TS_EXTRA_ARGS:-}
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    devices:
+      - /dev/net/tun
+    depends_on:
+      - app
+
+  # Expose the main app port (5003) through Tailscale
+  app-proxy:
+    image: alpine/socat
+    container_name: opencode-app-proxy
+    restart: unless-stopped
+    command: 
+      - TCP-LISTEN:5003,fork,reuseaddr
+      - TCP:app:5003
+    network_mode: service:tailscale
+    depends_on:
+      - app
+      - tailscale
+
+  # Expose additional ports (5100-5103) through Tailscale if needed
+  app-proxy-5100:
+    image: alpine/socat
+    container_name: opencode-app-proxy-5100
+    restart: unless-stopped
+    command: 
+      - TCP-LISTEN:5100,fork,reuseaddr
+      - TCP:app:5100
+    network_mode: service:tailscale
+    depends_on:
+      - app
+      - tailscale
+
+  app-proxy-5101:
+    image: alpine/socat
+    container_name: opencode-app-proxy-5101
+    restart: unless-stopped
+    command: 
+      - TCP-LISTEN:5101,fork,reuseaddr
+      - TCP:app:5101
+    network_mode: service:tailscale
+    depends_on:
+      - app
+      - tailscale
+
+  app-proxy-5102:
+    image: alpine/socat
+    container_name: opencode-app-proxy-5102
+    restart: unless-stopped
+    command: 
+      - TCP-LISTEN:5102,fork,reuseaddr
+      - TCP:app:5102
+    network_mode: service:tailscale
+    depends_on:
+      - app
+      - tailscale
+
+  app-proxy-5103:
+    image: alpine/socat
+    container_name: opencode-app-proxy-5103
+    restart: unless-stopped
+    command: 
+      - TCP-LISTEN:5103,fork,reuseaddr
+      - TCP:app:5103
+    network_mode: service:tailscale
+    depends_on:
+      - app
+      - tailscale
+
+volumes:
+  tailscale-data:
+    driver: local
+  # Reuse the existing volumes
+  opencode-workspace:
+    external: true
+  opencode-data:
+    external: true

@@ -49,7 +49,7 @@ export function useAutoScroll<T extends Message>({
     hasInitialScrolledRef.current = false;
     userScrolledAtRef.current = 0;
     userDisengagedRef.current = false;
-  }, []);
+  }, [sessionId]); // sessionId is included in the dependency array to trigger effect when session changes, even if not directly used
 
   useEffect(() => {
     const container = containerRef?.current;

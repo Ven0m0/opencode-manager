@@ -66,18 +66,18 @@ services:
         --target opencode-manager:latest
         --tag opencode-manager:slim
         --http-probe=false
-        --continue-after=1
+        --continue-after=10
         --include-path=/app
         --include-path=/workspace
         --include-path=/opt/opencode
-        --include-path=/opt/bun
         --include-path=/usr/local/bin
         --include-shell
         --include-cert-all
         --include-oslibs-net
+        --show-blogs=true
+        --copy-meta-artifacts=/tmp/artifacts
     depends_on:
-      app:
-        condition: service_started
+      - app
 
 volumes:
   opencode-workspace:

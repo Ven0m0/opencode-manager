@@ -294,6 +294,9 @@ if [[ -n "$GENERATED_VAPID_PUBLIC" ]]; then
 fi
 
 printf '\n'
+printf '  %bAdditional Options:%b\n' "$BOLD" "$NC"
+printf '  %bTailscale:%b Run %s to expose via Tailscale\n' "$BOLD" "$NC" "./scripts/setup-tailscale.sh"
+printf '\n'
 printf '  %bLogs:%b   %s logs -f\n' "$BOLD" "$NC" "$DOCKER_COMPOSE"
 printf '  %bStop:%b   %s down\n' "$BOLD" "$NC" "$DOCKER_COMPOSE"
 printf '  %bStatus:%b %s ps\n' "$BOLD" "$NC" "$DOCKER_COMPOSE"

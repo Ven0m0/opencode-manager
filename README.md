@@ -103,6 +103,30 @@ docker-compose logs -f    # View logs
 docker-compose restart    # Restart
 ```
 
+### Tailscale Access (Optional)
+
+To expose OpenCode Manager securely over the internet via Tailscale:
+
+1. Get a Tailscale auth key from [https://login.tailscale.com/admin/authkeys](https://login.tailscale.com/admin/authkeys)
+2. Add it to your `.env` file:
+   ```bash
+   TS_AUTHKEY=your-tskey-auth-key-here
+   ```
+3. Run the Tailscale setup script:
+   ```bash
+   ./scripts/setup-tailscale.sh
+   ```
+   
+After setup, access OpenCode Manager using your Tailscale IP address, which you can find at [https://login.tailscale.com/admin/machines](https://login.tailscale.com/admin/machines).
+
+**Tailscale-specific environment variables:**
+```bash
+TS_AUTHKEY=your-tskey-auth-key-here           # Required: Tailscale auth key
+TS_HOSTNAME=opencode-manager                  # Optional: Custom hostname for Tailscale
+TS_ROUTES=                                    # Optional: Subnet routes
+TS_EXTRA_ARGS=                                # Optional: Additional Tailscale arguments
+```
+
 ### Local Development
 
 For contributors who want to develop locally:
