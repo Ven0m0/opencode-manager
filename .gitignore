@@ -19,3 +19,6 @@ workspace/
 /config/
 temp/
 
+# Tailscale (auth keys contain secrets)
+tailscale-config/serve.json
+

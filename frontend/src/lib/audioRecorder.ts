@@ -239,10 +239,16 @@ export class AudioRecorder {
     }
 
     try {
-      const audioBuffer = this.audioContext?.createBuffer(
+      if (!this.audioContext) {
+        this.onError?.("Audio context not available");
+        this.setState("error");
+        return;
+      }
+
+      const audioBuffer = this.audioContext.createBuffer(
         1,
         this.recordingLength,
-        this.audioContext?.sampleRate,
+        this.audioContext.sampleRate,
       );
 
       const channelData = new Float32Array(this.recordingLength);

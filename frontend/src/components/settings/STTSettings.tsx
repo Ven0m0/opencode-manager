@@ -106,9 +106,9 @@ export function STTSettings() {
 
   const watchEnabled = form.watch("enabled");
   const watchProvider = form.watch("provider");
-  const _watchLanguage = form.watch("language");
+  form.watch("language");
   const watchEndpoint = form.watch("endpoint");
-  const _watchApiKey = form.watch("apiKey");
+  form.watch("apiKey");
   const watchModel = form.watch("model");
 
   const fetchModels = async (forceRefresh = false) => {

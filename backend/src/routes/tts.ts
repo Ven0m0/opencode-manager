@@ -285,7 +285,9 @@ export async function cleanupExpiredCache(): Promise<number> {
           await unlink(filePath);
           cleanedCount++;
         }
-      } catch {}
+      } catch {
+        continue;
+      }
     }
 
     if (cleanedCount > 0) {

@@ -79,8 +79,86 @@ services:
       app:
         condition: service_started
 
+  tailscale:
+    profiles: ["tailscale"]
+    image: tailscale/tailscale:stable
+    container_name: opencode-tailscale
+    hostname: opencode-manager
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY:-}
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+      - TS_SERVE_CONFIG=/config/serve.json
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container
+    volumes:
+      - tailscale-state:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+      - ./tailscale-config:/config:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "tailscale", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  app-tailscale:
+    profiles: ["tailscale"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: opencode-manager:latest
+    container_name: opencode-manager-ts
+    network_mode: service:tailscale
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - HOST=0.0.0.0
+      - PORT=5003
+      - OPENCODE_SERVER_PORT=5551
+      - DATABASE_PATH=/app/data/opencode.db
+      - WORKSPACE_PATH=/workspace
+      - USE_HOME_OPENCODE_CONFIG=${USE_HOME_OPENCODE_CONFIG:-false}
+      - PROCESS_START_WAIT_MS=2000
+      - PROCESS_VERIFY_WAIT_MS=1000
+      - HEALTH_CHECK_INTERVAL_MS=5000
+      - HEALTH_CHECK_TIMEOUT_MS=30000
+      - MAX_FILE_SIZE_MB=50
+      - MAX_UPLOAD_SIZE_MB=50
+      - DEBUG=false
+      - AUTH_SECRET=${AUTH_SECRET:-}
+      - AUTH_TRUSTED_ORIGINS=${AUTH_TRUSTED_ORIGINS:-http://localhost:5003}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - ADMIN_PASSWORD_RESET=${ADMIN_PASSWORD_RESET:-false}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID:-}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET:-}
+      - AUTH_SECURE_COOKIES=${AUTH_SECURE_COOKIES:-true}
+      - PASSKEY_RP_ID=${PASSKEY_RP_ID:-localhost}
+      - PASSKEY_RP_NAME=${PASSKEY_RP_NAME:-OpenCode Manager}
+      - PASSKEY_ORIGIN=${PASSKEY_ORIGIN:-http://localhost:5003}
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY:-}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY:-}
+      - VAPID_SUBJECT=${VAPID_SUBJECT:-}
+    volumes:
+      - opencode-workspace:/workspace
+      - opencode-data:/app/data
+    restart: unless-stopped
+    depends_on:
+      tailscale:
+        condition: service_healthy
+
 volumes:
   opencode-workspace:
     driver: local
   opencode-data:
+    driver: local
+  tailscale-state:
     driver: local

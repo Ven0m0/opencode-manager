@@ -1,0 +1,222 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1771158343509,
+  "projectRoot": "/home/ven0m0/projects/worktrees/docker-setup-finisher-droid-2-quj",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      }
+    ],
+    "frameworks": [],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "bun build",
+    "testCommand": "bun test",
+    "lintCommand": "bun lint",
+    "devCommand": "bun dev",
+    "scripts": {
+      "predev": "bash scripts/setup-dev.sh",
+      "dev": "concurrently \"npm:dev:backend\" \"npm:dev:frontend\"",
+      "dev:backend": "bun --watch backend/src/index.ts",
+      "dev:frontend": "bun --filter frontend dev",
+      "build": "bun run build:backend && bun run build:frontend",
+      "build:backend": "bun --filter backend build",
+      "build:frontend": "bun --filter frontend build",
+      "typecheck": "bun run typecheck:frontend && bun run typecheck:backend",
+      "typecheck:frontend": "bun --filter frontend typecheck",
+      "typecheck:backend": "bun --filter backend typecheck",
+      "test": "bun run test:backend",
+      "test:backend": "bun --filter backend test",
+      "lint": "bun run lint:frontend && bun run lint:backend",
+      "lint:frontend": "bun --filter frontend lint",
+      "lint:backend": "bun --filter backend lint",
+      "lint:fix": "bun run lint:frontend -- --fix && bun run lint:backend -- --fix",
+      "generate:openapi": "bun scripts/generate-openapi.ts",
+      "docker:build": "docker-compose build",
+      "docker:up": "docker-compose up -d",
+      "docker:down": "docker-compose down -v",
+      "docker:logs": "docker-compose logs -f",
+      "docker:restart": "docker-compose restart",
+      "setup:docker": "bash scripts/setup-docker.sh"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": true,
+    "workspaces": [
+      "shared",
+      "backend",
+      "frontend"
+    ],
+    "mainDirectories": [
+      "docs",
+      "scripts"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "backend": {
+      "path": "backend",
+      "purpose": null,
+      "fileCount": 6,
+      "lastAccessed": 1771158343501,
+      "keyFiles": [
+        "bun.lock",
+        "eslint.config.js",
+        "package.json",
+        "tsconfig.json",
+        "vitest.config.ts"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 2,
+      "lastAccessed": 1771158343502,
+      "keyFiles": [
+        "index.md",
+        "troubleshooting.md"
+      ]
+    },
+    "frontend": {
+      "path": "frontend",
+      "purpose": null,
+      "fileCount": 11,
+      "lastAccessed": 1771158343506,
+      "keyFiles": [
+        "components.json",
+        "eslint.config.js",
+        "index.html",
+        "package.json",
+        "tsconfig.app.json"
+      ]
+    },
+    "scripts": {
+      "path": "scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 7,
+      "lastAccessed": 1771158343507,
+      "keyFiles": [
+        "docker-entrypoint.sh",
+        "docker-slim.sh",
+        "docker-upgrade.sh",
+        "generate-openapi.ts",
+        "setup-dev.sh"
+      ]
+    },
+    "shared": {
+      "path": "shared",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1771158343507,
+      "keyFiles": [
+        "bun.lock",
+        "package.json",
+        "tsconfig.json"
+      ]
+    },
+    "tailscale-config": {
+      "path": "tailscale-config",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1771158343507,
+      "keyFiles": [
+        "serve.json"
+      ]
+    },
+    "workspace": {
+      "path": "workspace",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1771158343507,
+      "keyFiles": []
+    },
+    "backend/scripts": {
+      "path": "backend/scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 3,
+      "lastAccessed": 1771158343508,
+      "keyFiles": [
+        "askpass-empty.sh",
+        "askpass-main.ts",
+        "askpass.sh"
+      ]
+    },
+    "backend/src": {
+      "path": "backend/src",
+      "purpose": "Source code",
+      "fileCount": 2,
+      "lastAccessed": 1771158343508,
+      "keyFiles": [
+        "constants.ts",
+        "index.ts"
+      ]
+    },
+    "backend/test": {
+      "path": "backend/test",
+      "purpose": "Test files",
+      "fileCount": 1,
+      "lastAccessed": 1771158343508,
+      "keyFiles": [
+        "setup.ts"
+      ]
+    },
+    "frontend/node_modules": {
+      "path": "frontend/node_modules",
+      "purpose": "Dependencies",
+      "fileCount": 0,
+      "lastAccessed": 1771158343508,
+      "keyFiles": []
+    },
+    "frontend/public": {
+      "path": "frontend/public",
+      "purpose": "Public files",
+      "fileCount": 5,
+      "lastAccessed": 1771158343508,
+      "keyFiles": [
+        "favicon.svg",
+        "manifest.json",
+        "opencode-logo-dark.svg"
+      ]
+    },
+    "frontend/src": {
+      "path": "frontend/src",
+      "purpose": "Source code",
+      "fileCount": 4,
+      "lastAccessed": 1771158343508,
+      "keyFiles": [
+        "App.tsx",
+        "index.css",
+        "main.tsx"
+      ]
+    },
+    "shared/src": {
+      "path": "shared/src",
+      "purpose": "Source code",
+      "fileCount": 1,
+      "lastAccessed": 1771158343508,
+      "keyFiles": [
+        "index.ts"
+      ]
+    }
+  },
+  "hotPaths": [],
+  "userDirectives": []
+}

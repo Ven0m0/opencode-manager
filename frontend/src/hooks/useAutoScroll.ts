@@ -24,7 +24,6 @@ interface UseAutoScrollReturn {
 export function useAutoScroll<T extends Message>({
   containerRef,
   messages,
-  sessionId,
   onScrollStateChange,
 }: UseAutoScrollOptions<T>): UseAutoScrollReturn {
   const lastMessageCountRef = useRef(0);
