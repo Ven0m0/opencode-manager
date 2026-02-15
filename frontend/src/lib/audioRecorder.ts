@@ -238,15 +238,21 @@ export class AudioRecorder {
       return;
     }
 
+    if (!this.audioContext) {
+      this.onError?.("Audio context not available");
+      this.setState("error");
+      return;
+    }
+
     try {
-      const audioBuffer = this.audioContext?.createBuffer(
+      const audioBuffer = this.audioContext.createBuffer(
         1,
         this.recordingLength,
-        this.audioContext?.sampleRate,
+        this.audioContext.sampleRate,
       );
 
       const channelData = new Float32Array(this.recordingLength);
-      channelData.set(this.audioBuffer?.subarray(0, this.recordingLength));
+      channelData.set(this.audioBuffer.subarray(0, this.recordingLength));
       audioBuffer.copyToChannel(channelData, 0);
 
       const wavBlob = encodeWAV(audioBuffer);

@@ -63,6 +63,8 @@ SKIP_ENV="${SKIP_ENV:-false}"
 NO_VAPID=false
 NO_ADMIN=false
 NO_START=false
+WITH_TAILSCALE=false
+USE_SLIM=false
 
 usage() {
 	cat <<USAGE
@@ -71,17 +73,21 @@ Usage: $(basename "$0") [OPTIONS]
 Automatic Docker setup for OpenCode Manager.
 
 Options:
-  --skip-env    Don't create .env (use existing)
-  --no-vapid    Skip VAPID key generation prompt
-  --no-admin    Skip admin credentials prompt
-  --no-start    Build only, don't start containers
-  -h, --help    Show this help message
+  --skip-env      Don't create .env (use existing)
+  --no-vapid      Skip VAPID key generation prompt
+  --no-admin      Skip admin credentials prompt
+  --no-start      Build only, don't start containers
+  --slim          Build and use slimmed Docker image
+  --tailscale     Enable Tailscale exposure to the internet
+  -h, --help      Show this help message
 
 Environment variables (for CI/CD):
   ADMIN_EMAIL       Pre-set admin email
   ADMIN_PASSWORD    Pre-set admin password
   VAPID_SUBJECT     Pre-set VAPID subject (triggers key generation)
   SKIP_ENV          Set to "true" to skip .env creation
+  TS_AUTHKEY        Tailscale auth key for internet exposure
+  TS_HOSTNAME       Custom Tailscale hostname (default: opencode-manager)
 USAGE
 	exit 0
 }
@@ -92,6 +98,8 @@ while [[ $# -gt 0 ]]; do
 	--no-vapid) NO_VAPID=true ;;
 	--no-admin) NO_ADMIN=true ;;
 	--no-start) NO_START=true ;;
+	--slim) USE_SLIM=true ;;
+	--tailscale) WITH_TAILSCALE=true ;;
 	-h | --help) usage ;;
 	*) die "Unknown option: $1. Use --help for usage." ;;
 	esac
@@ -242,8 +250,47 @@ printf "\n"
 
 info "Building Docker image..."
 $DOCKER_COMPOSE build
-
 success "Docker image built"
+
+if [[ "$USE_SLIM" == true ]]; then
+	printf "\n"
+	info "Creating slimmed image with docker-slim..."
+	
+	if ! command -v slim >/dev/null 2>&1 && ! docker image inspect dslim/slim >/dev/null 2>&1; then
+		info "Installing slim toolkit..."
+		curl -sL https://raw.githubusercontent.com/slimtoolkit/slim/master/scripts/install-slim.sh | sudo -E bash - || {
+			warn "Could not install slim locally, using Docker image"
+		}
+	fi
+	
+	SLIM_ARGS=(
+		--target "opencode-manager:latest"
+		--tag "opencode-manager:slim"
+		--http-probe=false
+		--continue-after=1
+		--include-path=/app
+		--include-path=/workspace
+		--include-path=/opt/opencode
+		--include-path=/usr/local/bin
+		--include-path=/home/bun
+		--include-shell
+		--include-cert-all
+		--include-oslibs-net
+	)
+	
+	if command -v slim >/dev/null 2>&1; then
+		slim build "${SLIM_ARGS[@]}"
+	else
+		docker run --rm \
+			-v /var/run/docker.sock:/var/run/docker.sock \
+			dslim/slim build "${SLIM_ARGS[@]}"
+	fi
+	
+	printf "\n"
+	info "Image size comparison:"
+	docker images opencode-manager --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
+	success "Slim image created"
+fi
 
 if [[ "$NO_START" == true ]]; then
 	printf "\n"
@@ -255,8 +302,39 @@ fi
 
 printf "\n"
 
+COMPOSE_PROFILES=""
+IMAGE_TAG="latest"
+
+if [[ "$USE_SLIM" == true ]]; then
+	IMAGE_TAG="slim"
+fi
+
+if [[ "$WITH_TAILSCALE" == true ]]; then
+	if [[ -z "${TS_AUTHKEY:-}" ]]; then
+		warn "Tailscale requires TS_AUTHKEY environment variable"
+		info "Get an auth key from: https://login.tailscale.com/admin/settings/keys"
+		prompt_input "Enter Tailscale auth key (or leave empty to skip): " TS_AUTHKEY
+	fi
+	
+	if [[ -n "${TS_AUTHKEY:-}" ]]; then
+		COMPOSE_PROFILES="--profile expose"
+		export TS_AUTHKEY
+		
+		if [[ -z "${TS_HOSTNAME:-}" ]]; then
+			prompt_input "Tailscale hostname (default: opencode-manager): " TS_HOSTNAME "opencode-manager"
+		fi
+		export TS_HOSTNAME
+		
+		success "Tailscale configured: ${TS_HOSTNAME}"
+	else
+		warn "Skipping Tailscale (no auth key provided)"
+		WITH_TAILSCALE=false
+	fi
+fi
+
 info "Starting containers..."
-$DOCKER_COMPOSE up -d
+export IMAGE_TAG
+$DOCKER_COMPOSE $COMPOSE_PROFILES up -d
 
 info "Waiting for health check..."
 HEALTH_URL="http://localhost:5003/api/health"
@@ -283,7 +361,20 @@ printf '%b━━━━━━━━━━━━━━━━━━━━━━━�
 printf '%b  OpenCode Manager is running%b\n' "$BOLD" "$NC"
 printf '%b━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━%b\n' "$BOLD" "$NC"
 printf '\n'
-printf '  %bURL:%b  http://localhost:5003\n' "$BOLD" "$NC"
+printf '  %bLocal URL:%b  http://localhost:5003\n' "$BOLD" "$NC"
+
+if [[ "$WITH_TAILSCALE" == true && -n "${TS_AUTHKEY:-}" ]]; then
+	printf '  %bPublic URL:%b https://%s.<tailnet>.ts.net\n' "$BOLD" "$NC" "${TS_HOSTNAME:-opencode-manager}"
+	printf '\n'
+	info "Waiting for Tailscale to connect..."
+	sleep 5
+	TS_STATUS=$(docker exec opencode-tailscale tailscale status --json 2>/dev/null | jq -r '.Self.DNSName // empty' 2>/dev/null || true)
+	if [[ -n "$TS_STATUS" ]]; then
+		printf '  %bTailscale:%b https://%s\n' "$BOLD" "$NC" "${TS_STATUS%.}"
+	else
+		warn "Tailscale still connecting. Check: docker exec opencode-tailscale tailscale status"
+	fi
+fi
 
 if [[ -n "$GENERATED_ADMIN_EMAIL" ]]; then
 	printf '  %bAdmin:%b  %s\n' "$BOLD" "$NC" "$GENERATED_ADMIN_EMAIL"
@@ -293,8 +384,17 @@ if [[ -n "$GENERATED_VAPID_PUBLIC" ]]; then
 	printf '  %bPush:%b  Enabled\n' "$BOLD" "$NC"
 fi
 
+if [[ "$USE_SLIM" == true ]]; then
+	printf '  %bImage:%b  slim (optimized)\n' "$BOLD" "$NC"
+fi
+
 printf '\n'
 printf '  %bLogs:%b   %s logs -f\n' "$BOLD" "$NC" "$DOCKER_COMPOSE"
 printf '  %bStop:%b   %s down\n' "$BOLD" "$NC" "$DOCKER_COMPOSE"
 printf '  %bStatus:%b %s ps\n' "$BOLD" "$NC" "$DOCKER_COMPOSE"
+
+if [[ "$WITH_TAILSCALE" == true ]]; then
+	printf '  %bTailscale:%b docker exec opencode-tailscale tailscale status\n' "$BOLD" "$NC"
+fi
+
 printf '\n'

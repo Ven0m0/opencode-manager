@@ -5,12 +5,17 @@ IMAGE="opencode-manager"
 TAG_FULL="${IMAGE}:latest"
 TAG_SLIM="${IMAGE}:slim"
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_DIR"
+
 usage() {
-  echo "Usage: $0 [build|slim|run|all]"
-  echo "  build  - Build the Docker image"
-  echo "  slim   - Run slim against the built image"
-  echo "  run    - Start the container"
-  echo "  all    - Build, slim, then run the slimmed image"
+  echo "Usage: $0 [build|slim|run|expose|all]"
+  echo "  build   - Build the Docker image"
+  echo "  slim    - Run slim against the built image"
+  echo "  run     - Start the container"
+  echo "  expose  - Start with Tailscale exposure (requires TS_AUTHKEY)"
+  echo "  all     - Build, slim, then run the slimmed image"
   exit 1
 }
 
@@ -69,10 +74,35 @@ cmd_run() {
   IMAGE_TAG="${tag}" docker compose up -d app
 }
 
+cmd_expose() {
+  local tag="${1:-latest}"
+  
+  if [[ -z "${TS_AUTHKEY:-}" ]]; then
+    echo "ERROR: TS_AUTHKEY is required for Tailscale exposure."
+    echo ""
+    echo "Get an auth key from: https://login.tailscale.com/admin/settings/keys"
+    echo "Then run: TS_AUTHKEY=tskey-auth-xxx $0 expose"
+    exit 1
+  fi
+  
+  echo "==> Starting ${IMAGE}:${tag} with Tailscale exposure..."
+  IMAGE_TAG="${tag}" docker compose --profile expose up -d
+  
+  echo ""
+  echo "==> Tailscale status:"
+  sleep 5
+  docker exec opencode-tailscale tailscale status 2>/dev/null || echo "Waiting for Tailscale to connect..."
+  
+  echo ""
+  echo "Your service will be available at: https://${TS_HOSTNAME:-opencode-manager}.<your-tailnet>.ts.net"
+  echo "Check status: docker exec opencode-tailscale tailscale status"
+}
+
 case "${1:-}" in
-  build) cmd_build ;;
-  slim)  cmd_slim ;;
-  run)   cmd_run "${2:-latest}" ;;
-  all)   cmd_build; cmd_slim; cmd_run slim ;;
-  *)     usage ;;
+  build)  cmd_build ;;
+  slim)   cmd_slim ;;
+  run)    cmd_run "${2:-latest}" ;;
+  expose) cmd_expose "${2:-latest}" ;;
+  all)    cmd_build; cmd_slim; cmd_run slim ;;
+  *)      usage ;;
 esac

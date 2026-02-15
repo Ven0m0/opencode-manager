@@ -151,10 +151,7 @@ export function TTSSettings() {
   const watchEnabled = form.watch("enabled");
   const watchProvider = form.watch("provider");
   const watchApiKey = form.watch("apiKey");
-  const _watchEndpoint = form.watch("endpoint");
   const watchVoice = form.watch("voice");
-  const _watchModel = form.watch("model");
-  const _watchSpeed = form.watch("speed");
 
   // Check builtin Web Speech API support
   const hasWebSpeechSupport = isWebSpeechSupported();
