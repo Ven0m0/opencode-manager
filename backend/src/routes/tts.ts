@@ -22,6 +22,14 @@ const DISCOVERY_CACHE_TTL_MS = 60 * 60 * 1000;
 const MAX_CACHE_SIZE_MB = 200;
 const MAX_CACHE_SIZE_BYTES = MAX_CACHE_SIZE_MB * 1024 * 1024;
 
+function chunkArray<T>(array: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size));
+  }
+  return chunks;
+}
+
 const TTSRequestSchema = z.object({
   text: z.string().min(1).max(4096),
 });
@@ -73,9 +81,15 @@ async function getCacheSize(): Promise<number> {
     const files = await readdir(TTS_CACHE_DIR);
     const mp3Files = files.filter((file) => file.endsWith(".mp3"));
 
-    const stats = await Promise.all(
-      mp3Files.map((file) => stat(join(TTS_CACHE_DIR, file))),
-    );
+    const stats: import("node:fs").Stats[] = [];
+    const chunks = chunkArray(mp3Files, 50);
+
+    for (const chunk of chunks) {
+      const chunkResults = await Promise.all(
+        chunk.map((file) => stat(join(TTS_CACHE_DIR, file)))
+      );
+      stats.push(...chunkResults);
+    }
 
     return stats.reduce((total, s) => total + s.size, 0);
   } catch {
@@ -88,17 +102,23 @@ async function cleanupOldestFiles(requiredSpace: number): Promise<void> {
     const files = await readdir(TTS_CACHE_DIR);
     const mp3Files = files.filter((file) => file.endsWith(".mp3"));
 
-    const fileInfos = await Promise.all(
-      mp3Files.map(async (file) => {
-        const filePath = join(TTS_CACHE_DIR, file);
-        const fileStat = await stat(filePath);
-        return {
-          path: filePath,
-          mtimeMs: fileStat.mtimeMs,
-          size: fileStat.size,
-        };
-      }),
-    );
+    const fileInfos: { path: string; mtimeMs: number; size: number }[] = [];
+    const chunks = chunkArray(mp3Files, 50);
+
+    for (const chunk of chunks) {
+      const chunkResults = await Promise.all(
+        chunk.map(async (file) => {
+          const filePath = join(TTS_CACHE_DIR, file);
+          const fileStat = await stat(filePath);
+          return {
+            path: filePath,
+            mtimeMs: fileStat.mtimeMs,
+            size: fileStat.size,
+          };
+        })
+      );
+      fileInfos.push(...chunkResults);
+    }
 
     fileInfos.sort((a, b) => a.mtimeMs - b.mtimeMs);
 
@@ -271,21 +291,27 @@ export async function cleanupExpiredCache(): Promise<number> {
     const files = await readdir(TTS_CACHE_DIR);
     const mp3Files = files.filter((file) => file.endsWith(".mp3"));
 
-    const results = await Promise.all(
-      mp3Files.map(async (file) => {
-        const filePath = join(TTS_CACHE_DIR, file);
-        try {
-          const fileStat = await stat(filePath);
-          if (Date.now() - fileStat.mtimeMs > CACHE_TTL_MS) {
-            await unlink(filePath);
-            return true;
+    const results: boolean[] = [];
+    const chunks = chunkArray(mp3Files, 50);
+
+    for (const chunk of chunks) {
+      const chunkResults = await Promise.all(
+        chunk.map(async (file) => {
+          const filePath = join(TTS_CACHE_DIR, file);
+          try {
+            const fileStat = await stat(filePath);
+            if (Date.now() - fileStat.mtimeMs > CACHE_TTL_MS) {
+              await unlink(filePath);
+              return true;
+            }
+          } catch (error) {
+            logger.error(`Failed to cleanup TTS cache file ${file}`, error);
           }
-        } catch {
-          // Ignore errors for individual files
-        }
-        return false;
-      }),
-    );
+          return false;
+        })
+      );
+      results.push(...chunkResults);
+    }
 
     const cleanedCount = results.filter(Boolean).length;
 
@@ -310,9 +336,15 @@ export async function getCacheStats(): Promise<{
     const files = await readdir(TTS_CACHE_DIR);
     const mp3Files = files.filter((file) => file.endsWith(".mp3"));
 
-    const stats = await Promise.all(
-      mp3Files.map((file) => stat(join(TTS_CACHE_DIR, file))),
-    );
+    const stats: import("node:fs").Stats[] = [];
+    const chunks = chunkArray(mp3Files, 50);
+
+    for (const chunk of chunks) {
+      const chunkResults = await Promise.all(
+        chunk.map((file) => stat(join(TTS_CACHE_DIR, file)))
+      );
+      stats.push(...chunkResults);
+    }
 
     const now = Date.now();
     let count = 0;
