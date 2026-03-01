@@ -37,7 +37,7 @@
     "@vitest/ui": "^3.2.4",
     "eslint": "^10.0.1",
     "typescript-eslint": "^8.45.0",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.18"
   },
   "peerDependencies": {
     "typescript": "^5"
