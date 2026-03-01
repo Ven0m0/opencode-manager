@@ -1,0 +1,43 @@
+--- backend/src/services/repo.ts
++++ backend/src/services/repo.ts
+@@ -413,7 +413,7 @@
+   } catch (error: unknown) {
+     logger.error(`Failed to pull repo: ${repo.repoUrl}`, error);
+     throw new Error(
+-      `Failed to pull repository: ${getErrorMessage(error)}`,
++      `Failed to pull repository: ${getErrorMessage(error)}`, { cause: error }
+     );
+   }
+ }
+@@ -548,7 +548,7 @@
+           } catch (cloneError: unknown) {
+             throw new Error(
+               `Failed to clone branch '${branch}': ${getErrorMessage(cloneError)}`,
++              { cause: cloneError }
+             );
+           }
+
+@@ -562,7 +562,7 @@
+         } else {
+           throw new Error(
+             `Clone failed: ${getErrorMessage(error)}`,
++            { cause: error }
+           );
+         }
+       }
+@@ -764,7 +764,7 @@
+           } catch (cloneError: unknown) {
+             throw new Error(
+               `Failed to clone branch '${branch}': ${getErrorMessage(cloneError)}`,
++              { cause: cloneError }
+             );
+           }
+
+@@ -783,7 +783,7 @@
+         } else {
+           throw new Error(
+             `Clone failed: ${getErrorMessage(error)}`,
++            { cause: error }
+           );
+         }
+       }

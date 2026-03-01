@@ -1,0 +1,15 @@
+--- backend/test/services/repo.test.ts
++++ backend/test/services/repo.test.ts
+@@ -279,7 +279,6 @@
+     await expect(
+       initLocalRepo(database, mockGitAuthService, "repo/../../escaped")
+     ).rejects.toThrow("Invalid repository path: Path escapes the workspace directory.");
+   });
+
+   it("throws error when trying to use workspace root", async () => {
+@@ -293,4 +292,3 @@
+     ).rejects.toThrow("Invalid repository path: Cannot use the workspace root directory.");
+   });
+-});
+-});
++});

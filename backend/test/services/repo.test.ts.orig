@@ -251,7 +251,6 @@ describe("initLocalRepo", () => {
     const result = await initLocalRepo(database, mockGitAuthService, localPath);
 
     expect(result.localPath).toBe("my-repo");
-  });
 
   it("throws error for directory traversal attempt", async () => {
     const { initLocalRepo } = await import("../../src/services/repo");

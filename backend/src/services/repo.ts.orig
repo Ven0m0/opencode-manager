@@ -319,7 +319,6 @@ export async function initLocalRepo(
     );
     throw new Error(
       `Failed to register local repository '${repoLocalPath}': ${getErrorMessage(error)}`,
-      { cause: error },
     );
   }
 
@@ -561,7 +560,7 @@ export async function cloneRepo(
           logger.error(`Clone failed: directory still exists after cleanup attempt`)
           throw new Error(`Workspace directory ${worktreeDirName} already exists. Please delete it manually or contact support.`)
         }
-        
+
         if (branch && (getErrorMessage(error).includes('Remote branch') || getErrorMessage(error).includes('not found'))) {
           logger.info(`Branch '${branch}' not found, cloning default branch and creating branch locally`)
           try {
@@ -782,7 +781,7 @@ export async function cloneRepo(
           logger.error(`Clone failed: directory still exists after cleanup attempt`)
           throw new Error(`Workspace directory ${worktreeDirName} already exists. Please delete it manually or contact support.`)
         }
-        
+
         if (branch && (getErrorMessage(error).includes('Remote branch') || getErrorMessage(error).includes('not found'))) {
           logger.info(`Branch '${branch}' not found, cloning default branch and creating branch locally`)
           try {
