@@ -11,6 +11,7 @@ const migration: Migration = {
       preferences: string
     }>
 
+    const updateStmt = db.prepare('UPDATE user_preferences SET preferences = ? WHERE user_id = ?')
     for (const row of rows) {
       try {
         const parsed = JSON.parse(row.preferences) as Record<string, unknown>
@@ -31,8 +32,7 @@ const migration: Migration = {
           }],
         }
 
-        db.prepare('UPDATE user_preferences SET preferences = ? WHERE user_id = ?')
-          .run(JSON.stringify(migrated), row.user_id)
+        updateStmt.run(JSON.stringify(migrated), row.user_id)
 
         logger.info(`Migrated gitToken to gitCredentials for user: ${row.user_id}`)
       } catch (parseError) {
@@ -47,6 +47,7 @@ const migration: Migration = {
       preferences: string
     }>
 
+    const updateStmt = db.prepare('UPDATE user_preferences SET preferences = ? WHERE user_id = ?')
     for (const row of rows) {
       try {
         const parsed = JSON.parse(row.preferences) as Record<string, unknown>
@@ -62,8 +63,7 @@ const migration: Migration = {
           gitToken: firstCredential.token,
         }
 
-        db.prepare('UPDATE user_preferences SET preferences = ? WHERE user_id = ?')
-          .run(JSON.stringify(reverted), row.user_id)
+        updateStmt.run(JSON.stringify(reverted), row.user_id)
       } catch (parseError) {
         logger.error(`Failed to revert preferences for user ${row.user_id}:`, parseError)
       }
