@@ -215,6 +215,26 @@ export class NotificationService {
 
     if (!this.isConfigured()) return;
 
+    let notificationUrl = "/";
+    let repoName = "";
+    let repoId: number | undefined;
+
+    if (_directory) {
+      const reposBasePath = getReposPath();
+      const localPath = path.relative(reposBasePath, _directory);
+      const repo = getRepoByLocalPath(this.db, localPath);
+
+      if (repo) {
+        repoId = repo.id;
+        repoName = path.basename(repo.localPath);
+        if (sessionId) {
+          notificationUrl = `/repos/${repo.id}/sessions/${sessionId}`;
+        } else {
+          notificationUrl = `/repos/${repo.id}`;
+        }
+      }
+    }
+
     const userIds = this.getAllUserIds();
 
     for (const userId of userIds) {
@@ -224,26 +244,6 @@ export class NotificationService {
 
       if (!notifPrefs.enabled) continue;
       if (!notifPrefs.events[config.preferencesKey]) continue;
-
-      let notificationUrl = "/";
-      let repoName = "";
-      let repoId: number | undefined;
-
-      if (_directory) {
-        const reposBasePath = getReposPath();
-        const localPath = path.relative(reposBasePath, _directory);
-        const repo = getRepoByLocalPath(this.db, localPath);
-
-        if (repo) {
-          repoId = repo.id;
-          repoName = path.basename(repo.localPath);
-          if (sessionId) {
-            notificationUrl = `/repos/${repo.id}/sessions/${sessionId}`;
-          } else {
-            notificationUrl = `/repos/${repo.id}`;
-          }
-        }
-      }
 
       const body = config.bodyFn(event.properties);
 
