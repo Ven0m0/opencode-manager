@@ -202,12 +202,8 @@ export function TextPart({ part }: TextPartProps) {
     return part.text ? isMermaidBlockComplete(part.text) : false;
   }, [part.text]);
 
-  if (!part.text || part.text.trim() === "") {
-    return (
-      <div className="text-muted-foreground italic text-sm">
-        [Empty message content]
-      </div>
-    );
+  if (!part.text || part.text.trim() === '') {
+    return null  
   }
 
   return (

@@ -222,7 +222,6 @@ export class WebSpeechSynthesizer {
           this.pendingReject = null;
         }
         this.onEndCallbacks.forEach((cb) => cb());
-        resolve();
       };
 
       utterance.onerror = (event: SpeechSynthesisErrorEvent) => {
@@ -234,7 +233,6 @@ export class WebSpeechSynthesizer {
           this.pendingReject = null;
         }
         this.onErrorCallbacks.forEach((cb) => cb(errorMessage));
-        reject(new Error(errorMessage));
       };
 
       utterance.onboundary = (event) => {

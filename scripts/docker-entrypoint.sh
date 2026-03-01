@@ -37,6 +37,16 @@ if [ "$OPENCODE_VERSION" != "unknown" ]; then
   fi
 fi
 
+echo "🔍 Checking memory plugin..."
+
+if [ -d "$NODE_PATH/@opencode-manager/memory" ]; then
+    echo "✅ Memory plugin found at $NODE_PATH/@opencode-manager/memory"
+else
+    echo "⚠️  Memory plugin not found at $NODE_PATH/@opencode-manager/memory"
+fi
+
+echo "🚀 Starting OpenCode Manager Backend..."
+
 if [ -z "$AUTH_SECRET" ]; then
   cat >&2 <<'EOF'
 ERROR: AUTH_SECRET is required but not set.

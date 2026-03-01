@@ -19,7 +19,7 @@ export interface OpenCodeModel {
   cost: {
     input: number;
     output: number;
-    cache: {
+    cache?: {
       read: number;
       write: number;
     };
@@ -168,46 +168,38 @@ async function getProvidersFromOpenCodeServer(): Promise<{
         (openCodeProvider: OpenCodeProvider) => {
           const models: Record<string, Model> = {};
 
-          Object.entries(openCodeProvider.models).forEach(
-            ([modelId, openCodeModel]) => {
-              models[modelId] = {
-                id: modelId,
-                name: openCodeModel.name,
-                attachment: openCodeModel.capabilities.attachment,
-                reasoning: openCodeModel.capabilities.reasoning,
-                temperature: openCodeModel.capabilities.temperature,
-                tool_call: openCodeModel.capabilities.toolcall,
-                cost: {
-                  input: openCodeModel.cost.input,
-                  output: openCodeModel.cost.output,
-                  cache_read: openCodeModel.cost.cache.read,
-                  cache_write: openCodeModel.cost.cache.write,
-                },
-                limit: {
-                  context: openCodeModel.limit.context,
-                  output: openCodeModel.limit.output,
-                },
-                modalities: {
-                  input: Object.keys(openCodeModel.capabilities.input).filter(
-                    (key) =>
-                      openCodeModel.capabilities.input[
-                        key as keyof typeof openCodeModel.capabilities.input
-                      ],
-                  ) as ("text" | "audio" | "image" | "video" | "pdf")[],
-                  output: Object.keys(openCodeModel.capabilities.output).filter(
-                    (key) =>
-                      openCodeModel.capabilities.output[
-                        key as keyof typeof openCodeModel.capabilities.output
-                      ],
-                  ) as ("text" | "audio" | "image" | "video" | "pdf")[],
-                },
-                provider: {
-                  npm: openCodeModel.api.npm,
-                },
-                variants: openCodeModel.variants,
-              };
+        Object.entries(openCodeProvider.models).forEach(([modelId, openCodeModel]) => {
+          models[modelId] = {
+            id: modelId,
+            name: openCodeModel.name,
+            attachment: openCodeModel.capabilities.attachment,
+            reasoning: openCodeModel.capabilities.reasoning,
+            temperature: openCodeModel.capabilities.temperature,
+            tool_call: openCodeModel.capabilities.toolcall,
+            cost: {
+              input: openCodeModel.cost.input,
+              output: openCodeModel.cost.output,
+              cache_read: openCodeModel.cost.cache?.read ?? 0,
+              cache_write: openCodeModel.cost.cache?.write ?? 0,
             },
-          );
+            limit: {
+              context: openCodeModel.limit.context,
+              output: openCodeModel.limit.output,
+            },
+            modalities: {
+              input: Object.keys(openCodeModel.capabilities.input).filter(
+                (key) => openCodeModel.capabilities.input[key as keyof typeof openCodeModel.capabilities.input]
+              ) as ("text" | "audio" | "image" | "video" | "pdf")[],
+              output: Object.keys(openCodeModel.capabilities.output).filter(
+                (key) => openCodeModel.capabilities.output[key as keyof typeof openCodeModel.capabilities.output]
+              ) as ("text" | "audio" | "image" | "video" | "pdf")[],
+            },
+            provider: {
+              npm: openCodeModel.api.npm,
+            },
+            variants: openCodeModel.variants,
+          };
+        });
 
           return {
             id: openCodeProvider.id,
@@ -222,8 +214,8 @@ async function getProvidersFromOpenCodeServer(): Promise<{
 
       return { providers, connected: response.connected || [] };
     }
-  } catch (error) {
-    console.warn("Failed to load providers from OpenCode server", error);
+  } catch {
+    // Silently return empty providers on failure - graceful degradation
   }
 
   return { providers: [], connected: [] };
@@ -289,8 +281,8 @@ async function getConfiguredProviders(
     }
 
     return result;
-  } catch (error) {
-    console.warn("Failed to load configured providers", error);
+  } catch {
+    // Silently return empty providers on failure - graceful degradation
     return [];
   }
 }

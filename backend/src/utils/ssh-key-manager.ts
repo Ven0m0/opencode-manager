@@ -1,6 +1,5 @@
 /* eslint-disable no-empty */
-
-import { execFileSync } from "node:child_process";
+import { execFile } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { promises as fs } from "node:fs";
 import { join } from "node:path";
@@ -57,19 +56,20 @@ async function validateSSHKey(keyPath: string): Promise<boolean> {
   }
 }
 
-export async function writeTemporarySSHKey(
-  keyContent: string,
-  identifier: string,
-): Promise<string> {
-  await ensureSSHKeysDir();
+export async function writeTemporarySSHKey(keyContent: string, identifier: string): Promise<string> {
+  await ensureSSHKeysDir()
+  
+  const randomSuffix = randomBytes(8).toString('hex')
+  const fileName = `key-${identifier}-${randomSuffix}`
+  const keyPath = join(SSH_KEYS_DIR, fileName)
 
-  const randomSuffix = randomBytes(8).toString("hex");
-  const fileName = `key-${identifier}-${randomSuffix}`;
-  const keyPath = join(SSH_KEYS_DIR, fileName);
+  if (!keyPath.startsWith(SSH_KEYS_DIR)) {
+    throw new Error('Invalid key path')
+  }
 
-  await fs.writeFile(keyPath, `${keyContent.trim()}\n`, { mode: 0o600 });
-
-  const isValid = await validateSSHKey(keyPath);
+  await fs.writeFile(keyPath, keyContent.trim() + '\n', { mode: 0o600 })
+  
+  const isValid = await validateSSHKey(keyPath)
   if (!isValid) {
     await fs.unlink(keyPath).catch(() => {});
     throw new Error("Invalid SSH key format");
@@ -128,7 +128,11 @@ export async function writePersistentSSHKey(
   const fileName = `persistent-${identifier}`;
   const keyPath = join(SSH_KEYS_DIR, fileName);
 
-  await fs.writeFile(keyPath, `${keyContent.trim()}\n`, { mode: 0o600 });
+  if (!keyPath.startsWith(SSH_KEYS_DIR)) {
+    throw new Error('Invalid key path')
+  }
+
+  await fs.writeFile(keyPath, keyContent.trim() + '\n', { mode: 0o600 })
 
   const isValid = await validateSSHKey(keyPath);
   if (!isValid) {
@@ -146,12 +150,13 @@ export function buildSSHCommandWithConfig(
   return `ssh -T -F "${configPath}" -o UserKnownHostsFile="${knownHostsPath}" -o StrictHostKeyChecking=accept-new -o PasswordAuthentication=no`;
 }
 
-export function stripKeyPassphrase(keyPath: string, passphrase: string): void {
-  execFileSync(
-    "ssh-keygen",
-    ["-p", "-P", passphrase, "-N", "", "-f", keyPath],
-    { stdio: "ignore" },
-  );
+export async function stripKeyPassphrase(keyPath: string, passphrase: string): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    execFile('ssh-keygen', ['-p', '-P', passphrase, '-N', '', '-f', keyPath], (error: Error | null) => {
+      if (error) reject(error)
+      else resolve()
+    })
+  })
 }
 
 export interface SSHConfigEntry {

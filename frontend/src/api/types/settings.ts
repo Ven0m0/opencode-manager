@@ -30,12 +30,6 @@ export interface CustomCommand {
   promptTemplate: string;
 }
 
-export interface CustomAgent {
-  name: string;
-  description: string;
-  config: Record<string, unknown>;
-}
-
 export interface GitCredential {
   name: string;
   host: string;
@@ -54,25 +48,25 @@ export interface GitIdentity {
 }
 
 export interface UserPreferences {
-  theme: "dark" | "light" | "system";
-  mode: "plan" | "build";
-  defaultModel?: string;
-  defaultAgent?: string;
-  autoScroll: boolean;
-  showReasoning: boolean;
-  expandToolCalls: boolean;
-  expandDiffs: boolean;
-  leaderKey?: string;
-  directShortcuts?: string[];
-  keyboardShortcuts: Record<string, string>;
-  customCommands: CustomCommand[];
-  customAgents: CustomAgent[];
-  gitCredentials?: GitCredential[];
-  gitIdentity?: GitIdentity;
-  tts?: TTSConfig;
-  stt?: STTConfig;
-  notifications?: NotificationPreferences;
-  repoOrder?: number[];
+  theme: 'dark' | 'light' | 'system'
+  mode: 'plan' | 'build'
+  defaultModel?: string
+  defaultAgent?: string
+  autoScroll: boolean
+  showReasoning: boolean
+  expandToolCalls: boolean
+  expandDiffs: boolean
+  leaderKey?: string
+  directShortcuts?: string[]
+  keyboardShortcuts: Record<string, string>
+  customCommands: CustomCommand[]
+  gitCredentials?: GitCredential[]
+  gitIdentity?: GitIdentity
+  tts?: TTSConfig
+  stt?: STTConfig
+  notifications?: NotificationPreferences
+  repoOrder?: number[]
+  memoryDedupThreshold?: number
 }
 
 export interface SettingsResponse {

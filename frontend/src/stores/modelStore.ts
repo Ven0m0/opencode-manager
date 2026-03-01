@@ -1,5 +1,6 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+import type { Provider } from '@/api/providers'
 
 export interface ModelSelection {
   providerID: string;
@@ -12,12 +13,13 @@ interface ModelStore {
   variants: Record<string, string | undefined>;
   lastConfigModel: string | undefined;
 
-  setModel: (model: ModelSelection) => void;
-  syncFromConfig: (configModel: string | undefined) => void;
-  getModelString: () => string | null;
-  setVariant: (model: ModelSelection, variant: string | undefined) => void;
-  getVariant: (model: ModelSelection) => string | undefined;
-  clearVariant: (model: ModelSelection) => void;
+  setModel: (model: ModelSelection) => void
+  syncFromConfig: (configModel: string | undefined, force?: boolean) => void
+  validateAndSyncModel: (configModel: string | undefined, providers?: Provider[]) => void
+  getModelString: () => string | null
+  setVariant: (model: ModelSelection, variant: string | undefined) => void
+  getVariant: (model: ModelSelection) => string | undefined
+  clearVariant: (model: ModelSelection) => void
 }
 
 const MAX_RECENT_MODELS = 10;
@@ -57,10 +59,10 @@ export const useModelStore = create<ModelStore>()(
         });
       },
 
-      syncFromConfig: (configModel: string | undefined) => {
-        const state = get();
-        if (state.lastConfigModel === configModel) return;
-
+      syncFromConfig: (configModel: string | undefined, force = false) => {
+        const state = get()
+        if (!force && state.lastConfigModel === configModel) return
+        
         if (configModel) {
           const parsed = parseModelString(configModel);
           if (parsed) {
@@ -84,6 +86,25 @@ export const useModelStore = create<ModelStore>()(
           }
         }
         set({ lastConfigModel: configModel });
+      },
+
+      validateAndSyncModel: (configModel: string | undefined, providers?: Provider[]) => {
+        if (!configModel) return
+
+        const state = get()
+
+        if (!providers || !state.model) {
+          get().syncFromConfig(configModel)
+          return
+        }
+
+        const modelExists = providers.some(
+          (p) => p.id === state.model!.providerID && p.models && state.model!.modelID in p.models
+        )
+
+        if (!modelExists) {
+          get().syncFromConfig(configModel, true)
+        }
       },
 
       getModelString: () => {

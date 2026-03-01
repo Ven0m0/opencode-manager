@@ -11,13 +11,11 @@ const IV_LENGTH = 16;
 const KEY_LENGTH = 32;
 
 function deriveKey(): Buffer {
-  const secret = ENV.AUTH.SECRET;
+  const secret = ENV.AUTH.SECRET
   if (!secret) {
-    throw new Error(
-      "AUTH_SECRET environment variable is not set. This is required for security operations.",
-    );
+    throw new Error('AUTH_SECRET must be configured for encryption')
   }
-  return scryptSync(secret, ENCRYPTION_KEY_SALT, KEY_LENGTH);
+  return scryptSync(secret, ENCRYPTION_KEY_SALT, KEY_LENGTH)
 }
 
 export function encryptSecret(plaintext: string): string {

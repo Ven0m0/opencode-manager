@@ -220,10 +220,10 @@ export type ContentPart =
       dataUrl: string;
     };
 
-export interface FileInfo {
-  path: string;
-  name: string;
-  mime?: string;
+export interface FileAttachmentInfo {
+  path: string
+  name: string
+  mime?: string
 }
 
 export interface ImageAttachment {
@@ -244,5 +244,3 @@ export interface SSHHostKeyRequest {
   timestamp: number;
   action: "verify";
 }
-
-export type SSHHostKeyResponse = "accept" | "reject";

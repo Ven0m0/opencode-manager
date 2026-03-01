@@ -1,7 +1,8 @@
-import { promises as fs } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { executeCommand } from "./process";
+import { promises as fs } from 'fs'
+import { tmpdir } from 'os'
+import { join } from 'path'
+import { randomBytes } from 'crypto'
+import { executeCommand } from './process'
 
 async function removeFile(filePath: string): Promise<void> {
   await fs.unlink(filePath).catch(() => {});
@@ -27,11 +28,8 @@ export async function validateSSHPrivateKey(
   let tempKeyPath: string | null = null;
 
   try {
-    tempKeyPath = join(
-      tmpdir(),
-      `temp-ssh-key-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    );
-    await fs.writeFile(tempKeyPath, `${trimmedKey}\n`, { mode: 0o600 });
+    tempKeyPath = join(tmpdir(), `temp-ssh-key-${Date.now()}-${randomBytes(8).toString('hex')}`)
+    await fs.writeFile(tempKeyPath, trimmedKey + '\n', { mode: 0o600 })
 
     try {
       await executeCommand(["ssh-keygen", "-y", "-P", "", "-f", tempKeyPath], {

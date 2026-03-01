@@ -3,41 +3,16 @@ import { execSync, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import {
-  ENV,
-  getAgentsMdPath,
-  getOpenCodeConfigFilePath,
-} from "@opencode-manager/shared/config/env";
-import { Hono } from "hono";
-import { z } from "zod";
-import { DEFAULT_AGENTS_MD } from "../constants";
-import {
-  fileExists,
-  readFileContent,
-  writeFileContent,
-} from "../services/file-operations";
-import { opencodeServerManager } from "../services/opencode-single-server";
-import {
-  patchOpenCodeConfig,
-  proxyToOpenCodeWithDirectory,
-} from "../services/proxy";
-import { SettingsService } from "../services/settings";
-import { OpenCodeConfigSchema, UserPreferencesSchema } from "../types/settings";
-import { encryptSecret } from "../utils/crypto";
-import { logger } from "../utils/logger";
-import { validateSSHPrivateKey } from "../utils/ssh-validation";
-
-function compareVersions(v1: string, v2: string): number {
-  const parts1 = v1.split(".").map((s) => Number(s));
-  const parts2 = v2.split(".").map((s) => Number(s));
-
-  for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
-    const p1 = parts1[i] || 0;
-    const p2 = parts2[i] || 0;
-    if (p1 > p2) return 1;
-    if (p1 < p2) return -1;
-  }
-  return 0;
-}
+  UserPreferencesSchema,
+  OpenCodeConfigSchema,
+} from '../types/settings'
+import type { GitCredential } from '@opencode-manager/shared'
+import { logger } from '../utils/logger'
+import { opencodeServerManager } from '../services/opencode-single-server'
+import { DEFAULT_AGENTS_MD } from '../constants'
+import { validateSSHPrivateKey } from '../utils/ssh-validation'
+import { encryptSecret } from '../utils/crypto'
+import { compareVersions } from '../utils/version-utils'
 
 function getOpenCodeInstallMethod(): string {
   const homePath = process.env.HOME || "";
@@ -158,6 +133,8 @@ const ConnectMcpDirectorySchema = z.object({
   directory: z.string().min(1),
 });
 
+const McpAuthDirectorySchema = ConnectMcpDirectorySchema
+
 const TestSSHConnectionSchema = z.object({
   host: z.string().min(1),
   sshPrivateKey: z.string().min(1),
@@ -189,7 +166,20 @@ export function createSettingsRoutes(db: Database) {
     }
   });
 
-  app.patch("/", async (c) => {
+  app.get('/memory-plugin-status', async (c) => {
+    try {
+      const userId = c.req.query('userId') || 'default'
+      const configs = settingsService.getOpenCodeConfigs(userId)
+      const defaultConfig = configs.configs.find((cfg: { isDefault: boolean }) => cfg.isDefault)
+      const isEnabled = defaultConfig?.content?.plugin?.includes('@opencode-manager/memory') ?? false
+      return c.json({ memoryPluginEnabled: isEnabled })
+    } catch (error) {
+      logger.error('Failed to get memory plugin status:', error)
+      return c.json({ error: 'Failed to get memory plugin status' }, 500)
+    }
+  })
+
+  app.patch('/', async (c) => {
     try {
       const userId = c.req.query("userId") || "default";
       const body = await c.req.json();
@@ -197,36 +187,26 @@ export function createSettingsRoutes(db: Database) {
 
       if (validated.preferences.gitCredentials) {
         const validations = await Promise.all(
-          validated.preferences.gitCredentials.map(
-            async (cred: Record<string, unknown>) => {
-              if (cred.type === "ssh" && cred.sshPrivateKey) {
-                const validation = await validateSSHPrivateKey(
-                  cred.sshPrivateKey as string,
-                );
-                if (!validation.valid) {
-                  throw new Error(
-                    `Invalid SSH key for credential '${cred.name}': ${validation.error}`,
-                  );
-                }
-
-                const result: Record<string, unknown> = {
-                  ...cred,
-                  sshPrivateKeyEncrypted: encryptSecret(
-                    cred.sshPrivateKey as string,
-                  ),
-                  hasPassphrase: validation.hasPassphrase,
-                  passphrase: cred.passphrase
-                    ? encryptSecret(cred.passphrase as string)
-                    : undefined,
-                };
-                delete result.sshPrivateKey;
-                return result;
+          validated.preferences.gitCredentials.map(async (cred: GitCredential) => {
+            if (cred.type === 'ssh' && cred.sshPrivateKey) {
+              const validation = await validateSSHPrivateKey(cred.sshPrivateKey)
+              if (!validation.valid) {
+                throw new Error(`Invalid SSH key for credential '${cred.name}': ${validation.error}`)
               }
-              return cred;
-            },
-          ),
-        );
-        validated.preferences.gitCredentials = validations;
+
+              const result: GitCredential = {
+                ...cred,
+                sshPrivateKeyEncrypted: encryptSecret(cred.sshPrivateKey),
+                hasPassphrase: validation.hasPassphrase,
+                passphrase: cred.passphrase ? encryptSecret(cred.passphrase) : undefined,
+              }
+              delete result.sshPrivateKey
+              return result
+            }
+            return cred
+          })
+        )
+        validated.preferences.gitCredentials = validations
       }
 
       const currentSettings = settingsService.getSettings(userId);
@@ -1250,36 +1230,30 @@ export function createSettingsRoutes(db: Database) {
 
   app.post("/mcp/:name/authdirectedir", async (c) => {
     try {
-      const serverName = c.req.param("name");
-      const body = await c.req.json();
-      const { directory } = ConnectMcpDirectorySchema.parse(body);
-
+      const serverName = c.req.param('name')
+      const body = await c.req.json()
+      const { directory } = McpAuthDirectorySchema.parse(body)
+      
       const response = await proxyToOpenCodeWithDirectory(
         `/mcp/${encodeURIComponent(serverName)}/auth/authenticate`,
-        "POST",
+        'POST',
         directory,
-      );
-
+      )
+      
       if (!response.ok) {
-        const errorMsg = await extractOpenCodeError(
-          response,
-          "Failed to authenticate MCP server",
-        );
-        return c.json({ error: errorMsg }, 400);
+        const errorMsg = await extractOpenCodeError(response, 'Failed to authenticate MCP server')
+        return c.json({ error: errorMsg }, 400)
       }
-
-      return c.json(await response.json());
+      
+      return c.json(await response.json())
     } catch (error) {
-      logger.error("Failed to authenticate MCP server for directory:", error);
+      logger.error('Failed to authenticate MCP server for directory:', error)
       if (error instanceof z.ZodError) {
-        return c.json(
-          { error: "Invalid request data", details: error.issues },
-          400,
-        );
+        return c.json({ error: 'Invalid request data', details: error.issues }, 400)
       }
-      return c.json({ error: "Failed to authenticate MCP server" }, 500);
+      return c.json({ error: 'Failed to authenticate MCP server' }, 500)
     }
-  });
+  })
 
   app.delete("/mcp/:name/authdir", async (c) => {
     try {

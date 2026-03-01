@@ -1,30 +1,19 @@
-import type { Database } from "bun:sqlite";
-import { execSync, spawn } from "node:child_process";
-import path from "node:path";
-import {
-  ENV,
-  getOpenCodeConfigFilePath,
-  getWorkspacePath,
-} from "@opencode-manager/shared/config/env";
-import { decryptSecret } from "../utils/crypto";
-import {
-  createGitEnv,
-  createGitIdentityEnv,
-  type GitCredential,
-  resolveGitIdentity,
-} from "../utils/git-auth";
-import { logger } from "../utils/logger";
+import { spawn, execSync } from 'child_process'
+import path from 'path'
+import { logger } from '../utils/logger'
+import { createGitEnv, createGitIdentityEnv, resolveGitIdentity } from '../utils/git-auth'
+import type { GitCredential } from '@opencode-manager/shared'
 import {
   buildSSHCommandWithConfig,
   buildSSHCommandWithKnownHosts,
   cleanupPersistentSSHKeys,
-  generateSSHConfig,
-  parseSSHHost,
-  stripKeyPassphrase,
-  writePersistentSSHKey,
-  writeSSHConfig,
-} from "../utils/ssh-key-manager";
-import { SettingsService } from "./settings";
+  parseSSHHost
+} from '../utils/ssh-key-manager'
+import { decryptSecret } from '../utils/crypto'
+import { SettingsService } from './settings'
+import { getWorkspacePath, getOpenCodeConfigFilePath, ENV } from '@opencode-manager/shared/config/env'
+import type { Database } from 'bun:sqlite'
+import { compareVersions } from '../utils/version-utils'
 
 const OPENCODE_SERVER_PORT = ENV.OPENCODE.PORT;
 const OPENCODE_SERVER_HOST = ENV.OPENCODE.HOST;
@@ -32,19 +21,6 @@ const OPENCODE_SERVER_DIRECTORY = getWorkspacePath();
 const OPENCODE_CONFIG_PATH = getOpenCodeConfigFilePath();
 const MIN_OPENCODE_VERSION = "1.0.137";
 const MAX_STDERR_SIZE = 10240;
-
-function compareVersions(v1: string, v2: string): number {
-  const parts1 = v1.split(".").map(Number);
-  const parts2 = v2.split(".").map(Number);
-
-  for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
-    const p1 = parts1[i] || 0;
-    const p2 = parts2[i] || 0;
-    if (p1 > p2) return 1;
-    if (p1 < p2) return -1;
-  }
-  return 0;
-}
 
 class OpenCodeServerManager {
   private static instance: OpenCodeServerManager;
@@ -180,11 +156,9 @@ class OpenCodeServerManager {
           const keyPath = await writePersistentSSHKey(privateKey, cred.name);
 
           if (cred.passphrase) {
-            const passphrase = decryptSecret(cred.passphrase);
-            stripKeyPassphrase(keyPath, passphrase);
-            logger.info(
-              `Stripped passphrase from SSH key for ${cred.name} (${host}:${port})`,
-            );
+            const passphrase = decryptSecret(cred.passphrase)
+            await stripKeyPassphrase(keyPath, passphrase)
+            logger.info(`Stripped passphrase from SSH key for ${cred.name} (${host}:${port})`)
           } else {
             logger.info(
               `Setup SSH key for ${cred.name} (${host}:${port}): ${keyPath}`,

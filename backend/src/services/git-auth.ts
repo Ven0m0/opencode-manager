@@ -1,23 +1,13 @@
-import type { Database } from "bun:sqlite";
-import { AskpassHandler } from "../ipc/askpassHandler";
-import type { IPCServer } from "../ipc/ipcServer";
-import { SSHHostKeyHandler } from "../ipc/sshHostKeyHandler";
-import { decryptSecret } from "../utils/crypto";
-import {
-  extractHostFromSSHUrl,
-  type GitCredential,
-  getSSHCredentialsForHost,
-  isSSHUrl,
-} from "../utils/git-auth";
-import { logger } from "../utils/logger";
-import {
-  buildSSHCommand,
-  buildSSHCommandWithKnownHosts,
-  cleanupSSHKey,
-  parseSSHHost,
-  writeTemporarySSHKey,
-} from "../utils/ssh-key-manager";
-import { SettingsService } from "./settings";
+import type { IPCServer } from '../ipc/ipcServer'
+import type { Database } from 'bun:sqlite'
+import { AskpassHandler } from '../ipc/askpassHandler'
+import { SSHHostKeyHandler } from '../ipc/sshHostKeyHandler'
+import { writeTemporarySSHKey, buildSSHCommand, buildSSHCommandWithKnownHosts, cleanupSSHKey, parseSSHHost } from '../utils/ssh-key-manager'
+import { decryptSecret } from '../utils/crypto'
+import { isSSHUrl, normalizeSSHUrl, extractHostFromSSHUrl, getSSHCredentialsForHost } from '../utils/git-auth'
+import type { GitCredential } from '@opencode-manager/shared'
+import { logger } from '../utils/logger'
+import { SettingsService } from './settings'
 
 export class GitAuthService {
   private askpassHandler: AskpassHandler | null = null;
@@ -26,10 +16,10 @@ export class GitAuthService {
   private sshPassphrase: string | null = null;
   private sshPort: string | null = null;
 
-  initialize(ipcServer: IPCServer | undefined, database: Database): void {
-    this.askpassHandler = new AskpassHandler(ipcServer, database);
-    this.sshHostKeyHandler = new SSHHostKeyHandler(database, 120_000);
-    this.sshHostKeyHandler.initialize();
+  async initialize(ipcServer: IPCServer | undefined, database: Database): Promise<void> {
+    this.askpassHandler = new AskpassHandler(ipcServer, database)
+    this.sshHostKeyHandler = new SSHHostKeyHandler(database, 120_000)
+    await this.sshHostKeyHandler.initialize()
 
     if (ipcServer) {
       const handlerPath = "ssh-host-key";
@@ -109,22 +99,20 @@ export class GitAuthService {
     };
   }
 
-  async setupSSHForRepoUrl(
-    repoUrl: string | undefined,
-    database: Database,
-  ): Promise<boolean> {
+  async setupSSHForRepoUrl(repoUrl: string | undefined, database: Database, skipSSHVerification: boolean = false): Promise<boolean> {
     if (!repoUrl || !isSSHUrl(repoUrl)) {
       return false;
     }
 
-    const sshHost = extractHostFromSSHUrl(repoUrl);
+    const normalizedUrl = normalizeSSHUrl(repoUrl)
+    const sshHost = extractHostFromSSHUrl(normalizedUrl)
     if (!sshHost) {
       logger.warn(`Could not extract SSH host from URL: ${repoUrl}`);
       return false;
     }
 
-    const { port } = parseSSHHost(repoUrl);
-    this.setSSHPort(port && port !== "22" ? port : null);
+    const { port } = parseSSHHost(normalizedUrl)
+    this.setSSHPort(port && port !== '22' ? port : null)
 
     const settingsService = new SettingsService(database);
     const settings = settingsService.getSettings("default");
@@ -141,12 +129,20 @@ export class GitAuthService {
       }
     }
 
-    const verified = await this.verifyHostKeyBeforeOperation(repoUrl);
-    if (!verified) {
-      await this.cleanupSSHKey();
-      throw new Error(
-        "SSH host key verification failed or was rejected by user",
-      );
+    if (skipSSHVerification) {
+      logger.info(`Skipping SSH host key verification for ${sshHost} (user requested)`)
+      try {
+        await this.autoAcceptHostKey(normalizedUrl)
+      } catch (error) {
+        await this.cleanupSSHKey()
+        throw new Error(`Failed to auto-accept SSH host key for ${sshHost}: ${(error as Error).message}`)
+      }
+    } else {
+      const verified = await this.verifyHostKeyBeforeOperation(normalizedUrl)
+      if (!verified) {
+        await this.cleanupSSHKey()
+        throw new Error('SSH host key verification failed or was rejected by user')
+      }
     }
 
     return sshCredentials.length > 0;
@@ -157,6 +153,14 @@ export class GitAuthService {
       return true;
     }
     return this.sshHostKeyHandler.verifyHostKeyBeforeOperation(repoUrl);
+  }
+
+  async autoAcceptHostKey(repoUrl: string): Promise<void> {
+    if (!this.sshHostKeyHandler) {
+      logger.warn('SSH host key handler not initialized, skipping auto-accept')
+      return
+    }
+    await this.sshHostKeyHandler.autoAcceptHostKey(repoUrl)
   }
 
   async cleanupSSHKey(): Promise<void> {
@@ -184,6 +188,14 @@ export class GitAuthService {
       Object.assign(env, this.askpassHandler.getEnv());
     }
 
-    return env;
+    if (this.sshHostKeyHandler) {
+      const knownHostsPath = this.sshHostKeyHandler.getKnownHostsPath()
+      if (knownHostsPath) {
+        env.GIT_SSH_COMMAND = buildSSHCommandWithKnownHosts(knownHostsPath)
+        Object.assign(env, this.sshHostKeyHandler.getEnv())
+      }
+    }
+
+    return env
   }
 }

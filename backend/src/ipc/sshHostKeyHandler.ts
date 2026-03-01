@@ -33,14 +33,11 @@ export class SSHHostKeyHandler implements IPCHandler {
   private database: Database;
 
   constructor(database: Database, timeoutMs: number = 120_000) {
-    this.database = database;
-    this.timeoutMs = timeoutMs;
-    const configDir = path.join(getWorkspacePath(), "config");
-    this.knownHostsPath = path.join(configDir, "known_hosts");
-    this.ensureKnownHostsFile();
-    logger.info(
-      `SSHHostKeyHandler initialized with timeout=${timeoutMs}ms, known_hosts=${this.knownHostsPath}`,
-    );
+    this.database = database
+    this.timeoutMs = timeoutMs
+    const configDir = path.join(getWorkspacePath(), 'config')
+    this.knownHostsPath = path.join(configDir, 'known_hosts')
+    logger.info(`SSHHostKeyHandler initialized with timeout=${timeoutMs}ms, known_hosts=${this.knownHostsPath}`)
   }
 
   private async ensureKnownHostsFile(): Promise<void> {
@@ -118,18 +115,31 @@ export class SSHHostKeyHandler implements IPCHandler {
     }
   }
 
-  private async fetchHostPublicKey(
-    host: string,
-    port?: string,
-  ): Promise<string> {
-    const portArgs = port ? ["-p", port] : [];
-    const output = await executeCommand(
-      ["ssh-keyscan", "-t", "ed25519,rsa,ecdsa", ...portArgs, host],
-      { silent: true },
-    );
+  async autoAcceptHostKey(repoUrl: string): Promise<void> {
+    const { host, port } = parseSSHHost(repoUrl)
+    const hostPort = normalizeHostPort(host, port)
 
-    const bracketedHost = port && port !== "22" ? `[${host}]:${port}` : host;
-    const lines = output.trim().split("\n");
+    const trustedHost = this.getTrustedHost(hostPort)
+    if (trustedHost) {
+      logger.info(`Host ${hostPort} already trusted, skipping auto-accept`)
+      return
+    }
+
+    const publicKey = await this.fetchHostPublicKey(host, port)
+    await this.addToKnownHosts(hostPort, publicKey)
+    this.saveTrustedHost(hostPort, publicKey)
+    logger.info(`Auto-accepted SSH host key for ${hostPort}`)
+  }
+
+  private async fetchHostPublicKey(host: string, port?: string): Promise<string> {
+    const portArgs = port ? ['-p', port] : []
+    const result = await executeCommand(
+      ['ssh-keyscan', '-t', 'ed25519,rsa,ecdsa', ...portArgs, host],
+      { silent: true, ignoreExitCode: true }
+    ) as string | { exitCode: number; stdout: string; stderr: string }
+    const output = typeof result === 'string' ? result : result.stdout
+    const bracketedHost = port && port !== '22' ? `[${host}]:${port}` : host
+    const lines = output.trim().split('\n')
     for (const line of lines) {
       if (line.startsWith(host) || line.startsWith(bracketedHost)) {
         return line;

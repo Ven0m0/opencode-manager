@@ -40,8 +40,8 @@ export function createRepo(db: Database, repo: CreateRepoInput): Repo {
 
   const existing = repo.isLocal
     ? getRepoByLocalPath(db, normalizedPath)
-    : getRepoByUrlAndBranch(db, repo.repoUrl!, repo.branch);
-
+    : getRepoByUrlAndBranch(db, repo.repoUrl, repo.branch)
+  
   if (existing) {
     return existing;
   }
@@ -81,8 +81,8 @@ export function createRepo(db: Database, repo: CreateRepoInput): Repo {
     ) {
       const conflictRepo = repo.isLocal
         ? getRepoByLocalPath(db, normalizedPath)
-        : getRepoByUrlAndBranch(db, repo.repoUrl!, repo.branch);
-
+        : getRepoByUrlAndBranch(db, repo.repoUrl, repo.branch)
+      
       if (conflictRepo) {
         return conflictRepo;
       }
@@ -106,28 +106,17 @@ export function getRepoById(db: Database, id: number): Repo | null {
   return row ? rowToRepo(row) : null;
 }
 
-export function getRepoByUrl(db: Database, repoUrl: string): Repo | null {
-  const stmt = db.prepare("SELECT * FROM repos WHERE repo_url = ?");
-  const row = stmt.get(repoUrl) as RepoRow | undefined;
-
-  return row ? rowToRepo(row) : null;
-}
-
-export function getRepoByUrlAndBranch(
-  db: Database,
-  repoUrl: string,
-  branch?: string,
-): Repo | null {
-  const query = branch
-    ? "SELECT * FROM repos WHERE repo_url = ? AND branch = ?"
-    : "SELECT * FROM repos WHERE repo_url = ? AND branch IS NULL";
-
-  const stmt = db.prepare(query);
-  const row = branch
-    ? (stmt.get(repoUrl, branch) as RepoRow | undefined)
-    : (stmt.get(repoUrl) as RepoRow | undefined);
-
-  return row ? rowToRepo(row) : null;
+export function getRepoByUrlAndBranch(db: Database, repoUrl: string, branch?: string): Repo | null {
+  const query = branch 
+    ? 'SELECT * FROM repos WHERE repo_url = ? AND branch = ?'
+    : 'SELECT * FROM repos WHERE repo_url = ? AND branch IS NULL'
+  
+  const stmt = db.prepare(query)
+  const row = branch 
+    ? stmt.get(repoUrl, branch) as RepoRow | undefined
+    : stmt.get(repoUrl) as RepoRow | undefined
+  
+  return row ? rowToRepo(row) : null
 }
 
 export function getRepoByLocalPath(
@@ -176,38 +165,36 @@ function getRepoName(repo: Repo): string {
     : repo.localPath;
 }
 
-export function updateRepoStatus(
-  db: Database,
-  id: number,
-  cloneStatus: Repo["cloneStatus"],
-): void {
-  const stmt = db.prepare("UPDATE repos SET clone_status = ? WHERE id = ?");
-  stmt.run(cloneStatus, id);
+export function updateRepoStatus(db: Database, id: number, cloneStatus: Repo['cloneStatus']): void {
+  const stmt = db.prepare('UPDATE repos SET clone_status = ? WHERE id = ?')
+  const result = stmt.run(cloneStatus, id)
+  if (result.changes === 0) {
+    throw new Error(`Repository with id ${id} not found`)
+  }
 }
 
-export function updateRepoConfigName(
-  db: Database,
-  id: number,
-  configName: string,
-): void {
-  const stmt = db.prepare(
-    "UPDATE repos SET opencode_config_name = ? WHERE id = ?",
-  );
-  stmt.run(configName, id);
+export function updateRepoConfigName(db: Database, id: number, configName: string): void {
+  const stmt = db.prepare('UPDATE repos SET opencode_config_name = ? WHERE id = ?')
+  const result = stmt.run(configName, id)
+  if (result.changes === 0) {
+    throw new Error(`Repository with id ${id} not found`)
+  }
 }
 
 export function updateLastPulled(db: Database, id: number): void {
-  const stmt = db.prepare("UPDATE repos SET last_pulled = ? WHERE id = ?");
-  stmt.run(Date.now(), id);
+  const stmt = db.prepare('UPDATE repos SET last_pulled = ? WHERE id = ?')
+  const result = stmt.run(Date.now(), id)
+  if (result.changes === 0) {
+    throw new Error(`Repository with id ${id} not found`)
+  }
 }
 
-export function updateRepoBranch(
-  db: Database,
-  id: number,
-  branch: string,
-): void {
-  const stmt = db.prepare("UPDATE repos SET branch = ? WHERE id = ?");
-  stmt.run(branch, id);
+export function updateRepoBranch(db: Database, id: number, branch: string): void {
+  const stmt = db.prepare('UPDATE repos SET branch = ? WHERE id = ?')
+  const result = stmt.run(branch, id)
+  if (result.changes === 0) {
+    throw new Error(`Repository with id ${id} not found`)
+  }
 }
 
 export function deleteRepo(db: Database, id: number): void {

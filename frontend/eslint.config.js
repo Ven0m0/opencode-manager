@@ -6,13 +6,13 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default defineConfig([
-  globalIgnores(["dist"]),
+  globalIgnores(['dist', 'src/sw.ts']),
   {
     files: ["**/*.{ts,tsx}"],
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,
-      reactHooks.configs["recommended-latest"],
+      reactHooks.configs.flat["recommended-latest"],
       reactRefresh.configs.vite,
     ],
     languageOptions: {
@@ -20,7 +20,7 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: {
         projectService: {
-          defaultProject: "./tsconfig.app.json",
+          defaultProject: "./tsconfig.json",
         },
       },
     },

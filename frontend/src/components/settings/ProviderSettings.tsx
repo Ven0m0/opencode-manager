@@ -1,47 +1,31 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  Check,
-  ChevronDown,
-  ChevronRight,
-  Key,
-  Loader2,
-  Pencil,
-  Search,
-  Shield,
-  Trash2,
-  X,
-} from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
-import { type OAuthAuthorizeResponse, oauthApi } from "@/api/oauth";
-import type { Provider } from "@/api/providers";
-import { getProviders, providerCredentialsApi } from "@/api/providers";
-import { ApiKeyDialog } from "@/components/model/ApiKeyDialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { OAuthAuthorizeDialog } from "./OAuthAuthorizeDialog";
-import { OAuthCallbackDialog } from "./OAuthCallbackDialog";
+import { useState, useMemo, useCallback } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { DeleteDialog } from '@/components/ui/delete-dialog'
+import { Loader2, Check, X, Shield, ChevronDown, ChevronRight, Key, Search, Pencil, Trash2 } from 'lucide-react'
+import { providerCredentialsApi, getProviders } from '@/api/providers'
+import type { Provider } from '@/api/providers'
+import { oauthApi, type OAuthAuthorizeResponse } from '@/api/oauth'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { OAuthAuthorizeDialog } from './OAuthAuthorizeDialog'
+import { OAuthCallbackDialog } from './OAuthCallbackDialog'
+import { ApiKeyDialog } from '@/components/model/ApiKeyDialog'
 
 export function ProviderSettings() {
-  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
-  const [oauthDialogOpen, setOauthDialogOpen] = useState(false);
-  const [oauthCallbackDialogOpen, setOauthCallbackDialogOpen] = useState(false);
-  const [oauthResponse, setOauthResponse] =
-    useState<OAuthAuthorizeResponse | null>(null);
-  const [connectedExpanded, setConnectedExpanded] = useState(false);
-  const [availableExpanded, setAvailableExpanded] = useState(false);
-  const [availableSearch, setAvailableSearch] = useState("");
-  const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false);
-  const [apiKeyProvider, setApiKeyProvider] = useState<Provider | null>(null);
-  const [apiKeyMode, setApiKeyMode] = useState<"add" | "edit">("add");
-  const queryClient = useQueryClient();
+  const [selectedProvider, setSelectedProvider] = useState<string | null>(null)
+  const [oauthDialogOpen, setOauthDialogOpen] = useState(false)
+  const [oauthCallbackDialogOpen, setOauthCallbackDialogOpen] = useState(false)
+  const [oauthResponse, setOauthResponse] = useState<OAuthAuthorizeResponse | null>(null)
+  const [connectedExpanded, setConnectedExpanded] = useState(false)
+  const [availableExpanded, setAvailableExpanded] = useState(false)
+  const [availableSearch, setAvailableSearch] = useState('')
+  const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false)
+  const [apiKeyProvider, setApiKeyProvider] = useState<Provider | null>(null)
+  const [apiKeyMode, setApiKeyMode] = useState<'add' | 'edit'>('add')
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const queryClient = useQueryClient()
 
   const { data: providersData, isLoading: providersLoading } = useQuery({
     queryKey: ["providers"],
@@ -72,10 +56,19 @@ export function ProviderSettings() {
   });
 
   const handleDeleteCredential = (providerId: string) => {
-    if (confirm(`Remove credentials for ${providerId}?`)) {
-      deleteCredentialMutation.mutate(providerId);
+    setDeleteTarget(providerId)
+  }
+
+  const handleDeleteConfirm = () => {
+    if (deleteTarget) {
+      deleteCredentialMutation.mutate(deleteTarget)
+      setDeleteTarget(null)
     }
   };
+
+  const handleDeleteCancel = () => {
+    setDeleteTarget(null)
+  }
 
   const handleOAuthAuthorize = (response: OAuthAuthorizeResponse) => {
     setOauthResponse(response);
@@ -476,6 +469,16 @@ export function ProviderSettings() {
           mode={apiKeyMode}
         />
       )}
+
+      <DeleteDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        title="Remove Credentials"
+        description={`Are you sure you want to remove credentials for ${deleteTarget || 'this provider'}?`}
+        isDeleting={deleteCredentialMutation.isPending}
+      />
     </div>
   );
 }

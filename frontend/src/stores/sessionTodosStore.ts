@@ -40,17 +40,9 @@ export const useSessionTodos = create<SessionTodosStore>((set, get) => ({
   },
 }));
 
-export const useSessionTodosForSession = (
-  sessionID: string | undefined,
-): Todo[] => {
-  const todos = useSessionTodos((state) =>
-    sessionID ? state.todos.get(sessionID) : undefined,
-  );
-  return todos || [];
-};
-
-export const useHasSessionTodos = (sessionID: string | undefined): boolean => {
-  return useSessionTodos((state) =>
-    sessionID ? (state.todos.get(sessionID)?.length ?? 0) > 0 : false,
-  );
-};
+export const useSessionTodosForSession = (sessionID: string | undefined): Todo[] => {
+  const todos = useSessionTodos((state) => 
+    sessionID ? state.todos.get(sessionID) : undefined
+  )
+  return todos || []
+}

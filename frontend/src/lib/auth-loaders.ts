@@ -9,16 +9,21 @@ export interface AuthConfig {
 }
 
 async function fetchAuthConfig(): Promise<AuthConfig> {
-  const response = await fetch("/api/auth-info/config");
-  if (!response.ok) {
-    return {
-      enabledProviders: ["credentials"],
-      registrationEnabled: true,
-      isFirstUser: false,
-      adminConfigured: false,
-    };
+  const defaultConfig: AuthConfig = {
+    enabledProviders: ['credentials'],
+    registrationEnabled: true,
+    isFirstUser: false,
+    adminConfigured: false,
   }
-  return response.json();
+  const response = await fetch('/api/auth-info/config')
+  if (!response.ok) {
+    return defaultConfig
+  }
+  try {
+    return await response.json()
+  } catch {
+    return defaultConfig
+  }
 }
 
 export async function loginLoader() {

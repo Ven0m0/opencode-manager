@@ -35,12 +35,6 @@ export const STTConfigSchema = z.object({
   lastModelsFetch: z.number().optional(),
 });
 
-export const CustomAgentSchema = z.object({
-  name: z.string(),
-  description: z.string(),
-  config: z.record(z.string(), z.any()),
-});
-
 export type TTSConfig = {
   enabled: boolean;
   provider: "external" | "builtin";
@@ -128,7 +122,6 @@ export const UserPreferencesSchema = z.object({
   directShortcuts: z.array(z.string()).optional(),
   keyboardShortcuts: z.record(z.string(), z.string()),
   customCommands: z.array(CustomCommandSchema),
-  customAgents: z.array(CustomAgentSchema),
   gitCredentials: z.array(GitCredentialSchema).optional(),
   gitIdentity: GitIdentitySchema.optional(),
   tts: TTSConfigSchema.optional(),
@@ -207,6 +200,7 @@ export const OpenCodeConfigSchema = z.object({
   instructions: z.array(z.string()).optional(),
   disabled_providers: z.array(z.string()).optional(),
   share: z.enum(["manual", "auto", "disabled"]).optional(),
+  plugin: z.array(z.string()).optional(),
 });
 
 export type OpenCodeConfigContent = z.infer<typeof OpenCodeConfigSchema>;

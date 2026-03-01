@@ -110,7 +110,7 @@ export function VersionSelectDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md z-[200]" overlayClassName="z-[200]">
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Select OpenCode Version</DialogTitle>
           <DialogDescription>

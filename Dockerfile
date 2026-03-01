@@ -17,10 +17,11 @@ WORKDIR /app
 # --- deps stage: install node_modules with bun ---
 FROM base AS deps
 
-COPY --chown=bun:bun package.json bun.lockb ./
-COPY --chown=bun:bun shared/package.json ./shared/
-COPY --chown=bun:bun backend/package.json ./backend/
-COPY --chown=bun:bun frontend/package.json ./frontend/
+COPY --chown=node:node package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY --chown=node:node shared/package.json ./shared/
+COPY --chown=node:node backend/package.json ./backend/
+COPY --chown=node:node frontend/package.json ./frontend/
+COPY --chown=node:node packages/memory ./packages/memory/
 
 RUN bun install
 
@@ -33,8 +34,10 @@ COPY backend ./backend
 COPY frontend/src ./frontend/src
 COPY frontend/public ./frontend/public
 COPY frontend/index.html frontend/vite.config.ts frontend/tsconfig*.json frontend/components.json frontend/eslint.config.js ./frontend/
+COPY packages/memory ./packages/memory
 
-RUN cd frontend && bun run build
+RUN pnpm --filter frontend build
+RUN pnpm --filter @opencode-manager/memory build
 
 # --- runner stage: final image ---
 FROM base AS runner
@@ -55,12 +58,13 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | UV_NO_MODIFY_PATH=1 sh \
     && chmod -R 755 /opt/opencode \
     && ln -s /opt/opencode/bin/opencode /usr/local/bin/opencode
 
-ENV NODE_ENV=production \
-    HOST=0.0.0.0 \
-    PORT=5003 \
-    OPENCODE_SERVER_PORT=5551 \
-    DATABASE_PATH=/app/data/opencode.db \
-    WORKSPACE_PATH=/workspace
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=5003
+ENV OPENCODE_SERVER_PORT=5551
+ENV DATABASE_PATH=/app/data/opencode.db
+ENV WORKSPACE_PATH=/workspace
+ENV NODE_PATH=/opt/opencode-plugins/node_modules
 
 COPY --from=deps --chown=bun:bun /app/node_modules ./node_modules
 COPY --from=builder /app/shared ./shared
@@ -70,6 +74,16 @@ COPY package.json ./
 
 RUN mkdir -p /app/backend/node_modules/@opencode-manager \
     && ln -s /app/shared /app/backend/node_modules/@opencode-manager/shared
+
+COPY --from=builder /app/packages/memory /opt/opencode-plugins/src
+
+RUN cd /opt/opencode-plugins/src && npm install
+
+RUN mkdir -p /opt/opencode-plugins/node_modules/@opencode-manager/memory && \
+    cp -r /opt/opencode-plugins/src/dist/* /opt/opencode-plugins/node_modules/@opencode-manager/memory/ && \
+    cp /opt/opencode-plugins/src/package.json /opt/opencode-plugins/node_modules/@opencode-manager/memory/ && \
+    cp /opt/opencode-plugins/src/config.json /opt/opencode-plugins/node_modules/@opencode-manager/memory/config.json 2>/dev/null || true && \
+    cp -r /opt/opencode-plugins/src/node_modules/* /opt/opencode-plugins/node_modules/ 2>/dev/null || true
 
 COPY scripts/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh

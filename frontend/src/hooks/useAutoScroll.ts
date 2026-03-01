@@ -1,40 +1,35 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useRef, useEffect, useCallback } from 'react'
+import type { Message } from '@/api/types'
 
 const SCROLL_LOCK_MS = 300;
 
-interface MessageInfo {
-  role: string;
-}
-
-interface Message {
-  info: MessageInfo;
-}
-
-interface UseAutoScrollOptions<T extends Message> {
-  containerRef?: React.RefObject<HTMLDivElement | null>;
-  messages?: T[];
-  sessionId?: string;
-  onScrollStateChange?: (isScrolledUp: boolean) => void;
+interface UseAutoScrollOptions {
+  containerRef?: React.RefObject<HTMLDivElement | null>
+  messages?: Message[]
+  sessionId?: string
+  contentVersion?: number
+  onScrollStateChange?: (isScrolledUp: boolean) => void
 }
 
 interface UseAutoScrollReturn {
   scrollToBottom: () => void;
 }
 
-export function useAutoScroll<T extends Message>({
+export function useAutoScroll({
   containerRef,
   messages,
   sessionId,
-  onScrollStateChange,
-}: UseAutoScrollOptions<T>): UseAutoScrollReturn {
-  const lastMessageCountRef = useRef(0);
-  const hasInitialScrolledRef = useRef(false);
-  const userScrolledAtRef = useRef(0);
-  const userDisengagedRef = useRef(false);
-  const pointerStartYRef = useRef<number | null>(null);
-  const onScrollStateChangeRef = useRef(onScrollStateChange);
-
-  onScrollStateChangeRef.current = onScrollStateChange;
+  contentVersion,
+  onScrollStateChange
+}: UseAutoScrollOptions): UseAutoScrollReturn {
+  const lastMessageCountRef = useRef(0)
+  const hasInitialScrolledRef = useRef(false)
+  const userScrolledAtRef = useRef(0)
+  const userDisengagedRef = useRef(false)
+  const pointerStartYRef = useRef<number | null>(null)
+  const onScrollStateChangeRef = useRef(onScrollStateChange)
+  
+  onScrollStateChangeRef.current = onScrollStateChange
 
   const scrollToBottom = useCallback(() => {
     if (!containerRef?.current) return;
@@ -144,10 +139,10 @@ export function useAutoScroll<T extends Message>({
     }
 
     if (currentCount > prevCount) {
-      const newMessage = messages[currentCount - 1];
-      if (newMessage?.info.role === "user") {
-        scrollToBottom();
-        return;
+      const newMessage = messages[currentCount - 1]
+      if (newMessage?.role === 'user') {
+        scrollToBottom()
+        return
       }
     }
 
@@ -158,8 +153,8 @@ export function useAutoScroll<T extends Message>({
       return;
     }
 
-    scrollToBottom();
-  }, [messages, containerRef, scrollToBottom]);
+    scrollToBottom()
+  }, [messages, containerRef, scrollToBottom, contentVersion])
 
   return { scrollToBottom };
 }

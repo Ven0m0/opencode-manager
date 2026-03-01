@@ -1,7 +1,6 @@
 export const OAuthMethod = {
-  AUTO: 0,
-  CODE: 1,
-} as const;
+  CODE: 0,
+} as const
 
 export type OAuthMethodType = (typeof OAuthMethod)[keyof typeof OAuthMethod];
 

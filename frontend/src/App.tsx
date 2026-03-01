@@ -1,29 +1,24 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
-import { Toaster } from "sonner";
-import {
-  EventProvider,
-  useEventContext,
-  usePermissions,
-} from "@/contexts/EventContext";
-import { PermissionRequestDialog } from "./components/session/PermissionRequestDialog";
-import { SettingsDialog } from "./components/settings/SettingsDialog";
-import { SSHHostKeyDialog } from "./components/ssh/SSHHostKeyDialog";
-import { AuthProvider } from "./contexts/AuthContext";
-import { TTSProvider } from "./contexts/TTSContext";
-import { useTheme } from "./hooks/useTheme";
-import {
-  loginLoader,
-  protectedLoader,
-  registerLoader,
-  setupLoader,
-} from "./lib/auth-loaders";
-import { Login } from "./pages/Login";
-import { Register } from "./pages/Register";
-import { RepoDetail } from "./pages/RepoDetail";
-import { Repos } from "./pages/Repos";
-import { SessionDetail } from "./pages/SessionDetail";
-import { Setup } from "./pages/Setup";
+
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { createBrowserRouter, RouterProvider, Outlet, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Toaster } from 'sonner'
+import { Repos } from './pages/Repos'
+import { RepoDetail } from './pages/RepoDetail'
+import { SessionDetail } from './pages/SessionDetail'
+import { Memories } from './pages/Memories'
+import { Login } from './pages/Login'
+import { Register } from './pages/Register'
+import { Setup } from './pages/Setup'
+import { SettingsDialog } from './components/settings/SettingsDialog'
+import { VersionNotifier } from './components/VersionNotifier'
+import { useTheme } from './hooks/useTheme'
+import { TTSProvider } from './contexts/TTSContext'
+import { AuthProvider } from './contexts/AuthContext'
+import { EventProvider, usePermissions, useEventContext } from '@/contexts/EventContext'
+import { PermissionRequestDialog } from './components/session/PermissionRequestDialog'
+import { SSHHostKeyDialog } from './components/ssh/SSHHostKeyDialog'
+import { loginLoader, setupLoader, registerLoader, protectedLoader } from './lib/auth-loaders'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -69,7 +64,18 @@ function PermissionDialogWrapper() {
 }
 
 function AppShell() {
-  useTheme();
+  const navigate = useNavigate()
+  useTheme()
+
+  useEffect(() => {
+    const channel = new BroadcastChannel('notification-click')
+    channel.onmessage = (event: MessageEvent) => {
+      if (event.data?.url) {
+        navigate(event.data.url)
+      }
+    }
+    return () => channel.close()
+  }, [navigate])
 
   return (
     <AuthProvider>
@@ -78,6 +84,7 @@ function AppShell() {
         <PermissionDialogWrapper />
         <SSHHostKeyDialogWrapper />
         <SettingsDialog />
+        <VersionNotifier />
         <Toaster
           position="bottom-right"
           expand={false}
@@ -122,6 +129,11 @@ const router = createBrowserRouter([
       {
         path: "/repos/:id/sessions/:sessionId",
         element: <SessionDetail />,
+        loader: protectedLoader,
+      },
+      {
+        path: '/repos/:id/memories',
+        element: <Memories />,
         loader: protectedLoader,
       },
     ],

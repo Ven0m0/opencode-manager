@@ -7,10 +7,11 @@ type SSEClientCallback = (event: string, data: string) => void;
 type SSEEventListener = (directory: string, event: SSEEvent) => void;
 
 interface SSEClient {
-  id: string;
-  callback: SSEClientCallback;
-  directories: Set<string>;
-  visible: boolean;
+  id: string
+  callback: SSEClientCallback
+  directories: Set<string>
+  visible: boolean
+  activeSessionId: string | null
 }
 
 interface DirectoryConnection {
@@ -57,8 +58,12 @@ class SSEAggregator {
       callback,
       directories: new Set(directories),
       visible: false,
-    };
-    this.clients.set(id, client);
+      activeSessionId: null
+    }
+    this.clients.set(id, client)
+    
+    logger.info(`Client ${id} connected with directories: ${directories.length > 0 ? directories.join(', ') : '(none)'}`)
+    this.syncConnections()
 
     logger.info(
       `Client ${id} connected with directories: ${directories.length > 0 ? directories.join(", ") : "(none)"}`,
@@ -390,19 +395,22 @@ class SSEAggregator {
     return this.clients.size;
   }
 
-  setClientVisibility(id: string, visible: boolean): boolean {
-    const client = this.clients.get(id);
+  setClientVisibility(id: string, visible: boolean, activeSessionId: string | null = null): boolean {
+    const client = this.clients.get(id)
     if (!client) {
       logger.warn(`setClientVisibility: client ${id} not found`);
       return false;
     }
-    client.visible = visible;
-    return true;
+    client.visible = visible
+    client.activeSessionId = visible ? activeSessionId : null
+    return true
   }
 
-  hasVisibleClients(): boolean {
+  isSessionBeingViewed(sessionId: string): boolean {
     for (const client of this.clients.values()) {
-      if (client.visible) return true;
+      if (client.visible && client.activeSessionId === sessionId) {
+        return true
+      }
     }
     return false;
   }

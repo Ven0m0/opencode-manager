@@ -1,30 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  AlertCircle,
-  CheckCircle,
-  Edit2,
-  KeyRound,
-  Loader2,
-  Lock,
-  LogOut,
-  Plus,
-  Trash2,
-  User,
-} from "lucide-react";
-import { useState } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useAuth } from "@/hooks/useAuth";
-import { changePassword, passkey } from "@/lib/auth-client";
+import { useState } from 'react'
+import { Edit2 } from 'lucide-react'
+import { useAuth } from '@/hooks/useAuth'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { DeleteDialog } from '@/components/ui/delete-dialog'
+import { Loader2, User, KeyRound, LogOut, Plus, Trash2, AlertCircle, CheckCircle, Lock } from 'lucide-react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { passkey, changePassword } from '@/lib/auth-client'
 
 interface Passkey {
   id: string;
@@ -35,15 +20,16 @@ interface Passkey {
 }
 
 export function AccountSettings() {
-  const { user, addPasskey, logout } = useAuth();
-  const queryClient = useQueryClient();
-  const [passkeyName, setPasskeyName] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [showChangePassword, setShowChangePassword] = useState(false);
-  const [editingProfile, setEditingProfile] = useState(false);
+  const { user, addPasskey, logout } = useAuth()
+  const queryClient = useQueryClient()
+  const [passkeyName, setPasskeyName] = useState('')
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [showChangePassword, setShowChangePassword] = useState(false)
+  const [editingProfile, setEditingProfile] = useState(false)
+  const [deletePasskeyId, setDeletePasskeyId] = useState<string | null>(null)
 
   const { data: passkeys, isLoading: passkeysLoading } = useQuery({
     queryKey: ["passkeys"],
@@ -130,12 +116,21 @@ export function AccountSettings() {
   };
 
   const handleDeletePasskey = (id: string) => {
-    setError(null);
-    setSuccess(null);
-    if (confirm("Are you sure you want to delete this passkey?")) {
-      deletePasskeyMutation.mutate(id);
+    setError(null)
+    setSuccess(null)
+    setDeletePasskeyId(id)
+  }
+
+  const handleDeleteConfirm = () => {
+    if (deletePasskeyId) {
+      deletePasskeyMutation.mutate(deletePasskeyId)
+      setDeletePasskeyId(null)
     }
   };
+
+  const handleDeleteCancel = () => {
+    setDeletePasskeyId(null)
+  }
 
   const handleChangePassword = () => {
     setError(null);
@@ -418,6 +413,16 @@ export function AccountSettings() {
           </Button>
         </CardContent>
       </Card>
+
+      <DeleteDialog
+        open={deletePasskeyId !== null}
+        onOpenChange={(open) => !open && setDeletePasskeyId(null)}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        title="Delete Passkey"
+        description="Are you sure you want to delete this passkey? This action cannot be undone."
+        isDeleting={deletePasskeyMutation.isPending}
+      />
     </div>
   );
 }

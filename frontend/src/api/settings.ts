@@ -9,8 +9,10 @@ import type {
   UpdateSettingsRequest,
 } from "./types/settings";
 
+const DEFAULT_USER_ID = 'default'
+
 export const settingsApi = {
-  getSettings: async (userId = "default"): Promise<SettingsResponse> => {
+  getSettings: async (userId = DEFAULT_USER_ID): Promise<SettingsResponse> => {
     return fetchWrapper(`${API_BASE_URL}/api/settings`, {
       params: { userId },
     });
@@ -18,7 +20,7 @@ export const settingsApi = {
 
   updateSettings: async (
     updates: UpdateSettingsRequest,
-    userId = "default",
+    userId = DEFAULT_USER_ID
   ): Promise<SettingsResponse> => {
     return fetchWrapper(`${API_BASE_URL}/api/settings`, {
       method: "PATCH",
@@ -28,16 +30,14 @@ export const settingsApi = {
     });
   },
 
-  resetSettings: async (userId = "default"): Promise<SettingsResponse> => {
+  resetSettings: async (userId = DEFAULT_USER_ID): Promise<SettingsResponse> => {
     return fetchWrapper(`${API_BASE_URL}/api/settings`, {
       method: "DELETE",
       params: { userId },
     });
   },
 
-  getOpenCodeConfigs: async (
-    userId = "default",
-  ): Promise<OpenCodeConfigResponse> => {
+  getOpenCodeConfigs: async (userId = DEFAULT_USER_ID): Promise<OpenCodeConfigResponse> => {
     return fetchWrapper(`${API_BASE_URL}/api/settings/opencode-configs`, {
       params: { userId },
     });
@@ -45,7 +45,7 @@ export const settingsApi = {
 
   createOpenCodeConfig: async (
     request: CreateOpenCodeConfigRequest,
-    userId = "default",
+    userId = DEFAULT_USER_ID
   ): Promise<OpenCodeConfig> => {
     return fetchWrapper(`${API_BASE_URL}/api/settings/opencode-configs`, {
       method: "POST",
@@ -58,7 +58,7 @@ export const settingsApi = {
   updateOpenCodeConfig: async (
     configName: string,
     request: UpdateOpenCodeConfigRequest,
-    userId = "default",
+    userId = DEFAULT_USER_ID
   ): Promise<OpenCodeConfig> => {
     return fetchWrapper(
       `${API_BASE_URL}/api/settings/opencode-configs/${encodeURIComponent(configName)}`,
@@ -73,7 +73,7 @@ export const settingsApi = {
 
   deleteOpenCodeConfig: async (
     configName: string,
-    userId = "default",
+    userId = DEFAULT_USER_ID
   ): Promise<boolean> => {
     await fetchWrapper(
       `${API_BASE_URL}/api/settings/opencode-configs/${encodeURIComponent(configName)}`,
@@ -87,7 +87,7 @@ export const settingsApi = {
 
   setDefaultOpenCodeConfig: async (
     configName: string,
-    userId = "default",
+    userId = DEFAULT_USER_ID
   ): Promise<OpenCodeConfig> => {
     return fetchWrapper(
       `${API_BASE_URL}/api/settings/opencode-configs/${encodeURIComponent(configName)}/set-default`,
@@ -100,9 +100,7 @@ export const settingsApi = {
     );
   },
 
-  getDefaultOpenCodeConfig: async (
-    userId = "default",
-  ): Promise<OpenCodeConfig | null> => {
+  getDefaultOpenCodeConfig: async (userId = DEFAULT_USER_ID): Promise<OpenCodeConfig | null> => {
     try {
       return fetchWrapper(
         `${API_BASE_URL}/api/settings/opencode-configs/default`,
@@ -232,4 +230,20 @@ export const settingsApi = {
       body: JSON.stringify({ content }),
     });
   },
-};
+
+  getVersionInfo: async (): Promise<VersionInfo> => {
+    return fetchWrapper(`${API_BASE_URL}/api/health/version`)
+  },
+
+  getMemoryPluginStatus: async (): Promise<{ memoryPluginEnabled: boolean }> => {
+    return fetchWrapper(`${API_BASE_URL}/api/settings/memory-plugin-status`)
+  },
+}
+
+export interface VersionInfo {
+  currentVersion: string | null
+  latestVersion: string | null
+  updateAvailable: boolean
+  releaseUrl: string | null
+  releaseName: string | null
+}

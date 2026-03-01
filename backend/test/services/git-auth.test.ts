@@ -1,7 +1,7 @@
-import type { Database } from "bun:sqlite";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { IPCServer } from "../../src/ipc/ipcServer";
-import type { GitCredential } from "../../src/utils/git-auth";
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import type { GitCredential } from '@opencode-manager/shared'
+import type { IPCServer } from '../../src/ipc/ipcServer'
+import type { Database } from 'bun:sqlite'
 
 vi.mock("bun:sqlite", () => ({
   Database: vi.fn(),

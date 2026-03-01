@@ -149,24 +149,24 @@ export function useVirtualizedContent({
       content: string;
     }> = [];
 
-    let rangeStart = sortedLineNums[0];
-    let rangeLines: string[] = [editedLines.get(rangeStart)!];
-    let lastLine = rangeStart;
+    let rangeStart = sortedLineNums[0]
+    let rangeLines: string[] = [editedLines.get(rangeStart) ?? '']
+    let lastLine = rangeStart
 
     for (let i = 1; i < sortedLineNums.length; i++) {
       const lineNum = sortedLineNums[i];
       if (lineNum === lastLine + 1) {
-        rangeLines.push(editedLines.get(lineNum)!);
-        lastLine = lineNum;
+        rangeLines.push(editedLines.get(lineNum) ?? '')
+        lastLine = lineNum
       } else {
         ranges.push({
           startLine: rangeStart,
           endLine: lastLine + 1,
-          content: rangeLines.join("\n"),
-        });
-        rangeStart = lineNum;
-        rangeLines = [editedLines.get(lineNum)!];
-        lastLine = lineNum;
+          content: rangeLines.join('\n'),
+        })
+        rangeStart = lineNum
+        rangeLines = [editedLines.get(lineNum) ?? '']
+        lastLine = lineNum
       }
     }
 

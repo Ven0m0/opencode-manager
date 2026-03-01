@@ -1,23 +1,16 @@
-import {
-  CircleDot,
-  FilePlus,
-  FileSearch,
-  FileText,
-  FileX,
-  Minus,
-  Plus,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { GIT_STATUS_COLORS, GIT_UI_COLORS } from "@/lib/git-status-styles";
-import { cn } from "@/lib/utils";
-import type { GitFileStatus } from "@/types/git";
+import { Button } from '@/components/ui/button'
+import { Plus, Minus, FileText, FilePlus, FileX, FileSearch, CircleDot, RotateCcw } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import type { GitFileStatus } from '@/types/git'
+import { GIT_STATUS_COLORS, GIT_UI_COLORS } from '@/lib/git-status-styles'
 
 interface GitFlatFileItemProps {
-  file: GitFileStatus;
-  isSelected: boolean;
-  onSelect: (path: string, staged: boolean) => void;
-  onStage?: (path: string) => void;
-  onUnstage?: (path: string) => void;
+  file: GitFileStatus
+  isSelected: boolean
+  onSelect: (path: string, staged: boolean) => void
+  onStage?: (path: string) => void
+  onUnstage?: (path: string) => void
+  onDiscard?: (path: string, staged: boolean) => void
 }
 
 const statusIcons = {
@@ -29,15 +22,9 @@ const statusIcons = {
   copied: FilePlus,
 };
 
-export function GitFlatFileItem({
-  file,
-  isSelected,
-  onSelect,
-  onStage,
-  onUnstage,
-}: GitFlatFileItemProps) {
-  const StatusIcon = statusIcons[file.status] || FileText;
-  const statusColor = GIT_STATUS_COLORS[file.status] || "text-muted-foreground";
+export function GitFlatFileItem({ file, isSelected, onSelect, onStage, onUnstage, onDiscard }: GitFlatFileItemProps) {
+  const StatusIcon = statusIcons[file.status] || FileText
+  const statusColor = GIT_STATUS_COLORS[file.status] || 'text-muted-foreground'
 
   const fileName = file.path.split("/").pop() || file.path;
   const dirPath = file.path.includes("/")
@@ -52,6 +39,13 @@ export function GitFlatFileItem({
       onStage(file.path);
     }
   };
+
+  const handleDiscard = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (onDiscard) {
+      onDiscard(file.path, file.staged)
+    }
+  }
 
   return (
     <div
@@ -80,18 +74,41 @@ export function GitFlatFileItem({
           staged
         </span>
       )}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-        onClick={handleAction}
-      >
-        {file.staged ? (
-          <Minus className={cn("w-3 h-3", GIT_UI_COLORS.unstage)} />
-        ) : (
-          <Plus className={cn("w-3 h-3", GIT_UI_COLORS.stage)} />
-        )}
-      </Button>
+      {(file.additions !== undefined || file.deletions !== undefined) && (
+        <div className="flex items-center gap-1 text-xs flex-shrink-0">
+          {file.additions !== undefined && file.additions > 0 && (
+            <span className="text-green-500">+{file.additions}</span>
+          )}
+          {file.deletions !== undefined && file.deletions > 0 && (
+            <span className="text-red-500">-{file.deletions}</span>
+          )}
+        </div>
+      )}
+      {(onStage || onUnstage) && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+          onClick={handleAction}
+        >
+          {file.staged ? (
+            <Minus className={cn('w-3 h-3', GIT_UI_COLORS.unstage)} />
+          ) : (
+            <Plus className={cn('w-3 h-3', GIT_UI_COLORS.stage)} />
+          )}
+        </Button>
+      )}
+      {onDiscard && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+          onClick={handleDiscard}
+          title="Discard changes"
+        >
+          <RotateCcw className="w-3 h-3 text-rose-500" />
+        </Button>
+      )}
     </div>
   );
 }

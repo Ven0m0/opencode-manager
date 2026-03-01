@@ -31,18 +31,18 @@ export function GitCredentialDialog({
   isSaving,
 }: GitCredentialDialogProps) {
   const [formData, setFormData] = useState<GitCredential>({
-    name: "",
-    host: "",
-    type: "pat",
-    token: "",
-    username: "",
-    sshPrivateKey: "",
-    passphrase: "",
-  });
-  const [tokenEdited, setTokenEdited] = useState(false);
-  const [isTesting, setIsTesting] = useState(false);
-  const [showPassphraseInput, setShowPassphraseInput] = useState(false);
-  const [testPassphrase, setTestPassphrase] = useState("");
+    name: '',
+    host: '',
+    type: 'pat',
+    token: '',
+    username: '',
+    sshPrivateKey: '',
+    passphrase: ''
+  })
+  const [tokenEdited, setTokenEdited] = useState(false)
+  const [isTesting, setIsTesting] = useState(false)
+  const [showPassphraseInput, setShowPassphraseInput] = useState(false)
+  const [testPassphrase, setTestPassphrase] = useState('')
 
   const maskToken = (token: string) => {
     if (!token) return "";
@@ -158,11 +158,7 @@ export function GitCredentialDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        mobileFullscreen
-        className="max-w-lg z-[200] h-[90vh] sm:h-auto sm:max-h-[85vh] flex flex-col"
-        overlayClassName="z-[200]"
-      >
+      <DialogContent mobileFullscreen className="max-w-lg h-[90vh] sm:h-auto sm:max-h-[85vh] flex flex-col">
         <DialogHeader className="flex-shrink-0 px-4 sm:px-6 pt-4 sm:pt-6 pb-2 sm:pb-3">
           <DialogTitle>
             {credential ? "Edit Git Credential" : "Add Git Credential"}

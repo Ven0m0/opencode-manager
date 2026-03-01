@@ -28,15 +28,8 @@ export function createRepoRoutes(
 
   app.post("/", async (c) => {
     try {
-      const body = await c.req.json();
-      const {
-        repoUrl,
-        localPath,
-        branch,
-        openCodeConfigName,
-        useWorktree,
-        provider,
-      } = body;
+      const body = await c.req.json()
+      const { repoUrl, localPath, branch, openCodeConfigName, useWorktree, skipSSHVerification, provider } = body
 
       if (!repoUrl && !localPath) {
         return c.json(
@@ -64,7 +57,8 @@ export function createRepoRoutes(
           repoUrl!,
           branch,
           useWorktree,
-        );
+          skipSSHVerification
+        )
       }
 
       if (openCodeConfigName) {

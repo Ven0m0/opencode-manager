@@ -1,14 +1,15 @@
-import type { Database } from "bun:sqlite";
-import path from "node:path";
-import { getReposPath } from "@opencode-manager/shared/config/env";
-import * as db from "../db/queries";
-import type { CreateRepoInput, Repo } from "../types/repo";
-import { isGitHubHttpsUrl, isSSHUrl } from "../utils/git-auth";
-import { logger } from "../utils/logger";
-import { executeCommand } from "../utils/process";
-import { parseSSHHost } from "../utils/ssh-key-manager";
-import { ensureDirectoryExists } from "./file-operations";
-import type { GitAuthService } from "./git-auth";
+import { executeCommand } from '../utils/process'
+import { ensureDirectoryExists } from './file-operations'
+import * as db from '../db/queries'
+import type { Database } from 'bun:sqlite'
+import type { Repo, CreateRepoInput } from '../types/repo'
+import { logger } from '../utils/logger'
+import { getReposPath } from '@opencode-manager/shared/config/env'
+import type { GitAuthService } from './git-auth'
+import { isGitHubHttpsUrl, isSSHUrl, normalizeSSHUrl } from '../utils/git-auth'
+import path from 'path'
+import { parseSSHHost } from '../utils/ssh-key-manager'
+import { getErrorMessage } from '../utils/error-utils'
 
 const GIT_CLONE_TIMEOUT = 300000;
 
@@ -59,33 +60,7 @@ function enhanceCloneError(
   return error instanceof Error ? error : new Error(originalMessage);
 }
 
-interface ErrorWithMessage {
-  message: string;
-}
-
-function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "message" in error &&
-    typeof (error as ErrorWithMessage).message === "string"
-  );
-}
-
-function getErrorMessage(error: unknown): string {
-  if (isErrorWithMessage(error)) {
-    return error.message;
-  }
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return String(error);
-}
-
-async function hasCommits(
-  repoPath: string,
-  env: Record<string, string>,
-): Promise<boolean> {
+async function hasCommits(repoPath: string, env: Record<string, string>): Promise<boolean> {
   try {
     await executeCommand(["git", "-C", repoPath, "rev-parse", "HEAD"], {
       env,
@@ -293,11 +268,8 @@ export async function initLocalRepo(
         );
       }
     } catch (error: unknown) {
-      if (
-        isErrorWithMessage(error) &&
-        getErrorMessage(error).includes("No such file or directory")
-      ) {
-        throw error;
+      if (getErrorMessage(error).includes('No such file or directory')) {
+        throw error
       }
       throw new Error(
         `Failed to process absolute path '${normalizedInputPath}': ${getErrorMessage(error)}`,
@@ -440,24 +412,17 @@ export async function cloneRepo(
   repoUrl: string,
   branch?: string,
   useWorktree: boolean = false,
+  skipSSHVerification: boolean = false
 ): Promise<Repo> {
-  const isSSH = isSSHUrl(repoUrl);
-  const preserveSSH = isSSH;
-  const hasSSHCredential = await gitAuthService.setupSSHForRepoUrl(
-    repoUrl,
-    database,
-  );
+  const effectiveUrl = normalizeSSHUrl(repoUrl)
+  const isSSH = isSSHUrl(effectiveUrl)
+  const preserveSSH = isSSH
+  const hasSSHCredential = await gitAuthService.setupSSHForRepoUrl(effectiveUrl, database, skipSSHVerification)
 
-  const { url: normalizedRepoUrl, name: repoName } = normalizeRepoUrl(
-    repoUrl,
-    preserveSSH,
-  );
-  const baseRepoDirName = repoName;
-  const worktreeDirName =
-    branch && useWorktree
-      ? `${repoName}-${branch.replace(/[\\/]/g, "-")}`
-      : repoName;
-  const localPath = worktreeDirName;
+  const { url: normalizedRepoUrl, name: repoName } = normalizeRepoUrl(effectiveUrl, preserveSSH)
+  const baseRepoDirName = repoName
+  const worktreeDirName = branch && useWorktree ? `${repoName}-${branch.replace(/[\\/]/g, '-')}` : repoName
+  const localPath = worktreeDirName
 
   const existing = db.getRepoByUrlAndBranch(
     database,
@@ -582,28 +547,13 @@ export async function cloneRepo(
           { cwd: getReposPath(), env, timeout: GIT_CLONE_TIMEOUT },
         );
       } catch (error: unknown) {
-        if (
-          isErrorWithMessage(error) &&
-          getErrorMessage(error).includes("destination path") &&
-          getErrorMessage(error).includes("already exists")
-        ) {
-          logger.error(
-            `Clone failed: directory still exists after cleanup attempt`,
-          );
-          throw new Error(
-            `Workspace directory ${worktreeDirName} already exists. Please delete it manually or contact support.`,
-          );
+        if (getErrorMessage(error).includes('destination path') && getErrorMessage(error).includes('already exists')) {
+          logger.error(`Clone failed: directory still exists after cleanup attempt`)
+          throw new Error(`Workspace directory ${worktreeDirName} already exists. Please delete it manually or contact support.`)
         }
-
-        if (
-          branch &&
-          isErrorWithMessage(error) &&
-          (getErrorMessage(error).includes("Remote branch") ||
-            getErrorMessage(error).includes("not found"))
-        ) {
-          logger.info(
-            `Branch '${branch}' not found, cloning default branch and creating branch locally`,
-          );
+        
+        if (branch && (getErrorMessage(error).includes('Remote branch') || getErrorMessage(error).includes('not found'))) {
+          logger.info(`Branch '${branch}' not found, cloning default branch and creating branch locally`)
           try {
             await executeCommand(
               ["git", "clone", normalizedRepoUrl, worktreeDirName],
@@ -818,28 +768,13 @@ export async function cloneRepo(
           timeout: GIT_CLONE_TIMEOUT,
         });
       } catch (error: unknown) {
-        if (
-          isErrorWithMessage(error) &&
-          getErrorMessage(error).includes("destination path") &&
-          getErrorMessage(error).includes("already exists")
-        ) {
-          logger.error(
-            `Clone failed: directory still exists after cleanup attempt`,
-          );
-          throw new Error(
-            `Workspace directory ${worktreeDirName} already exists. Please delete it manually or contact support.`,
-          );
+        if (getErrorMessage(error).includes('destination path') && getErrorMessage(error).includes('already exists')) {
+          logger.error(`Clone failed: directory still exists after cleanup attempt`)
+          throw new Error(`Workspace directory ${worktreeDirName} already exists. Please delete it manually or contact support.`)
         }
-
-        if (
-          branch &&
-          isErrorWithMessage(error) &&
-          (getErrorMessage(error).includes("Remote branch") ||
-            getErrorMessage(error).includes("not found"))
-        ) {
-          logger.info(
-            `Branch '${branch}' not found, cloning default branch and creating branch locally`,
-          );
+        
+        if (branch && (getErrorMessage(error).includes('Remote branch') || getErrorMessage(error).includes('not found'))) {
+          logger.info(`Branch '${branch}' not found, cloning default branch and creating branch locally`)
           try {
             await executeCommand(
               ["git", "clone", normalizedRepoUrl, worktreeDirName],
@@ -1125,43 +1060,8 @@ function normalizeRepoUrl(
   };
 }
 
-export async function cleanupOrphanedDirectories(
-  database: Database,
-): Promise<void> {
-  try {
-    const reposPath = getReposPath();
-    await ensureDirectoryExists(reposPath);
-
-    const dirResult = await executeCommand(["ls", "-1"], reposPath).catch(
-      () => "",
-    );
-    const directories = dirResult.split("\n").filter((d) => d.trim());
-
-    if (directories.length === 0) {
-      return;
-    }
-
-    const allRepos = db.listRepos(database);
-    const trackedPaths = new Set(
-      allRepos.map((r) => r.localPath.split("/").pop()),
-    );
-    const orphanedDirs = directories.filter((dir) => !trackedPaths.has(dir));
-
-    for (const dir of orphanedDirs) {
-      await executeCommand(["rm", "-rf", dir], reposPath).catch(() => {});
-    }
-  } catch {
-    // Cleanup is best-effort
-  }
-}
-
-async function createWorktreeSafely(
-  baseRepoPath: string,
-  worktreePath: string,
-  branch: string,
-  env: Record<string, string>,
-): Promise<void> {
-  const currentBranch = await safeGetCurrentBranch(baseRepoPath, env);
+async function createWorktreeSafely(baseRepoPath: string, worktreePath: string, branch: string, env: Record<string, string>): Promise<void> {
+  const currentBranch = await safeGetCurrentBranch(baseRepoPath, env)
   if (currentBranch === branch) {
     const defaultBranch = await executeCommand(
       ["git", "-C", baseRepoPath, "rev-parse", "--abbrev-ref", "origin/HEAD"],

@@ -1,57 +1,46 @@
+import { useState } from "react";
+import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import {
-  CornerUpLeft,
-  FolderOpen,
-  GitCommitHorizontal,
-  Plug,
-  Settings,
-  VolumeX,
-  X,
-} from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { createOpenCodeClient } from "@/api/opencode";
 import { getRepo } from "@/api/repos";
-import { FileBrowserSheet } from "@/components/file-browser/FileBrowserSheet";
-import { MessageSkeleton } from "@/components/message/MessageSkeleton";
 import { MessageThread } from "@/components/message/MessageThread";
-import {
-  PromptInput,
-  type PromptInputHandle,
-} from "@/components/message/PromptInput";
+import { PromptInput, type PromptInputHandle } from "@/components/message/PromptInput";
+import { X, VolumeX, FolderOpen, Plug, Settings, CornerUpLeft, GitCommitHorizontal, Brain, ShieldOff } from "lucide-react";
 import { ModelSelectDialog } from "@/components/model/ModelSelectDialog";
-import { PendingActionsGroup } from "@/components/notifications/PendingActionsGroup";
-import { RepoMcpDialog } from "@/components/repo/RepoMcpDialog";
-import { ContextUsageIndicator } from "@/components/session/ContextUsageIndicator";
-import { QuestionPrompt } from "@/components/session/QuestionPrompt";
-import { SessionList } from "@/components/session/SessionList";
-import { SourceControlPanel } from "@/components/source-control";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Header } from "@/components/ui/header";
-import { API_BASE_URL, OPENCODE_API_ENDPOINT } from "@/config";
-import { useQuestions } from "@/contexts/EventContext";
-import { useAutoScroll } from "@/hooks/useAutoScroll";
-import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { useSwipeBack } from "@/hooks/useMobile";
-import { useModelSelection } from "@/hooks/useModelSelection";
-import {
-  useAbortSession,
-  useCreateSession,
-  useMessages,
-  useSession,
-  useTitleGenerating,
-  useUpdateSession,
-} from "@/hooks/useOpenCode";
-import { useSettings } from "@/hooks/useSettings";
-import { useSettingsDialog } from "@/hooks/useSettingsDialog";
+import { SessionList } from "@/components/session/SessionList";
+
+import { FileBrowserSheet } from "@/components/file-browser/FileBrowserSheet";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { ContextUsageIndicator } from "@/components/session/ContextUsageIndicator";
+import { useSession, useAbortSession, useUpdateSession, useMessages, useTitleGenerating, useCreateSession } from "@/hooks/useOpenCode";
+import { OPENCODE_API_ENDPOINT } from "@/config";
 import { useSSE } from "@/hooks/useSSE";
-import { useTTS } from "@/hooks/useTTS";
-import { downloadMarkdown, exportSession } from "@/lib/exportSession";
-import { showToast } from "@/lib/toast";
-import { useSessionStatus } from "@/stores/sessionStatusStore";
 import { useUIState } from "@/stores/uiStateStore";
+import { useSettings } from "@/hooks/useSettings";
+import { useModelSelection } from "@/hooks/useModelSelection";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useSettingsDialog } from "@/hooks/useSettingsDialog";
+import { useAutoScroll } from "@/hooks/useAutoScroll";
+import { useSwipeBack, useMobile } from "@/hooks/useMobile";
+import { useVisualViewport } from "@/hooks/useVisualViewport";
+import { useTTS } from "@/hooks/useTTS";
+import { useEffect, useRef, useCallback, useMemo } from "react";
+import { MessageSkeleton } from "@/components/message/MessageSkeleton";
+import { exportSession, downloadMarkdown } from "@/lib/exportSession";
+import type { MessageWithParts } from "@/api/types";
+import { showToast } from "@/lib/toast";
+import { getRepoDisplayName } from "@/lib/utils";
+import { RepoMcpDialog } from "@/components/repo/RepoMcpDialog";
+import { ResetPermissionsDialog } from "@/components/repo/ResetPermissionsDialog";
+import { createOpenCodeClient } from "@/api/opencode";
+import { useSessionStatus, useSessionStatusForSession } from "@/stores/sessionStatusStore";
+import { useQuestions } from "@/contexts/EventContext";
+import { QuestionPrompt } from "@/components/session/QuestionPrompt";
+import { PendingActionsGroup } from "@/components/notifications/PendingActionsGroup";
+import { SourceControlPanel } from "@/components/source-control";
+import { SessionTodoDisplay } from "@/components/message/SessionTodoDisplay";
 
 const compareMessageIds = (id1: string, id2: string): number => {
   const num1 = parseInt(id1, 10);
@@ -63,7 +52,7 @@ const compareMessageIds = (id1: string, id2: string): number => {
 export function SessionDetail() {
   const { id, sessionId } = useParams<{ id: string; sessionId: string }>();
   const navigate = useNavigate();
-  const repoId = parseInt(id || "0", 10);
+  const repoId = Number(id) || 0;
   const { preferences, updateSettings } = useSettings();
   const messageContainerRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
@@ -73,9 +62,8 @@ export function SessionDetail() {
   const [fileBrowserOpen, setFileBrowserOpen] = useState(false);
   const [mcpDialogOpen, setMcpDialogOpen] = useState(false);
   const [sourceControlOpen, setSourceControlOpen] = useState(false);
-  const [selectedFilePath, setSelectedFilePath] = useState<
-    string | undefined
-  >();
+  const [resetPermissionsOpen, setResetPermissionsOpen] = useState(false);
+  const [selectedFilePath, setSelectedFilePath] = useState<string | undefined>();
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [hasPromptContent, setHasPromptContent] = useState(false);
 
@@ -87,6 +75,10 @@ export function SessionDetail() {
     enabled: !fileBrowserOpen && !modelDialogOpen && !sessionsDialogOpen,
   });
 
+  const isMobile = useMobile();
+  const { keyboardHeight } = useVisualViewport();
+  const inputBottomOffset = isMobile ? keyboardHeight : 0;
+
   useEffect(() => {
     return bindSwipe(pageRef.current);
   }, [bindSwipe]);
@@ -95,17 +87,6 @@ export function SessionDetail() {
     queryKey: ["repo", repoId],
     queryFn: () => getRepo(repoId),
     enabled: !!repoId,
-  });
-
-  const { data: settings } = useQuery({
-    queryKey: ["opencode-config"],
-    queryFn: async () => {
-      const response = await fetch(
-        `${API_BASE_URL}/api/settings/opencode-configs/default`,
-      );
-      if (!response.ok) throw new Error("Failed to fetch config");
-      return response.json();
-    },
   });
 
   const opcodeUrl = OPENCODE_API_ENDPOINT;
@@ -124,19 +105,22 @@ export function SessionDetail() {
   );
 
   const messages = useMemo(() => {
-    if (!rawMessages) return undefined;
-    const revertMessageID = session?.revert?.messageID;
-    if (!revertMessageID) return rawMessages;
-    return rawMessages.filter(
-      (msg) => compareMessageIds(msg.info.id, revertMessageID) < 0,
-    );
+    if (!rawMessages) return undefined
+    const revertMessageID = session?.revert?.messageID
+    if (!revertMessageID) return rawMessages
+    return rawMessages.filter(msgWithParts => compareMessageIds(msgWithParts.info.id, revertMessageID) < 0)
   }, [rawMessages, session?.revert?.messageID]);
+
+  const getMessagesWithParts = useCallback((): MessageWithParts[] | undefined => {
+    return messages
+  }, [messages])
 
   const { scrollToBottom } = useAutoScroll({
     containerRef: messageContainerRef,
-    messages,
+    messages: messages?.map(m => m.info),
     sessionId,
-    onScrollStateChange: setShowScrollButton,
+    contentVersion: messages?.reduce((sum, m) => sum + m.parts.length, 0) ?? 0,
+    onScrollStateChange: setShowScrollButton
   });
 
   const { isConnected, isReconnecting } = useSSE(
@@ -158,6 +142,16 @@ export function SessionDetail() {
     reply: replyToQuestion,
     reject: rejectQuestion,
   } = useQuestions();
+
+  const sessionStatus = useSessionStatusForSession(sessionId);
+  const isSessionActive = sessionStatus.type === 'busy' || sessionStatus.type === 'retry';
+  const lastAssistantMessage = messages?.filter(m => m.info.role === 'assistant').at(-1);
+  const hasIncompleteMessages = lastAssistantMessage ? !('completed' in lastAssistantMessage.info.time && lastAssistantMessage.info.time.completed) : false;
+  const hasActiveStream = hasIncompleteMessages && isSessionActive;
+
+  const handleShowModelsDialog = useCallback(() => setModelDialogOpen(true), []);
+  const handleShowSessionsDialog = useCallback(() => setSessionsDialogOpen(true), []);
+  const handleShowHelpDialog = useCallback(() => openSettings(), [openSettings]);
 
   const handleNewSession = useCallback(async () => {
     try {
@@ -322,15 +316,16 @@ export function SessionDetail() {
   }, [preferences?.expandToolCalls, updateSettings]);
 
   const handleExportSession = useCallback(() => {
-    if (!messages || !session) {
-      showToast.error("No session data to export");
-      return;
+    const data = getMessagesWithParts()
+    if (!data || !session) {
+      showToast.error('No session data to export')
+      return
     }
-
-    const { filename, content } = exportSession(messages, session);
-    downloadMarkdown(content, filename);
-    showToast.success(`Exported to ${filename}`);
-  }, [messages, session]);
+    
+    const { filename, content } = exportSession(data, session)
+    downloadMarkdown(content, filename)
+    showToast.success(`Exported to ${filename}`)
+  }, [getMessagesWithParts, session]);
 
   const handleUndoMessage = useCallback((restoredPrompt: string) => {
     promptInputRef.current?.setPromptValue(restoredPrompt);
@@ -341,11 +336,7 @@ export function SessionDetail() {
   }, []);
 
   if (!sessionId) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-background via-background to-background text-muted-foreground">
-        Session not found
-      </div>
-    );
+    return <Navigate to="/" replace />;
   }
 
   if (!repo) {
@@ -395,13 +386,7 @@ export function SessionDetail() {
           <Header.EditableTitle
             value={session?.title || "Untitled Session"}
             onChange={handleSessionTitleUpdate}
-            subtitle={
-              <span className="text-orange-600 dark:text-orange-400">
-                {repo.repoUrl?.split("/").pop()?.replace(".git", "") ||
-                  repo.localPath ||
-                  "Repository"}
-              </span>
-            }
+            subtitle={<span className="text-orange-600 dark:text-orange-400">{getRepoDisplayName(repo.repoUrl, repo.localPath)}</span>}
             generating={isTitleGenerating}
           />
         </div>
@@ -446,6 +431,24 @@ export function SessionDetail() {
           <Button
             variant="outline"
             size="sm"
+            onClick={() => navigate(`/repos/${repoId}/memories`)}
+            className="hidden md:flex text-foreground border-border hover:bg-accent transition-all duration-200 hover:scale-105"
+          >
+            <Brain className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Memory</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setResetPermissionsOpen(true)}
+            className="hidden lg:flex text-foreground border-border hover:bg-accent transition-all duration-200 hover:scale-105"
+          >
+            <ShieldOff className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Reset Permissions</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={openSettings}
             className="hidden md:flex text-foreground border-border hover:bg-accent transition-all duration-200 hover:scale-105"
           >
@@ -453,18 +456,26 @@ export function SessionDetail() {
             <span className="hidden sm:inline">Settings</span>
           </Button>
           <Header.MobileDropdown>
-            <DropdownMenuItem onClick={() => setMcpDialogOpen(true)}>
-              <Plug className="w-4 h-4 mr-2" /> MCP
+            <DropdownMenuItem onClick={() => navigate(`/repos/${repoId}/memories`)}>
+              <Brain className="w-4 h-4 mr-2" /> Memory
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setSourceControlOpen(true)}>
               <GitCommitHorizontal className="w-4 h-4 mr-2" /> Source Control
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setMcpDialogOpen(true)}>
+              <Plug className="w-4 h-4 mr-2" /> MCP
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setFileBrowserOpen(true)}>
               <FolderOpen className="w-4 h-4 mr-2" /> Files
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setResetPermissionsOpen(true)}>
+              <ShieldOff className="w-4 h-4 mr-2" /> Reset Permissions
             </DropdownMenuItem>
           </Header.MobileDropdown>
         </Header.Actions>
       </Header>
+
+      <SessionTodoDisplay sessionID={sessionId} />
 
       <div className="flex-1 overflow-hidden flex flex-col relative">
         <div
@@ -488,7 +499,10 @@ export function SessionDetail() {
           ) : null}
         </div>
         {opcodeUrl && repoDirectory && !isEditingMessage && (
-          <div className="absolute bottom-0 left-0 right-0 flex justify-center">
+          <div
+            className="absolute left-0 right-0 flex justify-center"
+            style={{ bottom: inputBottomOffset }}
+          >
             <div className="relative w-[94%] md:max-w-4xl">
               {hasPromptContent && (
                 <button
@@ -546,12 +560,11 @@ export function SessionDetail() {
                 sessionID={sessionId}
                 disabled={!isConnected}
                 showScrollButton={showScrollButton}
+                hasActiveStream={hasActiveStream}
                 onScrollToBottom={scrollToBottom}
-                onShowModelsDialog={() => setModelDialogOpen(true)}
-                onShowSessionsDialog={() => setSessionsDialogOpen(true)}
-                onShowHelpDialog={() => {
-                  openSettings();
-                }}
+                onShowModelsDialog={handleShowModelsDialog}
+                onShowSessionsDialog={handleShowSessionsDialog}
+                onShowHelpDialog={handleShowHelpDialog}
                 onToggleDetails={handleToggleDetails}
                 onExportSession={handleExportSession}
                 onPromptChange={setHasPromptContent}
@@ -592,11 +605,7 @@ export function SessionDetail() {
         isOpen={fileBrowserOpen}
         onClose={handleFileBrowserClose}
         basePath={repo.localPath}
-        repoName={
-          repo.repoUrl?.split("/").pop()?.replace(".git", "") ||
-          repo.localPath ||
-          "Repository"
-        }
+        repoName={getRepoDisplayName(repo.repoUrl, repo.localPath)}
         repoId={repoId}
         initialSelectedFile={selectedFilePath}
       />
@@ -604,7 +613,6 @@ export function SessionDetail() {
       <RepoMcpDialog
         open={mcpDialogOpen}
         onOpenChange={setMcpDialogOpen}
-        config={settings}
         directory={repoDirectory}
       />
 
@@ -613,11 +621,14 @@ export function SessionDetail() {
         isOpen={sourceControlOpen}
         onClose={() => setSourceControlOpen(false)}
         currentBranch={repo.currentBranch || repo.branch || "main"}
-        repoName={
-          repo.repoUrl?.split("/").pop()?.replace(".git", "") ||
-          repo.localPath ||
-          "Repository"
-        }
+        repoName={getRepoDisplayName(repo.repoUrl, repo.localPath)}
+      />
+
+      <ResetPermissionsDialog
+        open={resetPermissionsOpen}
+        onOpenChange={setResetPermissionsOpen}
+        repoId={repoId}
+        repoDirectory={repoDirectory}
       />
     </div>
   );

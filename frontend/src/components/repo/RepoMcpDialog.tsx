@@ -1,82 +1,47 @@
-import { useMutation } from "@tanstack/react-query";
-import {
-  AlertCircle,
-  Key,
-  Loader2,
-  MoreVertical,
-  Plug,
-  RefreshCw,
-  Shield,
-  XCircle,
-} from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import {
-  type McpAuthStartResponse,
-  type McpServerConfig,
-  type McpStatus,
-  mcpApi,
-} from "@/api/mcp";
-import { McpOAuthDialog } from "@/components/settings/McpOAuthDialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { DeleteDialog } from "@/components/ui/delete-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Switch } from "@/components/ui/switch";
-import { showToast } from "@/lib/toast";
+import { useState, useEffect, useCallback } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { RepoMcpServerList } from './RepoMcpServerList'
+import { DeleteDialog } from '@/components/ui/delete-dialog'
+import { McpOAuthDialog } from '@/components/settings/McpOAuthDialog'
+import { mcpApi, type McpStatus, type McpServerConfig, type McpAuthStartResponse } from '@/api/mcp'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { invalidateSessionCaches } from '@/lib/queryInvalidation'
+import { showToast } from '@/lib/toast'
 
 interface RepoMcpDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  config: {
-    content: Record<string, unknown>;
-  } | null;
-  directory: string | undefined;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  directory: string | undefined
 }
 
-export function RepoMcpDialog({
-  open,
-  onOpenChange,
-  config,
-  directory,
-}: RepoMcpDialogProps) {
-  const [localStatus, setLocalStatus] = useState<Record<string, McpStatus>>({});
-  const [isLoadingStatus, setIsLoadingStatus] = useState(false);
-  const [removeAuthConfirmServer, setRemoveAuthConfirmServer] = useState<
-    string | null
-  >(null);
-  const [authDialogServerId, setAuthDialogServerId] = useState<string | null>(
-    null,
-  );
-
-  const mcpServers =
-    (config?.content?.mcp as Record<string, McpServerConfig> | undefined) || {};
-  const serverIds = Object.keys(mcpServers);
-
+export function RepoMcpDialog({ open, onOpenChange, directory }: RepoMcpDialogProps) {
+  const queryClient = useQueryClient()
+  const [localStatus, setLocalStatus] = useState<Record<string, McpStatus>>({})
+  const [mcpServers, setMcpServers] = useState<Record<string, McpServerConfig>>({})
+  const [isLoadingStatus, setIsLoadingStatus] = useState(false)
+  const [hasFetchedStatus, setHasFetchedStatus] = useState(false)
+  const [removeAuthConfirmServer, setRemoveAuthConfirmServer] = useState<string | null>(null)
+  const [authDialogServerId, setAuthDialogServerId] = useState<string | null>(null)
+  
+  const serverIds = Object.keys(localStatus)
+  
   const fetchStatus = useCallback(async () => {
-    if (!directory || serverIds.length === 0) return;
-
-    setIsLoadingStatus(true);
+    if (!directory) return
+    
+    setIsLoadingStatus(true)
     try {
-      const status = await mcpApi.getStatusFor(directory);
-      setLocalStatus(status);
+      const [status, config] = await Promise.all([
+        mcpApi.getStatusFor(directory),
+        mcpApi.getConfigForDirectory(directory),
+      ])
+      setLocalStatus(status)
+      setMcpServers((config.mcp as Record<string, McpServerConfig>) || {})
+      setHasFetchedStatus(true)
     } finally {
       setIsLoadingStatus(false);
     }
-  }, [directory, serverIds.length]);
-
+  }, [directory])
+  
   const toggleMutation = useMutation({
     mutationFn: async ({
       serverId,
@@ -100,8 +65,9 @@ export function RepoMcpDialog({
       }
     },
     onSuccess: async () => {
-      showToast.success("MCP server updated for this location");
-      await fetchStatus();
+      showToast.success('MCP server updated for this location')
+      await fetchStatus()
+      invalidateSessionCaches(queryClient)
     },
     onError: (error) => {
       showToast.error(
@@ -116,9 +82,10 @@ export function RepoMcpDialog({
       await mcpApi.removeAuthDirectory(serverId, directory);
     },
     onSuccess: async () => {
-      showToast.success("Authentication removed for this location");
-      setRemoveAuthConfirmServer(null);
-      await fetchStatus();
+      showToast.success('Authentication removed for this location')
+      setRemoveAuthConfirmServer(null)
+      await fetchStatus()
+      invalidateSessionCaches(queryClient)
     },
     onError: (error) => {
       showToast.error(
@@ -129,102 +96,58 @@ export function RepoMcpDialog({
     },
   });
 
-  const handleOAuthAutoAuth = async () => {
-    if (!authDialogServerId || !directory) return;
-    await mcpApi.authenticateDirectory(authDialogServerId, directory);
-    await fetchStatus();
-    setAuthDialogServerId(null);
-  };
-
   const handleOAuthStartAuth = async (): Promise<McpAuthStartResponse> => {
-    if (!authDialogServerId) throw new Error("No server ID");
-    return await mcpApi.startAuth(authDialogServerId);
-  };
+    if (!authDialogServerId) throw new Error('No server ID')
+    const serverConfig = mcpServers[authDialogServerId]
+    if (!serverConfig?.url) throw new Error('Server URL not found')
+    const oauthConfig = typeof serverConfig.oauth === 'object' ? serverConfig.oauth : undefined
+    return await mcpApi.startAuth(
+      authDialogServerId,
+      serverConfig.url,
+      oauthConfig?.scope,
+      oauthConfig?.clientId,
+      oauthConfig?.clientSecret,
+      directory,
+    )
+  }
 
   const handleOAuthCompleteAuth = async (code: string) => {
-    if (!authDialogServerId) return;
-    await mcpApi.completeAuth(authDialogServerId, code);
-    await fetchStatus();
-    setAuthDialogServerId(null);
-  };
+    if (!authDialogServerId) return
+    await mcpApi.completeAuth(authDialogServerId, code)
+    await fetchStatus()
+    invalidateSessionCaches(queryClient)
+    setAuthDialogServerId(null)
+  }
 
+  const handleOAuthCheckStatus = async (): Promise<boolean> => {
+    if (!authDialogServerId || !directory) return false
+    const status = await mcpApi.getStatusFor(directory)
+    const serverStatus = status[authDialogServerId]
+    if (serverStatus?.status === 'connected') {
+      setLocalStatus(status)
+      return true
+    }
+    return false
+  }
+
+  const handleOAuthSuccess = () => {
+    fetchStatus()
+    invalidateSessionCaches(queryClient)
+  }
+  
   useEffect(() => {
     if (open && directory) {
       fetchStatus();
     }
-  }, [open, directory, fetchStatus]);
+  }, [open, directory, fetchStatus])
 
   const getDisplayName = (serverId: string): string => {
-    const name = serverId.replace(/[-_]/g, " ");
-    return name.charAt(0).toUpperCase() + name.slice(1);
-  };
+    const name = serverId.replace(/[-_]/g, ' ')
+    return name.charAt(0).toUpperCase() + name.slice(1)
+  }
 
-  const getDescription = (serverConfig: McpServerConfig): string => {
-    if (serverConfig.type === "local" && serverConfig.command) {
-      const command = serverConfig.command.join(" ");
-      if (command.includes("filesystem")) return "File system access";
-      if (command.includes("git")) return "Git repository operations";
-      if (command.includes("sqlite")) return "SQLite database access";
-      if (command.includes("postgres")) return "PostgreSQL database access";
-      if (command.includes("brave-search")) return "Web search via Brave";
-      if (command.includes("github")) return "GitHub repository access";
-      if (command.includes("slack")) return "Slack integration";
-      if (command.includes("puppeteer")) return "Web automation";
-      if (command.includes("fetch")) return "HTTP requests";
-      if (command.includes("memory")) return "Persistent memory";
-      return `Local: ${command}`;
-    } else if (serverConfig.type === "remote" && serverConfig.url) {
-      return serverConfig.url;
-    }
-    return "MCP server";
-  };
-
-  const getStatusBadge = (status?: McpStatus) => {
-    if (!status) return null;
-
-    switch (status.status) {
-      case "connected":
-        return (
-          <Badge variant="default" className="text-xs bg-green-600">
-            Connected
-          </Badge>
-        );
-      case "disabled":
-        return (
-          <Badge className="text-xs bg-gray-700 text-gray-300 border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">
-            Disabled
-          </Badge>
-        );
-      case "failed":
-        return (
-          <Badge
-            variant="destructive"
-            className="text-xs flex items-center gap-1"
-          >
-            <AlertCircle className="h-3 w-3" />
-            Failed
-          </Badge>
-        );
-      case "needs_auth":
-        return (
-          <Badge
-            variant="outline"
-            className="text-xs border-yellow-500 text-yellow-600"
-          >
-            Needs Auth
-          </Badge>
-        );
-      default:
-        return (
-          <Badge variant="outline" className="text-xs">
-            Unknown
-          </Badge>
-        );
-    }
-  };
-
-  if (!directory) return null;
-
+  if (!directory) return null
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -238,146 +161,17 @@ export function RepoMcpDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="px-4 sm:px-6 py-3 sm:py-4 flex-1 overflow-y-auto min-h-0">
-          {serverIds.length === 0 ? (
-            <div className="text-center py-6 text-muted-foreground">
-              <Plug className="w-10 h-10 mx-auto mb-3 opacity-50" />
-              <p className="text-sm">No MCP servers configured globally</p>
-              <p className="text-xs mt-1">Add them in Settings first</p>
-            </div>
-          ) : isLoadingStatus ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-4 h-4 animate-spin text-blue-600 dark:text-blue-400" />
-              <span className="ml-2 text-sm text-muted-foreground">
-                Loading...
-              </span>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {serverIds.map((serverId) => {
-                const serverConfig = mcpServers[serverId];
-                const status = localStatus[serverId];
-                const isConnected = status?.status === "connected";
-                const needsAuth = status?.status === "needs_auth";
-                const failed = status?.status === "failed";
-                const isRemote = serverConfig.type === "remote";
-                const hasOAuthConfig = isRemote && !!serverConfig.oauth;
-                const hasOAuthError =
-                  failed && isRemote && /oauth|auth.*state/i.test(status.error);
-                const isOAuthServer =
-                  hasOAuthConfig || hasOAuthError || (needsAuth && isRemote);
-                const connectedWithOAuth = isOAuthServer && isConnected;
-                const showAuthButton = needsAuth || (isOAuthServer && failed);
-
-                return (
-                  <div
-                    key={serverId}
-                    className="flex items-center justify-between gap-3 p-3 rounded-lg border border-border bg-card"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-medium truncate">
-                          {getDisplayName(serverId)}
-                        </p>
-                        {connectedWithOAuth && (
-                          <span title="OAuth authenticated">
-                            <Shield className="h-3 w-3 text-muted-foreground" />
-                          </span>
-                        )}
-                        {getStatusBadge(status)}
-                      </div>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {getDescription(serverConfig)}
-                      </p>
-                      {failed && status.status === "failed" && (
-                        <div className="flex items-center gap-1 mt-1 text-xs text-red-500">
-                          <XCircle className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate">{status.error}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {showAuthButton ? (
-                        <Button
-                          onClick={() => setAuthDialogServerId(serverId)}
-                          disabled={toggleMutation.isPending}
-                          variant="default"
-                          size="sm"
-                        >
-                          <Key className="h-3 w-3 mr-1" />
-                          Auth
-                        </Button>
-                      ) : (
-                        <Switch
-                          checked={isConnected}
-                          disabled={
-                            toggleMutation.isPending ||
-                            removeAuthMutation.isPending
-                          }
-                          onCheckedChange={(enabled) => {
-                            toggleMutation.mutate({
-                              serverId,
-                              enable: enabled,
-                            });
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      )}
-                      {(isOAuthServer || needsAuth) && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {showAuthButton && (
-                              <DropdownMenuItem
-                                onClick={() => setAuthDialogServerId(serverId)}
-                              >
-                                <Key className="h-4 w-4 mr-2" />
-                                Authenticate
-                              </DropdownMenuItem>
-                            )}
-                            {connectedWithOAuth && (
-                              <DropdownMenuItem
-                                onClick={() => setAuthDialogServerId(serverId)}
-                              >
-                                <RefreshCw className="h-4 w-4 mr-2" />
-                                Re-authenticate
-                              </DropdownMenuItem>
-                            )}
-                            {connectedWithOAuth && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    setRemoveAuthConfirmServer(serverId)
-                                  }
-                                  disabled={removeAuthMutation.isPending}
-                                >
-                                  <Shield className="h-4 w-4 mr-2" />
-                                  {removeAuthMutation.isPending
-                                    ? "Removing..."
-                                    : "Remove Auth"}
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        <RepoMcpServerList
+          hasFetchedStatus={hasFetchedStatus}
+          serverIds={serverIds}
+          isLoadingStatus={isLoadingStatus}
+          localStatus={localStatus}
+          mcpServers={mcpServers}
+          toggleMutation={toggleMutation}
+          removeAuthMutation={removeAuthMutation}
+          onAuthClick={setAuthDialogServerId}
+          onRemoveAuthClick={setRemoveAuthConfirmServer}
+        />
 
         <DeleteDialog
           open={!!removeAuthConfirmServer}
@@ -401,10 +195,11 @@ export function RepoMcpDialog({
         <McpOAuthDialog
           open={!!authDialogServerId}
           onOpenChange={(o) => !o && setAuthDialogServerId(null)}
-          serverName={authDialogServerId || ""}
-          onAutoAuth={handleOAuthAutoAuth}
+          serverName={authDialogServerId || ''}
           onStartAuth={handleOAuthStartAuth}
           onCompleteAuth={handleOAuthCompleteAuth}
+          onCheckStatus={handleOAuthCheckStatus}
+          onSuccess={handleOAuthSuccess}
           directory={directory}
         />
       </DialogContent>

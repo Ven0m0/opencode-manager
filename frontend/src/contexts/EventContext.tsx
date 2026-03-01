@@ -1,4 +1,14 @@
 /* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { useQueryClient, useQuery } from '@tanstack/react-query'
+import { OpenCodeClient } from '@/api/opencode'
+import { listRepos } from '@/api/repos'
+import type { PermissionRequest, PermissionResponse, QuestionRequest, SSEEvent, SSHHostKeyRequest, MessageWithParts } from '@/api/types'
+import { showToast } from '@/lib/toast'
+import { subscribeToSSE, addSSEDirectory, ensureSSEConnected } from '@/lib/sseManager'
+import { OPENCODE_API_ENDPOINT } from '@/config'
+import { addToSessionKeyedState, removeFromSessionKeyedState } from '@/lib/sessionKeyedState'
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -34,6 +44,73 @@ import { showToast } from "@/lib/toast";
 
 type PermissionsBySession = Record<string, PermissionRequest[]>;
 type QuestionsBySession = Record<string, QuestionRequest[]>;
+
+function optimisticallyErrorToolPart(
+  queryClient: ReturnType<typeof useQueryClient>,
+  sessionID: string,
+  messageID: string,
+  callID: string,
+  errorMessage: string
+) {
+  const cache = queryClient.getQueryCache()
+  const queries = cache.getAll()
+  
+  for (const query of queries) {
+    const key = query.queryKey
+    if (key[0] === 'opencode' && key[1] === 'messages' && key.length >= 5) {
+      const querySessionID = key[3] as string
+      if (querySessionID !== sessionID) continue
+      
+      const currentData = queryClient.getQueryData<MessageWithParts[]>(key)
+      if (!currentData) continue
+      
+      const updatedData = currentData.map(msgWithParts => {
+        if (msgWithParts.info.id !== messageID) return msgWithParts
+        
+        const targetPart = msgWithParts.parts.find(p => 
+          p.type === 'tool' && 
+          'callID' in p && 
+          p.callID === callID && 
+          'state' in p && 
+          p.state && 
+          typeof p.state === 'object' && 
+          'status' in p.state && 
+          (p.state as { status?: string }).status === 'running'
+        )
+        if (!targetPart) {
+          return msgWithParts
+        }
+        
+        const targetPartAny = targetPart as unknown as { state: { status: string; input?: string; time: { start: number } } }
+        const targetState = targetPartAny.state
+        
+        const updatedParts = msgWithParts.parts.map(p => {
+          if (p.id !== targetPart.id) return p
+          return {
+            ...p,
+            state: {
+              status: 'error' as const,
+              input: targetState.input,
+              error: errorMessage,
+              time: {
+                start: targetState.time.start,
+                end: Date.now(),
+              },
+            },
+          }
+        })
+        
+        return {
+          ...msgWithParts,
+          parts: updatedParts,
+        }
+      })
+      
+      queryClient.setQueryData(key, updatedData)
+      break
+    }
+  }
+}
 
 interface SSHHostKeyState {
   request: SSHHostKeyRequest | null;
@@ -237,62 +314,55 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     prevPermissionCountRef.current = permissionCount;
   }, [allPermissions.length, showPermissionDialog]);
 
-  const respondToPermission = useCallback(
-    async (
-      permissionID: string,
-      sessionID: string,
-      response: PermissionResponse,
-    ) => {
-      const connected = await ensureSSEConnected();
-      if (!connected) {
-        showToast.error("Unable to connect. Please try again.");
-        throw new Error("SSE connection failed");
-      }
-      const client = getClient(sessionID);
-      if (!client) throw new Error("No client found for session");
-      await client.respondToPermission(sessionID, permissionID, response);
-      removePermission(permissionID, sessionID);
-    },
-    [getClient, removePermission],
-  );
+  const respondToPermission = useCallback(async (permissionID: string, sessionID: string, response: PermissionResponse) => {
+    const connected = await ensureSSEConnected()
+    if (!connected) {
+      showToast.error('Unable to connect. Please try again.')
+      throw new Error('SSE connection failed')
+    }
+    const client = getClient(sessionID)
+    if (!client) throw new Error('No client found for session')
 
-  const replyToQuestion = useCallback(
-    async (requestID: string, answers: string[][]) => {
-      const connected = await ensureSSEConnected();
-      if (!connected) {
-        showToast.error("Unable to connect. Please try again.");
-        throw new Error("SSE connection failed");
+    if (response === 'reject') {
+      const permission = (permissionsBySession[sessionID] ?? []).find(p => p.id === permissionID)
+      if (permission?.tool) {
+        optimisticallyErrorToolPart(queryClient, sessionID, permission.tool.messageID, permission.tool.callID, 'Permission denied')
       }
-      const question = Object.values(questionsBySession)
-        .flat()
-        .find((q) => q.id === requestID);
-      if (!question) throw new Error("Question not found");
-      const client = getClient(question.sessionID);
-      if (!client) throw new Error("No client found for session");
-      await client.replyToQuestion(requestID, answers);
-      removeQuestion(requestID, question.sessionID);
-    },
-    [getClient, removeQuestion, questionsBySession],
-  );
+    }
 
-  const rejectQuestion = useCallback(
-    async (requestID: string) => {
-      const connected = await ensureSSEConnected();
-      if (!connected) {
-        showToast.error("Unable to connect. Please try again.");
-        throw new Error("SSE connection failed");
-      }
-      const question = Object.values(questionsBySession)
-        .flat()
-        .find((q) => q.id === requestID);
-      if (!question) throw new Error("Question not found");
-      const client = getClient(question.sessionID);
-      if (!client) throw new Error("No client found for session");
-      await client.rejectQuestion(requestID);
-      removeQuestion(requestID, question.sessionID);
-    },
-    [getClient, removeQuestion, questionsBySession],
-  );
+    await client.respondToPermission(sessionID, permissionID, response)
+  }, [getClient, permissionsBySession, queryClient])
+
+  const replyToQuestion = useCallback(async (requestID: string, answers: string[][]) => {
+    const connected = await ensureSSEConnected()
+    if (!connected) {
+      showToast.error('Unable to connect. Please try again.')
+      throw new Error('SSE connection failed')
+    }
+    const question = Object.values(questionsBySession).flat().find(q => q.id === requestID)
+    if (!question) throw new Error('Question not found')
+    const client = getClient(question.sessionID)
+    if (!client) throw new Error('No client found for session')
+    await client.replyToQuestion(requestID, answers)
+  }, [getClient, questionsBySession])
+
+  const rejectQuestion = useCallback(async (requestID: string) => {
+    const connected = await ensureSSEConnected()
+    if (!connected) {
+      showToast.error('Unable to connect. Please try again.')
+      throw new Error('SSE connection failed')
+    }
+    const question = Object.values(questionsBySession).flat().find(q => q.id === requestID)
+    if (!question) throw new Error('Question not found')
+    const client = getClient(question.sessionID)
+    if (!client) throw new Error('No client found for session')
+
+    if (question.tool) {
+      optimisticallyErrorToolPart(queryClient, question.sessionID, question.tool.messageID, question.tool.callID, 'Question rejected')
+    }
+
+    await client.rejectQuestion(requestID)
+  }, [getClient, questionsBySession, queryClient])
 
   const getPermissionForCallID = useCallback(
     (callID: string, sessionID: string): PermissionRequest | null => {

@@ -1,5 +1,6 @@
 import os from "node:os";
 import path from "node:path";
+import { readFile } from "node:fs/promises";
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import {
@@ -18,6 +19,7 @@ import { cors } from "hono/cors";
 import stripJsonComments from "strip-json-comments";
 import { createAuth } from "./auth";
 import { createAuthMiddleware } from "./auth/middleware";
+import { DEFAULT_AGENTS_MD } from "./constants";
 import { initializeDatabase } from "./db/schema";
 import { createIPCServer, type IPCServer } from "./ipc/ipcServer";
 import {
@@ -27,6 +29,8 @@ import {
 } from "./routes/auth";
 import { createFileRoutes } from "./routes/files";
 import { createHealthRoutes } from "./routes/health";
+import { createMcpOauthProxyRoutes } from "./routes/mcp-oauth-proxy";
+import { createMemoryRoutes } from "./routes/memory";
 import { createNotificationRoutes } from "./routes/notifications";
 import { createOAuthRoutes } from "./routes/oauth";
 import { createProvidersRoutes } from "./routes/providers";
@@ -46,11 +50,22 @@ import {
 import { GitAuthService } from "./services/git-auth";
 import { NotificationService } from "./services/notification";
 import { opencodeServerManager } from "./services/opencode-single-server";
-import { proxyRequest } from "./services/proxy";
+import { proxyRequest, proxyMcpAuthStart, proxyMcpAuthAuthenticate } from "./services/proxy";
 import { cleanupOrphanedDirectories } from "./services/repo";
 import { SettingsService } from "./services/settings";
 import { sseAggregator } from "./services/sse-aggregator";
 import { logger } from "./utils/logger";
+
+async function getAppVersion(): Promise<string> {
+  try {
+    const packageUrl = new URL("../../package.json", import.meta.url);
+    const packageJsonRaw = await readFile(packageUrl, "utf-8");
+    const packageJson = JSON.parse(packageJsonRaw) as { version?: string };
+    return packageJson.version ?? "unknown";
+  } catch {
+    return "unknown";
+  }
+}
 
 const { PORT, HOST } = ENV.SERVER;
 const DB_PATH = getDatabasePath();
@@ -77,8 +92,6 @@ app.use(
 const db = initializeDatabase(DB_PATH);
 const auth = createAuth(db);
 const requireAuth = createAuthMiddleware(auth);
-
-import { DEFAULT_AGENTS_MD } from "./constants";
 
 let ipcServer: IPCServer | undefined;
 const gitAuthService = new GitAuthService();
@@ -223,7 +236,7 @@ try {
   settingsService.initializeLastKnownGoodConfig();
 
   ipcServer = await createIPCServer(process.env.STORAGE_PATH || undefined);
-  gitAuthService.initialize(ipcServer, db);
+  await gitAuthService.initialize(ipcServer, db);
   logger.info(`Git IPC server running at ${ipcServer.ipcHandlePath}`);
 
   opencodeServerManager.setDatabase(db);
@@ -264,8 +277,9 @@ if (ENV.VAPID.PUBLIC_KEY && ENV.VAPID.PRIVATE_KEY) {
 
 app.route("/api/auth", createAuthRoutes(auth));
 app.route("/api/auth-info", createAuthInfoRoutes(auth, db));
-
 app.route("/api/health", createHealthRoutes(db));
+
+app.route("/api/mcp-oauth-proxy", createMcpOauthProxyRoutes(requireAuth));
 
 const protectedApi = new Hono();
 protectedApi.use("/*", requireAuth);
@@ -284,8 +298,21 @@ protectedApi.route(
   "/notifications",
   createNotificationRoutes(notificationService),
 );
+protectedApi.route("/memory", createMemoryRoutes(db));
 
 app.route("/api", protectedApi);
+
+app.post("/api/opencode/mcp/:name/auth", requireAuth, async (c) => {
+  const serverName = c.req.param("name");
+  const directory = c.req.query("directory");
+  return proxyMcpAuthStart(serverName, directory);
+});
+
+app.post("/api/opencode/mcp/:name/auth/authenticate", requireAuth, async (c) => {
+  const serverName = c.req.param("name");
+  const directory = c.req.query("directory");
+  return proxyMcpAuthAuthenticate(serverName, directory);
+});
 
 app.all("/api/opencode/*", requireAuth, async (c) => {
   const request = c.req.raw;
@@ -295,6 +322,15 @@ app.all("/api/opencode/*", requireAuth, async (c) => {
 const isProduction = ENV.SERVER.NODE_ENV === "production";
 
 if (isProduction) {
+  app.use("/*", async (c, next) => {
+    await next();
+    if (c.req.path === "/sw.js") {
+      c.res.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      c.res.headers.set("Pragma", "no-cache");
+      c.res.headers.set("Expires", "0");
+    }
+  });
+
   app.use("/*", serveStatic({ root: "./frontend/dist" }));
 
   app.get("*", async (c) => {
@@ -308,10 +344,11 @@ if (isProduction) {
     return c.html(html);
   });
 } else {
-  app.get("/", (c) => {
+  app.get("/", async (c) => {
+    const version = await getAppVersion();
     return c.json({
       name: "OpenCode WebUI",
-      version: "2.0.0",
+      version,
       status: "running",
       endpoints: {
         health: "/api/health",
@@ -361,7 +398,7 @@ const shutdown = async (signal: string) => {
     sseAggregator.shutdown();
     logger.info("SSE Aggregator stopped");
     if (ipcServer) {
-      ipcServer.dispose();
+      await ipcServer.dispose();
       logger.info("Git IPC server stopped");
     }
     await opencodeServerManager.stop();

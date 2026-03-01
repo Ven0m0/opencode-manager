@@ -1,12 +1,18 @@
 /// <reference lib="webworker" />
-import { cleanupOutdatedCaches, precacheAndRoute } from "workbox-precaching";
 
-declare const self: ServiceWorkerGlobalScope & {
-  __WB_MANIFEST: Array<{ url: string; revision: string | null }>;
-};
+declare const self: ServiceWorkerGlobalScope & typeof globalThis;
 
-cleanupOutdatedCaches();
-precacheAndRoute(self.__WB_MANIFEST);
+self.addEventListener("install", () => {
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((names) =>
+      Promise.all(names.map((name) => caches.delete(name)))
+    ).then(() => self.clients.claim())
+  );
+});
 
 interface PushNotificationData {
   title: string;
@@ -19,18 +25,12 @@ interface PushNotificationData {
     eventType: string;
     sessionId?: string;
     directory?: string;
+    repoId?: number;
+    repoName?: string;
   };
 }
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
-});
-
-self.addEventListener("install", () => {
-  self.skipWaiting();
-});
-
-self.addEventListener("push", (event: PushEvent) => {
+self.addEventListener("push", (event) => {
   if (!event.data) return;
 
   let payload: PushNotificationData;
@@ -56,7 +56,7 @@ self.addEventListener("push", (event: PushEvent) => {
   event.waitUntil(self.registration.showNotification(payload.title, options));
 });
 
-self.addEventListener("notificationclick", (event: NotificationEvent) => {
+self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   const url = (event.notification.data?.url as string) ?? "/";
@@ -67,9 +67,10 @@ self.addEventListener("notificationclick", (event: NotificationEvent) => {
       .then((clientList) => {
         for (const client of clientList) {
           if (new URL(client.url).origin === self.location.origin) {
-            client.focus();
-            (client as WindowClient).navigate(url);
-            return;
+            const channel = new BroadcastChannel("notification-click");
+            channel.postMessage({ url });
+            channel.close();
+            return (client as WindowClient).focus();
           }
         }
         return self.clients.openWindow(url);

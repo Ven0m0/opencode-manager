@@ -1,10 +1,10 @@
-import type { Database } from "bun:sqlite";
-import * as path from "node:path";
-import { fileURLToPath } from "node:url";
-import { SettingsService } from "../services/settings";
-import type { GitCredential } from "../utils/git-auth";
-import { logger } from "../utils/logger";
-import type { IPCHandler, IPCServer } from "./ipcServer";
+import * as path from 'path'
+import { fileURLToPath } from 'url'
+import type { IPCServer, IPCHandler } from './ipcServer'
+import type { Database } from 'bun:sqlite'
+import { SettingsService } from '../services/settings'
+import type { GitCredential } from '@opencode-manager/shared'
+import { logger } from '../utils/logger'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

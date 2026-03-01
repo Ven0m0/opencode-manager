@@ -1,11 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { GitCredential } from "../../src/utils/git-auth";
-import {
-  createGitIdentityEnv,
-  fetchGitHubUserInfo,
-  findGitHubCredential,
-  resolveGitIdentity,
-} from "../../src/utils/git-auth";
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { fetchGitHubUserInfo, findGitHubCredential, resolveGitIdentity, createGitIdentityEnv } from '../../src/utils/git-auth'
+import type { GitCredential } from '@opencode-manager/shared'
 
 describe("fetchGitHubUserInfo", () => {
   beforeEach(() => {

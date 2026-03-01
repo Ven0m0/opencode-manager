@@ -217,17 +217,14 @@ export function AddMcpServerDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent
-        className="max-w-3xl max-h-[90vh] sm:max-h-[85vh] gap-0 flex flex-col p-0 md:p-6 z-[200]"
-        overlayClassName="z-[200]"
-      >
+      <DialogContent className="max-w-3xl max-h-[90vh] sm:max-h-[85vh] gap-0 flex flex-col p-0 md:p-6">
         <DialogHeader className="p-4 sm:p-6 border-b flex flex-row items-center justify-between space-y-0">
           <DialogTitle>Add MCP Server</DialogTitle>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-2 sm:p-4">
           <div className="space-y-4">
-            <div>
+            <div className="space-y-1.5">
               <Label htmlFor="serverId">Server ID</Label>
               <Input
                 id="serverId"
@@ -241,7 +238,7 @@ export function AddMcpServerDialog({
               </p>
             </div>
 
-            <div>
+            <div className="space-y-1.5">
               <Label htmlFor="serverType">Server Type</Label>
               <Select
                 value={serverType}
@@ -259,8 +256,8 @@ export function AddMcpServerDialog({
               </Select>
             </div>
 
-            {serverType === "local" ? (
-              <div>
+            {serverType === 'local' ? (
+              <div className="space-y-1.5">
                 <Label htmlFor="command">Command</Label>
                 <Input
                   id="command"
@@ -274,7 +271,7 @@ export function AddMcpServerDialog({
                 </p>
               </div>
             ) : (
-              <div>
+              <div className="space-y-1.5">
                 <Label htmlFor="url">Server URL</Label>
                 <Input
                   id="url"
@@ -305,7 +302,7 @@ export function AddMcpServerDialog({
                       Leave fields blank to use the server's default OAuth
                       discovery
                     </p>
-                    <div>
+                    <div className="space-y-1.5">
                       <Label htmlFor="oauthClientId">Client ID</Label>
                       <Input
                         id="oauthClientId"
@@ -315,7 +312,7 @@ export function AddMcpServerDialog({
                         className="bg-background border-border font-mono"
                       />
                     </div>
-                    <div>
+                    <div className="space-y-1.5">
                       <Label htmlFor="oauthClientSecret">Client Secret</Label>
                       <Input
                         id="oauthClientSecret"
@@ -326,7 +323,7 @@ export function AddMcpServerDialog({
                         className="bg-background border-border font-mono"
                       />
                     </div>
-                    <div>
+                    <div className="space-y-1.5">
                       <Label htmlFor="oauthScope">Scope</Label>
                       <Input
                         id="oauthScope"
@@ -341,8 +338,8 @@ export function AddMcpServerDialog({
               </div>
             )}
 
-            {serverType === "local" && (
-              <div>
+            {serverType === 'local' && (
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label>Environment Variables</Label>
                   <Button
@@ -395,7 +392,7 @@ export function AddMcpServerDialog({
               </div>
             )}
 
-            <div>
+            <div className="space-y-1.5">
               <Label htmlFor="timeout">Timeout (ms)</Label>
               <Input
                 id="timeout"

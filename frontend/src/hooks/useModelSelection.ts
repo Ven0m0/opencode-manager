@@ -1,6 +1,9 @@
-import { useEffect } from "react";
-import { type ModelSelection, useModelStore } from "@/stores/modelStore";
-import { useConfig } from "./useOpenCode";
+import { useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useConfig } from './useOpenCode'
+import { useOpenCodeClient } from './useOpenCode'
+import { useModelStore, type ModelSelection } from '@/stores/modelStore'
+import { getProviders } from '@/api/providers'
 
 interface UseModelSelectionResult {
   model: ModelSelection | null;
@@ -13,13 +16,27 @@ export function useModelSelection(
   opcodeUrl: string | null | undefined,
   directory?: string,
 ): UseModelSelectionResult {
-  const { data: config } = useConfig(opcodeUrl, directory);
-  const { model, recentModels, setModel, syncFromConfig, getModelString } =
-    useModelStore();
+  const { data: config } = useConfig(opcodeUrl, directory)
+  const client = useOpenCodeClient(opcodeUrl, directory)
+  
+  const { data: providersData } = useQuery({
+    queryKey: ['opencode', 'providers', opcodeUrl, directory],
+    queryFn: () => getProviders(),
+    enabled: !!client,
+    staleTime: 30000,
+  })
+
+  const { 
+    model, 
+    recentModels, 
+    setModel, 
+    validateAndSyncModel, 
+    getModelString 
+  } = useModelStore()
 
   useEffect(() => {
-    syncFromConfig(config?.model);
-  }, [config?.model, syncFromConfig]);
+    validateAndSyncModel(config?.model, providersData?.providers)
+  }, [config?.model, providersData, validateAndSyncModel])
 
   return {
     model,

@@ -60,11 +60,12 @@ export function BranchesTab({
   const switchBranchMutation = useMutation({
     mutationFn: (branch: string) => switchBranch(repoId, branch),
     onSuccess: (updatedRepo) => {
-      queryClient.setQueryData(["repo", repoId], updatedRepo);
-      queryClient.invalidateQueries({ queryKey: ["repos"] });
-      queryClient.invalidateQueries({ queryKey: ["gitStatus", repoId] });
-      refetch();
-      showToast.success(`Switched to branch: ${updatedRepo.currentBranch}`);
+      queryClient.setQueryData(['repo', repoId], updatedRepo)
+      queryClient.invalidateQueries({ queryKey: ['repos'] })
+      queryClient.invalidateQueries({ queryKey: ['reposGitStatus'] })
+      queryClient.invalidateQueries({ queryKey: ['gitStatus', repoId] })
+      refetch()
+      showToast.success(`Switched to branch: ${updatedRepo.currentBranch}`)
     },
     onError: (error) => {
       if (error instanceof GitAuthError) {
@@ -81,11 +82,12 @@ export function BranchesTab({
     mutationFn: (branch: string) =>
       createRepo(repoUrl || undefined, undefined, branch, undefined, true),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["repos"] });
-      setNewBranchName("");
-      setIsCreating(false);
-      setUseWorktree(false);
-      showToast.success("Branch workspace created");
+      queryClient.invalidateQueries({ queryKey: ['repos'] })
+      queryClient.invalidateQueries({ queryKey: ['reposGitStatus'] })
+      setNewBranchName('')
+      setIsCreating(false)
+      setUseWorktree(false)
+      showToast.success('Branch workspace created')
     },
     onError: (error) => {
       showToast.error(

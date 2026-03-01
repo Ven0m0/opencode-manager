@@ -15,13 +15,18 @@ git clone https://github.com/chriswritescode-dev/opencode-manager.git
 cd opencode-manager
 
 # Install dependencies
-bun install
+pnpm install
+```
 
-# Copy environment configuration
-cp .env.example .env
+The `pnpm dev` command automatically runs `scripts/setup-dev.sh` first, which:
+- Checks prerequisites (pnpm, bun, git, OpenCode TUI)
+- Creates required workspace directories
+- Copies `.env.example` to `.env` if missing
 
-# Start development servers
-bun dev
+Then start development servers:
+
+```bash
+pnpm dev
 ```
 
 This starts:
@@ -37,19 +42,27 @@ opencode-manager/
 │   ├── src/
 │   │   ├── routes/       # API route handlers
 │   │   ├── services/     # Business logic
-│   │   ├── db/           # Database schema and queries
+│   │   ├── db/           # Database migrations and queries
+│   │   │   └── migrations/  # Numbered migration files
+│   │   ├── types/        # TypeScript types
+│   │   ├── utils/        # Utility functions
 │   │   └── index.ts      # Entry point
-│   └── tests/            # Backend tests
+│   └── test/             # Backend tests
 ├── frontend/             # React + Vite SPA
 │   ├── src/
 │   │   ├── components/   # UI components
 │   │   ├── pages/        # Page components
 │   │   ├── hooks/        # Custom React hooks
 │   │   ├── api/          # API client
-│   │   └── lib/          # Utilities
+│   │   ├── lib/          # Utilities
+│   │   ├── stores/       # Zustand stores
+│   │   └── contexts/     # React contexts
 │   └── public/           # Static assets
-├── shared/               # Shared types and utilities
-├── scripts/              # Build and Docker entrypoint scripts
+├── shared/               # @opencode-manager/shared types and utilities
+├── packages/memory/      # Memory plugin package
+├── workspace/            # Runtime workspace for OpenCode
+├── docs/                 # Documentation
+├── scripts/              # Build and utility scripts
 ├── Dockerfile            # Docker image definition
 └── docker-compose.yml    # Docker Compose configuration
 ```
@@ -59,21 +72,25 @@ opencode-manager/
 ### Root Level
 
 ```bash
-bun dev          # Start both backend and frontend
-bun build        # Build both packages
-bun lint         # Lint both packages
-bun test         # Run all tests
+pnpm dev          # Start both backend and frontend (runs setup-dev.sh first)
+pnpm dev:backend  # Start backend only
+pnpm dev:frontend # Start frontend only
+pnpm build        # Build both packages
+pnpm lint         # Lint both packages
+pnpm test         # Run all tests
 ```
 
 ### Backend
 
 ```bash
 cd backend
-bun run dev       # Start with hot reload
-bun test          # Run tests
-bun test <file>   # Run single test file
-bun run lint      # ESLint
-bun run typecheck # TypeScript check
+bun --watch src/index.ts  # Start with hot reload
+pnpm test                 # Run tests (uses Vitest)
+vitest <file>             # Run single test file
+vitest --ui               # Test UI
+vitest --coverage         # Coverage report
+eslint . --ext .ts        # Lint
+tsc --noEmit              # TypeScript check
 ```
 
 ### Frontend
@@ -88,7 +105,7 @@ bun typecheck    # TypeScript check
 
 ## Database
 
-Using Bun's built-in SQLite (`bun:sqlite`) with hand-written migrations.
+Using Bun's built-in SQLite (`bun:sqlite`) with numbered migrations.
 
 ### Location
 
@@ -97,8 +114,9 @@ Using Bun's built-in SQLite (`bun:sqlite`) with hand-written migrations.
 
 ### Schema Changes
 
-1. Edit migrations in `backend/src/db/migrations.ts`
-2. Migrations run automatically on startup
+1. Add new migration file in `backend/src/db/migrations/` (e.g., `007-new-feature.ts`)
+2. Export the migration in `backend/src/db/migrations/index.ts`
+3. Migrations run automatically on startup
 
 ### Inspection
 
@@ -117,13 +135,16 @@ SELECT * FROM user;      # View data
 
 ```bash
 # All tests
-cd backend && bun test
+cd backend && pnpm test
 
 # Single file
-cd backend && bun test src/services/repo.test.ts
+cd backend && pnpm test src/services/repo.test.ts
+
+# With UI
+cd backend && pnpm test:ui
 
 # With coverage
-cd backend && bun test --coverage
+cd backend && pnpm test -- --coverage
 ```
 
 ### Writing Tests
@@ -148,13 +169,12 @@ Minimum 80% coverage is enforced.
 
 ### Backend
 
-Logs output to terminal when running `bun dev`.
-
-For more detailed debugging:
+Logs output to terminal when running `pnpm dev`. For verbose debug logging:
 
 ```bash
-cd backend
-DEBUG=* bun run dev
+# Add to .env
+DEBUG=true
+LOG_LEVEL=debug
 ```
 
 ### Frontend
@@ -163,13 +183,6 @@ DEBUG=* bun run dev
 2. Check Console for errors
 3. Check Network tab for API calls
 4. Use React DevTools extension
-
-### VS Code
-
-Launch configurations are provided in `.vscode/launch.json`:
-
-- **Debug Backend** - Attach debugger to backend
-- **Debug Frontend** - Launch Chrome with debugging
 
 ## Building
 
@@ -226,6 +239,6 @@ rm -rf */tsconfig.tsbuildinfo
 
 ```bash
 # Reset database
-rm -f backend/data/opencode.db
-bun dev  # Database is recreated
+rm -f data/opencode.db
+pnpm dev  # Database is recreated
 ```

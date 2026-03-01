@@ -1,6 +1,7 @@
-import os from "node:os";
-import path from "node:path";
-import { DEFAULTS } from "./defaults";
+import path from 'path'
+import os from 'os'
+import { randomBytes } from 'crypto'
+import { DEFAULTS } from './defaults'
 
 try {
   const { config } = await import("dotenv");
@@ -38,14 +39,8 @@ const resolveWorkspacePath = (): string => {
 const workspaceBasePath = resolveWorkspacePath();
 
 const generateDefaultSecret = (): string => {
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "";
-  for (let i = 0; i < 32; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-};
+  return randomBytes(32).toString('base64').slice(0, 32)
+}
 
 export const ENV = {
   SERVER: {
@@ -56,8 +51,9 @@ export const ENV = {
   },
 
   OPENCODE: {
-    PORT: getEnvNumber("OPENCODE_SERVER_PORT", DEFAULTS.OPENCODE.PORT),
-    HOST: getEnvString("OPENCODE_HOST", DEFAULTS.OPENCODE.HOST),
+    PORT: getEnvNumber('OPENCODE_SERVER_PORT', DEFAULTS.OPENCODE.PORT),
+    HOST: getEnvString('OPENCODE_HOST', DEFAULTS.OPENCODE.HOST),
+    API_URL: process.env.OPENCODE_MANAGER_API_URL ?? `http://127.0.0.1:${DEFAULTS.SERVER.PORT}`,
   },
 
   DATABASE: {
@@ -142,29 +138,26 @@ export const ENV = {
     PASSKEY_RP_NAME: getEnvString("PASSKEY_RP_NAME", "OpenCode Manager"),
     PASSKEY_ORIGIN: getEnvString("PASSKEY_ORIGIN", "http://localhost:5003"),
   },
-} as const;
 
-const homeOpenCodeConfigDir = () =>
-  path.join(os.homedir(), ".config", "opencode");
-const workspaceOpenCodeConfigDir = () =>
-  path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.CONFIG_DIR);
+  REDIS: {
+    URL: getEnvString('REDIS_URL', ''),
+    PASSWORD: process.env.REDIS_PASSWORD ?? '',
+    DB: getEnvNumber('REDIS_DB', 0),
+  },
+} as const
 
-export const getWorkspacePath = () => ENV.WORKSPACE.BASE_PATH;
-export const getReposPath = () =>
-  path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.REPOS_DIR);
-export const getConfigPath = () =>
-  path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.CONFIG_DIR);
-export const getOpenCodeConfigDir = () =>
-  ENV.WORKSPACE.USE_HOME_OPENCODE_CONFIG
-    ? homeOpenCodeConfigDir()
-    : workspaceOpenCodeConfigDir();
-export const getOpenCodeConfigFilePath = () =>
-  path.join(getOpenCodeConfigDir(), "opencode.json");
-export const getAgentsMdPath = () =>
-  path.join(getOpenCodeConfigDir(), "AGENTS.md");
-export const getAuthPath = () =>
-  path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.AUTH_FILE);
-export const getDatabasePath = () => ENV.DATABASE.PATH;
+export const getWorkspacePath = () => ENV.WORKSPACE.BASE_PATH
+export const getReposPath = () => path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.REPOS_DIR)
+export const getConfigPath = () => path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.CONFIG_DIR)
+export const getOpenCodeConfigFilePath = () => path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.CONFIG_DIR, 'opencode.json')
+export const getPluginSourcePath = () => {
+  const envPath = process.env.OPENCODE_PLUGIN_PATH
+  if (envPath) return path.resolve(envPath)
+  return path.resolve('packages/memory/src/index.ts')
+}
+export const getAgentsMdPath = () => path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.CONFIG_DIR, 'AGENTS.md')
+export const getAuthPath = () => path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.AUTH_FILE)
+export const getDatabasePath = () => ENV.DATABASE.PATH
 
 export const getApiUrl = (port: number = ENV.SERVER.PORT): string => {
   const host = ENV.SERVER.HOST;

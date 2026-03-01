@@ -1,15 +1,9 @@
-import { Copy, ExternalLink } from "lucide-react";
-import { useState } from "react";
-import { type OAuthAuthorizeResponse, oauthApi } from "@/api/oauth";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { mapOAuthError, OAuthMethod } from "@/lib/oauthErrors";
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Copy } from 'lucide-react'
+import { oauthApi, type OAuthAuthorizeResponse } from '@/api/oauth'
+import { mapOAuthError, OAuthMethod } from '@/lib/oauthErrors'
 
 interface OAuthAuthorizeDialogProps {
   providerId: string;
@@ -51,15 +45,11 @@ export function OAuthAuthorizeDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent
-        className="bg-card border-border max-w-lg z-[200]"
-        overlayClassName="z-[200]"
-      >
+      <DialogContent className="bg-card border-border max-w-lg">
         <DialogHeader>
           <DialogTitle>Connect to {providerName}</DialogTitle>
           <DialogDescription>
-            Choose an authentication method to connect your {providerName}{" "}
-            account.
+            Connect your {providerName} account using authorization code.
           </DialogDescription>
         </DialogHeader>
 
@@ -70,16 +60,6 @@ export function OAuthAuthorizeDialog({
         )}
 
         <div className="space-y-3">
-          <Button
-            onClick={() => handleAuthorize(OAuthMethod.AUTO)}
-            disabled={isLoading}
-            className="w-full justify-start"
-            variant="outline"
-          >
-            <ExternalLink className="h-4 w-4 mr-2" />
-            {isLoading ? "Authorizing..." : "Open Authorization Page"}
-          </Button>
-
           <Button
             onClick={() => handleAuthorize(OAuthMethod.CODE)}
             disabled={isLoading}
@@ -92,13 +72,7 @@ export function OAuthAuthorizeDialog({
         </div>
 
         <div className="text-xs text-muted-foreground">
-          <p>
-            • "Open Authorization Page" will open a browser window for you to
-            sign in
-          </p>
-          <p>
-            • "Use Authorization Code" will give you a code to manually enter
-          </p>
+          <p>• "Use Authorization Code" will give you a code to manually enter</p>
         </div>
       </DialogContent>
     </Dialog>

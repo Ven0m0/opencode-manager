@@ -2,9 +2,9 @@ import { API_BASE_URL } from "@/config";
 import { FetchError, fetchWrapper } from "./fetchWrapper";
 
 export interface OAuthAuthorizeResponse {
-  url: string;
-  method: "auto" | "code";
-  instructions: string;
+  url: string
+  method: "code"
+  instructions: string
 }
 
 export interface OAuthCallbackRequest {
@@ -34,14 +34,11 @@ export const oauthApi = {
     method: number,
   ): Promise<OAuthAuthorizeResponse> => {
     try {
-      return fetchWrapper(
-        `${API_BASE_URL}/api/oauth/${providerId}/oauth/authorize`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ method }),
-        },
-      );
+      return await fetchWrapper(`${API_BASE_URL}/api/oauth/${providerId}/oauth/authorize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ method }),
+      })
     } catch (error) {
       handleApiError(error, "OAuth authorization failed");
     }
@@ -52,14 +49,11 @@ export const oauthApi = {
     request: OAuthCallbackRequest,
   ): Promise<boolean> => {
     try {
-      return fetchWrapper(
-        `${API_BASE_URL}/api/oauth/${providerId}/oauth/callback`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(request),
-        },
-      );
+      return await fetchWrapper(`${API_BASE_URL}/api/oauth/${providerId}/oauth/callback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request),
+      })
     } catch (error) {
       handleApiError(error, "OAuth callback failed");
     }

@@ -1,43 +1,27 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  ArrowUpCircle,
-  Download,
-  Edit,
-  FileText,
-  History,
-  Loader2,
-  Plus,
-  RotateCcw,
-  Star,
-  StarOff,
-  Trash2,
-} from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { settingsApi } from "@/api/settings";
-import type { OpenCodeConfig } from "@/api/types/settings";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DeleteDialog } from "@/components/ui/delete-dialog";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useServerHealth } from "@/hooks/useServerHealth";
-import { hasJsoncComments, parseJsonc } from "@/lib/jsonc";
-import { invalidateConfigCaches } from "@/lib/queryInvalidation";
-import { showToast } from "@/lib/toast";
-import { AgentsEditor } from "./AgentsEditor";
-import { AgentsMdEditor } from "./AgentsMdEditor";
-import { CommandsEditor } from "./CommandsEditor";
-import { CreateConfigDialog } from "./CreateConfigDialog";
-import { McpManager } from "./McpManager";
-import { OpenCodeConfigEditor } from "./OpenCodeConfigEditor";
-import { VersionSelectDialog } from "./VersionSelectDialog";
+import { useState, useEffect, useRef } from 'react'
+import { cn } from '@/lib/utils'
+import { Loader2, Plus, Trash2, Edit, StarOff, Download, RotateCcw, FileText, ArrowUpCircle, History } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { DeleteDialog } from '@/components/ui/delete-dialog'
+import { CreateConfigDialog } from './CreateConfigDialog'
+import { OpenCodeConfigEditor } from './OpenCodeConfigEditor'
+import { CommandsEditor } from './CommandsEditor'
+import { AgentsEditor } from './AgentsEditor'
+import { AgentsMdEditor } from './AgentsMdEditor'
+import { McpManager } from './McpManager'
+import { VersionSelectDialog } from './VersionSelectDialog'
+import { MemoryPluginConfig } from './MemoryPluginConfig'
+import { settingsApi } from '@/api/settings'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useServerHealth } from '@/hooks/useServerHealth'
+import { parseJsonc, hasJsoncComments } from '@/lib/jsonc'
+import { showToast } from '@/lib/toast'
+import { invalidateConfigCaches } from '@/lib/queryInvalidation'
+import type { OpenCodeConfig } from '@/api/types/settings'
 
 interface Command {
   template: string;
@@ -249,11 +233,10 @@ export function OpenCodeConfigManager() {
         });
       }
 
-      const agentsChanged =
-        JSON.stringify(previousContent?.agent) !==
-        JSON.stringify(newContent.agent);
-      if (restartServer || agentsChanged) {
-        showToast.loading("Reloading server...", { id: "update-restart" });
+      const agentsChanged = JSON.stringify(previousContent?.agent) !== JSON.stringify(newContent.agent)
+      const pluginsChanged = JSON.stringify(previousContent?.plugin) !== JSON.stringify(newContent.plugin)
+      if (restartServer || agentsChanged || pluginsChanged) {
+        showToast.loading('Reloading server...', { id: 'update-restart' })
         try {
           await reloadConfigMutation.mutateAsync();
           showToast.success("Configuration updated and server reloaded", {
@@ -423,13 +406,11 @@ export function OpenCodeConfigManager() {
   return (
     <div className="space-y-6 overflow-y-auto">
       {health && (
-        <Card className={isUnhealthy ? "border-destructive" : ""}>
+        <Card className={cn('bg-transparent border-transparent', isUnhealthy && 'border-destructive')}>
           <CardContent className="p-3">
-            <div className="flex flex-col sm:flex-row sm:items-center items-center gap-3">
-              <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
-                <div
-                  className={`h-3 w-3 rounded-full ${isUnhealthy ? "bg-destructive animate-pulse" : "bg-green-500"}`}
-                />
+            <div className="flex flex-col sm:flex-row sm:items-center items-center justify-center gap-3">
+              <div className="flex items-center gap-2 flex-wrap justify-center ">
+                <div className={`h-3 w-3 rounded-full ${isUnhealthy ? 'bg-destructive animate-pulse' : 'bg-green-500'}`} />
                 <p className="font-medium text-sm sm:text-base">
                   Server Status: {isUnhealthy ? "Unhealthy" : "Healthy"}
                 </p>
@@ -438,7 +419,12 @@ export function OpenCodeConfigManager() {
                 )}
                 {health.opencodeVersion && (
                   <p className="text-xs text-muted-foreground">
-                    v{health.opencodeVersion}
+                    OpenCode v{health.opencodeVersion}
+                  </p>
+                )}
+                {health.opencodeManagerVersion && (
+                  <p className="text-xs text-muted-foreground">
+                    Manager v{health.opencodeManagerVersion}
                   </p>
                 )}
               </div>
@@ -528,8 +514,32 @@ export function OpenCodeConfigManager() {
             </div>
           </CardContent>
         </Card>
-      )}
-      <CreateConfigDialog
+       )}
+
+        <MemoryPluginConfig 
+           memoryPluginEnabled={configs.find(c => c.isDefault)?.content?.plugin?.includes('@opencode-manager/memory') ?? false}
+           onToggle={async (enabled) => {
+             const defaultConfig = configs.find(c => c.isDefault)
+             if (!defaultConfig) return
+             
+             const currentPlugins = defaultConfig.content?.plugin ?? []
+             const memoryPlugin = '@opencode-manager/memory'
+             const newPlugins = enabled
+               ? currentPlugins.includes(memoryPlugin)
+                 ? currentPlugins
+                 : [...currentPlugins, memoryPlugin]
+               : currentPlugins.filter(p => p !== memoryPlugin)
+             
+             await updateConfigContent(defaultConfig.name, {
+               ...defaultConfig.content,
+               plugin: newPlugins.length > 0 ? newPlugins : undefined
+             }, true)
+             
+             queryClient.invalidateQueries({ queryKey: ['memory-plugin-status'] })
+           }}
+         />
+        
+        <CreateConfigDialog
         isOpen={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
         onCreate={createConfig}
@@ -552,68 +562,66 @@ export function OpenCodeConfigManager() {
         </Card>
       ) : (
         <div className="flex flex-col gap-4 md:grid md:grid-cols-2 lg:grid-cols">
-          {configs.map((config) => (
-            <Card key={config.id}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <CardTitle className="text-base">{config.name}</CardTitle>
-                    {config.isDefault && (
-                      <Badge variant="default" className="">
-                        <Star className="h-4 w-4" />
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => downloadConfig(config)}
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => startEdit(config)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setDefaultConfig(config)}
-                      disabled={config.isDefault || isUpdating}
-                    >
-                      {config.isDefault ? (
-                        <StarOff className="h-4 w-4" />
-                      ) : (
-                        <Star className="h-4 w-4" />
+          {configs
+            .sort((a, b) => {
+              if (a.isDefault) return -1
+              if (b.isDefault) return 1
+              return 0
+            })
+            .map((config) => (
+              <Card key={config.id} className={cn('border-transparent', config.isDefault && 'border-green-500')}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <CardTitle className="text-base">{config.name}</CardTitle>
+                      {config.isDefault && (
+                        <Badge variant="default" className="text-green-500 bg-green-500/10">
+                          Current
+                        </Badge>
                       )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setDeleteConfirmConfig(config)}
-                      className="text-red-500 hover:text-red-600"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => downloadConfig(config)}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => startEdit(config)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDefaultConfig(config)}
+                        disabled={config.isDefault || isUpdating}
+                      >
+                        <StarOff className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDeleteConfirmConfig(config)}
+                        className="text-red-500 hover:text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm text-muted-foreground break-words">
-                  <p className="truncate">
-                    Updated: {new Date(config.updatedAt).toLocaleString()}
-                  </p>
-                  <p className="truncate">
-                    Created: {new Date(config.createdAt).toLocaleString()}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardHeader>
+                <CardContent>
+                  <div className="text-sm text-muted-foreground break-words">
+                    <p className="truncate">Updated: {new Date(config.updatedAt).toLocaleString()}</p>
+                    <p className="truncate">Created: {new Date(config.createdAt).toLocaleString()}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
         </div>
       )}
 

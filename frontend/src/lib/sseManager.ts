@@ -282,13 +282,13 @@ class SSEManager {
     return this.isConnected;
   }
 
-  reportVisibility(visible: boolean): void {
-    if (!this.clientId || !this.isConnected) return;
-    fetch("/api/sse/visibility", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ clientId: this.clientId, visible }),
-    }).catch(() => {});
+  reportVisibility(visible: boolean, activeSessionId?: string): void {
+    if (!this.clientId || !this.isConnected) return
+    fetch('/api/sse/visibility', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId: this.clientId, visible, activeSessionId: activeSessionId ?? null })
+    }).catch(() => {})
   }
 
   async ensureConnected(timeoutMs: number = 5000): Promise<boolean> {
