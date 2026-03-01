@@ -71,17 +71,13 @@ async function getCachedAudio(cacheKey: string): Promise<Buffer | null> {
 async function getCacheSize(): Promise<number> {
   try {
     const files = await readdir(TTS_CACHE_DIR);
-    let totalSize = 0;
+    const mp3Files = files.filter((file) => file.endsWith(".mp3"));
 
-    for (const file of files) {
-      if (!file.endsWith(".mp3")) continue;
+    const stats = await Promise.all(
+      mp3Files.map((file) => stat(join(TTS_CACHE_DIR, file))),
+    );
 
-      const filePath = join(TTS_CACHE_DIR, file);
-      const fileStat = await stat(filePath);
-      totalSize += fileStat.size;
-    }
-
-    return totalSize;
+    return stats.reduce((total, s) => total + s.size, 0);
   } catch {
     return 0;
   }
@@ -90,19 +86,19 @@ async function getCacheSize(): Promise<number> {
 async function cleanupOldestFiles(requiredSpace: number): Promise<void> {
   try {
     const files = await readdir(TTS_CACHE_DIR);
-    const fileInfos = [];
+    const mp3Files = files.filter((file) => file.endsWith(".mp3"));
 
-    for (const file of files) {
-      if (!file.endsWith(".mp3")) continue;
-
-      const filePath = join(TTS_CACHE_DIR, file);
-      const fileStat = await stat(filePath);
-      fileInfos.push({
-        path: filePath,
-        mtimeMs: fileStat.mtimeMs,
-        size: fileStat.size,
-      });
-    }
+    const fileInfos = await Promise.all(
+      mp3Files.map(async (file) => {
+        const filePath = join(TTS_CACHE_DIR, file);
+        const fileStat = await stat(filePath);
+        return {
+          path: filePath,
+          mtimeMs: fileStat.mtimeMs,
+          size: fileStat.size,
+        };
+      }),
+    );
 
     fileInfos.sort((a, b) => a.mtimeMs - b.mtimeMs);
 
@@ -273,22 +269,25 @@ export async function cleanupExpiredCache(): Promise<number> {
   try {
     await ensureCacheDir();
     const files = await readdir(TTS_CACHE_DIR);
-    let cleanedCount = 0;
+    const mp3Files = files.filter((file) => file.endsWith(".mp3"));
 
-    for (const file of files) {
-      if (!file.endsWith(".mp3")) continue;
-
-      const filePath = join(TTS_CACHE_DIR, file);
-      try {
-        const fileStat = await stat(filePath);
-        if (Date.now() - fileStat.mtimeMs > CACHE_TTL_MS) {
-          await unlink(filePath);
-          cleanedCount++;
+    const results = await Promise.all(
+      mp3Files.map(async (file) => {
+        const filePath = join(TTS_CACHE_DIR, file);
+        try {
+          const fileStat = await stat(filePath);
+          if (Date.now() - fileStat.mtimeMs > CACHE_TTL_MS) {
+            await unlink(filePath);
+            return true;
+          }
+        } catch {
+          // Ignore errors for individual files
         }
-      } catch (error) {
-        logger.error(`Failed to cleanup TTS cache file ${file}:`, error);
-      }
-    }
+        return false;
+      }),
+    );
+
+    const cleanedCount = results.filter(Boolean).length;
 
     if (cleanedCount > 0) {
       logger.info(`TTS cache cleanup: removed ${cleanedCount} expired files`);
@@ -309,18 +308,20 @@ export async function getCacheStats(): Promise<{
   try {
     await ensureCacheDir();
     const files = await readdir(TTS_CACHE_DIR);
+    const mp3Files = files.filter((file) => file.endsWith(".mp3"));
+
+    const stats = await Promise.all(
+      mp3Files.map((file) => stat(join(TTS_CACHE_DIR, file))),
+    );
+
+    const now = Date.now();
     let count = 0;
     let totalSize = 0;
 
-    for (const file of files) {
-      if (!file.endsWith(".mp3")) continue;
-
-      const filePath = join(TTS_CACHE_DIR, file);
-      const fileStat = await stat(filePath);
-
-      if (Date.now() - fileStat.mtimeMs <= CACHE_TTL_MS) {
+    for (const s of stats) {
+      if (now - s.mtimeMs <= CACHE_TTL_MS) {
         count++;
-        totalSize += fileStat.size;
+        totalSize += s.size;
       }
     }
 
