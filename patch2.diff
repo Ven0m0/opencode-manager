@@ -1,0 +1,11 @@
+--- backend/src/services/repo.ts
++++ backend/src/services/repo.ts
+@@ -271,7 +271,7 @@
+         throw error
+       }
+       throw new Error(
+-        `Failed to process absolute path '${normalizedInputPath}': ${getErrorMessage(error)}`,
++        `Failed to process absolute path '${normalizedInputPath}': ${getErrorMessage(error)}`, { cause: error }
+       );
+     }
+   } else {

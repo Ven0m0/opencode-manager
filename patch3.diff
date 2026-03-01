@@ -1,0 +1,12 @@
+--- backend/src/services/repo.ts
++++ backend/src/services/repo.ts
+@@ -311,7 +311,7 @@
+     );
+     throw new Error(
+       `Failed to register local repository '${repoLocalPath}': ${getErrorMessage(error)}`,
+-    );
++      { cause: error },
++    );
+   }
+
+   try {
