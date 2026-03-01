@@ -30,6 +30,7 @@ const mockReaddir = fs.readdir as any;
 const mockStat = fs.stat as any;
 const mockUnlink = fs.unlink as any;
 
+import { logger } from "../../src/utils/logger";
 import {
   cleanupExpiredCache,
   cleanupOldestFiles,
@@ -220,6 +221,36 @@ describe("TTS Routes", () => {
       expect(cleaned).toBe(1);
       expect(mockUnlink).toHaveBeenCalledWith(
         expect.stringContaining("expired.mp3"),
+      );
+    });
+
+    it("should log error when file stat fails during cleanup", async () => {
+      mockReaddir.mockResolvedValue(["error.mp3"] as any);
+      mockStat.mockRejectedValue(new Error("Stat failed"));
+
+      const cleaned = await cleanupExpiredCache();
+
+      expect(cleaned).toBe(0);
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining("Failed to cleanup TTS cache file error.mp3"),
+        expect.any(Error),
+      );
+    });
+
+    it("should log error when file unlink fails during cleanup", async () => {
+      mockReaddir.mockResolvedValue(["unlink-error.mp3"] as any);
+      mockStat.mockResolvedValue({
+        size: 1024,
+        mtimeMs: Date.now() - 25 * 60 * 60 * 1000,
+      } as any);
+      mockUnlink.mockRejectedValue(new Error("Unlink failed"));
+
+      const cleaned = await cleanupExpiredCache();
+
+      expect(cleaned).toBe(0);
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining("Failed to cleanup TTS cache file unlink-error.mp3"),
+        expect.any(Error),
       );
     });
   });

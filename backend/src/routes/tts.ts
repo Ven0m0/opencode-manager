@@ -285,7 +285,9 @@ export async function cleanupExpiredCache(): Promise<number> {
           await unlink(filePath);
           cleanedCount++;
         }
-      } catch {}
+      } catch (error) {
+        logger.error(`Failed to cleanup TTS cache file ${file}:`, error);
+      }
     }
 
     if (cleanedCount > 0) {
