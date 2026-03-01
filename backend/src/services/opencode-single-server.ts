@@ -8,7 +8,7 @@ import {
   buildSSHCommandWithKnownHosts,
   cleanupPersistentSSHKeys,
   parseSSHHost
-} from '../utils/ssh-key-manager'
+, writePersistentSSHKey, stripKeyPassphrase, generateSSHConfig, writeSSHConfig } from "../utils/ssh-key-manager";
 import { decryptSecret } from '../utils/crypto'
 import { SettingsService } from './settings'
 import { getWorkspacePath, getOpenCodeConfigFilePath, ENV } from '@opencode-manager/shared/config/env'
