@@ -4,8 +4,19 @@ import { randomBytes } from "node:crypto";
 import { promises as fs } from "node:fs";
 import { join } from "node:path";
 import { getWorkspacePath } from "@opencode-manager/shared/config/env";
+import { logger } from "./logger";
 
 const SSH_KEYS_DIR = join(getWorkspacePath(), ".ssh-keys");
+
+async function safeUnlink(filePath: string): Promise<void> {
+  try {
+    await fs.unlink(filePath);
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && (error as any).code !== 'ENOENT') {
+      logger.error(`Failed to unlink file at ${filePath}`, error);
+    }
+  }
+}
 
 async function ensureSSHKeysDir(): Promise<void> {
   try {
@@ -71,7 +82,7 @@ export async function writeTemporarySSHKey(keyContent: string, identifier: strin
   
   const isValid = await validateSSHKey(keyPath)
   if (!isValid) {
-    await fs.unlink(keyPath).catch(() => {});
+    await safeUnlink(keyPath);
     throw new Error("Invalid SSH key format");
   }
 
@@ -80,8 +91,10 @@ export async function writeTemporarySSHKey(keyContent: string, identifier: strin
 
 export async function cleanupSSHKey(keyPath: string): Promise<void> {
   try {
-    await fs.unlink(keyPath).catch(() => {});
-  } catch {}
+    await safeUnlink(keyPath);
+  } catch (error) {
+    logger.error(`Error in cleanupSSHKey for ${keyPath}`, error);
+  }
 }
 
 export interface SSHCommandResult {
@@ -136,7 +149,7 @@ export async function writePersistentSSHKey(
 
   const isValid = await validateSSHKey(keyPath);
   if (!isValid) {
-    await fs.unlink(keyPath).catch(() => {});
+    await safeUnlink(keyPath);
     throw new Error("Invalid SSH key format");
   }
 
@@ -200,7 +213,9 @@ export async function writeSSHConfig(
 export async function cleanupAllSSHKeys(): Promise<void> {
   try {
     await fs.rm(SSH_KEYS_DIR, { recursive: true, force: true });
-  } catch {}
+  } catch (error) {
+    logger.error(`Failed to cleanup all SSH keys directory ${SSH_KEYS_DIR}`, error);
+  }
 }
 
 export async function cleanupPersistentSSHKeys(): Promise<void> {
@@ -212,15 +227,19 @@ export async function cleanupPersistentSSHKeys(): Promise<void> {
 
     await Promise.all(
       persistentFiles.map((f) =>
-        fs.unlink(join(SSH_KEYS_DIR, f)).catch(() => {}),
+        safeUnlink(join(SSH_KEYS_DIR, f)),
       ),
     );
-  } catch {}
+  } catch (error) {
+    logger.error(`Failed to process SSH keys directory ${SSH_KEYS_DIR}`, error);
+  }
 
   try {
     const configPath = join(getWorkspacePath(), "config", "ssh_config");
-    await fs.unlink(configPath);
-  } catch {}
+    await safeUnlink(configPath);
+  } catch (error) {
+    logger.error(`Failed to unlink ssh config`, error);
+  }
 }
 
 export interface SSHConnectionInfo {
