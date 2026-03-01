@@ -34,7 +34,7 @@
     "@types/bun": "latest",
     "@types/eventsource": "^3.0.0",
     "@types/web-push": "^3.6.4",
-    "@vitest/ui": "^3.2.4",
+    "@vitest/ui": "^4.0.18",
     "eslint": "^10.0.1",
     "typescript-eslint": "^8.45.0",
     "vitest": "^3.2.4"
