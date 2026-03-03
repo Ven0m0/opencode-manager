@@ -79,9 +79,7 @@ export function useCommandHandler({
               });
               if (newSession?.id) {
                 const currentPath = window.location.pathname;
-                const repoMatch = currentPath.match(
-                  /\/repos\/(\d+)\/sessions\//,
-                );
+                const repoMatch = currentPath.match(/\/repos\/(\d+)\/sessions\//);
                 if (repoMatch) {
                   const repoId = repoMatch[1];
                   const newPath = `/repos/${repoId}/sessions/${newSession.id}`;
@@ -98,9 +96,7 @@ export function useCommandHandler({
           case "details":
             if (onToggleDetails) {
               const expanded = onToggleDetails();
-              showToast.success(
-                expanded ? "Tool details expanded" : "Tool details collapsed",
-              );
+              showToast.success(expanded ? "Tool details expanded" : "Tool details collapsed");
             }
             break;
 
@@ -113,9 +109,7 @@ export function useCommandHandler({
           case "compact":
           case "summarize": {
             if (!model?.providerID || !model?.modelID) {
-              showToast.error(
-                "No model selected. Please select a provider and model first.",
-              );
+              showToast.error("No model selected. Please select a provider and model first.");
               break;
             }
 
@@ -125,11 +119,7 @@ export function useCommandHandler({
 
             setSessionStatus(sessionID, { type: "compact" });
 
-            await client.summarizeSession(
-              sessionID,
-              model.providerID,
-              model.modelID,
-            );
+            await client.summarizeSession(sessionID, model.providerID, model.modelID);
             break;
           }
 

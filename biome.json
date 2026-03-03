@@ -1,0 +1,87 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.3.15/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json"],
+    "experimentalScannerIgnores": ["**/dist/**", "**/build/**", "bun.lockb", "bun.lock"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "correctness": {
+        "noUnusedVariables": "warn",
+        "noUnusedImports": "warn"
+      },
+      "suspicious": {
+        "noConsole": "warn"
+      },
+      "style": {
+        "noNonNullAssertion": "off"
+      },
+      "security": {
+        "noGlobalEval": "error"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "semicolons": "always",
+      "trailingCommas": "all",
+      "arrowParentheses": "always"
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off",
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/scripts/**/*.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/utils/logger.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    }
+  ]
+}

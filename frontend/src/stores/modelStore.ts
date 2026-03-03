@@ -1,6 +1,6 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import type { Provider } from '@/api/providers'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { Provider } from "@/api/providers";
 
 export interface ModelSelection {
   providerID: string;
@@ -13,13 +13,13 @@ interface ModelStore {
   variants: Record<string, string | undefined>;
   lastConfigModel: string | undefined;
 
-  setModel: (model: ModelSelection) => void
-  syncFromConfig: (configModel: string | undefined, force?: boolean) => void
-  validateAndSyncModel: (configModel: string | undefined, providers?: Provider[]) => void
-  getModelString: () => string | null
-  setVariant: (model: ModelSelection, variant: string | undefined) => void
-  getVariant: (model: ModelSelection) => string | undefined
-  clearVariant: (model: ModelSelection) => void
+  setModel: (model: ModelSelection) => void;
+  syncFromConfig: (configModel: string | undefined, force?: boolean) => void;
+  validateAndSyncModel: (configModel: string | undefined, providers?: Provider[]) => void;
+  getModelString: () => string | null;
+  setVariant: (model: ModelSelection, variant: string | undefined) => void;
+  getVariant: (model: ModelSelection) => string | undefined;
+  clearVariant: (model: ModelSelection) => void;
 }
 
 const MAX_RECENT_MODELS = 10;
@@ -44,11 +44,7 @@ export const useModelStore = create<ModelStore>()(
           const newRecent = [
             model,
             ...state.recentModels.filter(
-              (m) =>
-                !(
-                  m.providerID === model.providerID &&
-                  m.modelID === model.modelID
-                ),
+              (m) => !(m.providerID === model.providerID && m.modelID === model.modelID),
             ),
           ].slice(0, MAX_RECENT_MODELS);
 
@@ -60,20 +56,16 @@ export const useModelStore = create<ModelStore>()(
       },
 
       syncFromConfig: (configModel: string | undefined, force = false) => {
-        const state = get()
-        if (!force && state.lastConfigModel === configModel) return
-        
+        const state = get();
+        if (!force && state.lastConfigModel === configModel) return;
+
         if (configModel) {
           const parsed = parseModelString(configModel);
           if (parsed) {
             const newRecent = [
               parsed,
               ...state.recentModels.filter(
-                (m) =>
-                  !(
-                    m.providerID === parsed.providerID &&
-                    m.modelID === parsed.modelID
-                  ),
+                (m) => !(m.providerID === parsed.providerID && m.modelID === parsed.modelID),
               ),
             ].slice(0, MAX_RECENT_MODELS);
 
@@ -89,21 +81,21 @@ export const useModelStore = create<ModelStore>()(
       },
 
       validateAndSyncModel: (configModel: string | undefined, providers?: Provider[]) => {
-        if (!configModel) return
+        if (!configModel) return;
 
-        const state = get()
+        const state = get();
 
         if (!providers || !state.model) {
-          get().syncFromConfig(configModel)
-          return
+          get().syncFromConfig(configModel);
+          return;
         }
 
         const modelExists = providers.some(
-          (p) => p.id === state.model!.providerID && p.models && state.model!.modelID in p.models
-        )
+          (p) => p.id === state.model!.providerID && p.models && state.model!.modelID in p.models,
+        );
 
         if (!modelExists) {
-          get().syncFromConfig(configModel, true)
+          get().syncFromConfig(configModel, true);
         }
       },
 

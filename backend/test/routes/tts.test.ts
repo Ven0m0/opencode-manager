@@ -30,7 +30,6 @@ const mockReaddir = fs.readdir as any;
 const mockStat = fs.stat as any;
 const mockUnlink = fs.unlink as any;
 
-import { logger } from "../../src/utils/logger";
 import {
   cleanupExpiredCache,
   cleanupOldestFiles,
@@ -41,6 +40,7 @@ import {
   getCacheSize,
   getCacheStats,
 } from "../../src/routes/tts";
+import { logger } from "../../src/utils/logger";
 
 describe("TTS Routes", () => {
   let mockDb: any;
@@ -80,10 +80,9 @@ describe("TTS Routes", () => {
 
       await ensureCacheDir();
 
-      expect(mockMkdir).toHaveBeenCalledWith(
-        expect.stringContaining("cache/tts"),
-        { recursive: true },
-      );
+      expect(mockMkdir).toHaveBeenCalledWith(expect.stringContaining("cache/tts"), {
+        recursive: true,
+      });
     });
   });
 
@@ -109,9 +108,7 @@ describe("TTS Routes", () => {
       const result = await getCachedAudio(cacheKey);
 
       expect(result).toBe(audioBuffer);
-      expect(mockReadFile).toHaveBeenCalledWith(
-        expect.stringContaining(`${cacheKey}.mp3`),
-      );
+      expect(mockReadFile).toHaveBeenCalledWith(expect.stringContaining(`${cacheKey}.mp3`));
     });
 
     it("should return null when cached file has expired", async () => {
@@ -126,9 +123,7 @@ describe("TTS Routes", () => {
       const result = await getCachedAudio(cacheKey);
 
       expect(result).toBeNull();
-      expect(mockUnlink).toHaveBeenCalledWith(
-        expect.stringContaining(`${cacheKey}.mp3`),
-      );
+      expect(mockUnlink).toHaveBeenCalledWith(expect.stringContaining(`${cacheKey}.mp3`));
     });
 
     it("should return null when cached file does not exist", async () => {
@@ -144,11 +139,7 @@ describe("TTS Routes", () => {
 
   describe("getCacheSize", () => {
     it("should calculate correct cache size", async () => {
-      mockReaddir.mockResolvedValue([
-        "file1.mp3",
-        "file2.mp3",
-        "readme.txt",
-      ] as any);
+      mockReaddir.mockResolvedValue(["file1.mp3", "file2.mp3", "readme.txt"] as any);
       mockStat
         .mockResolvedValueOnce({ size: 1024, mtimeMs: Date.now() } as any)
         .mockResolvedValueOnce({ size: 2048, mtimeMs: Date.now() } as any);
@@ -169,11 +160,7 @@ describe("TTS Routes", () => {
 
   describe("cleanupMethods", () => {
     it("should remove oldest files when cache size limit exceeded", async () => {
-      mockReaddir.mockResolvedValue([
-        "file1.mp3",
-        "file2.mp3",
-        "file3.mp3",
-      ] as any);
+      mockReaddir.mockResolvedValue(["file1.mp3", "file2.mp3", "file3.mp3"] as any);
       mockStat
         .mockResolvedValueOnce({ size: 1024, mtimeMs: 1000 } as any)
         .mockResolvedValueOnce({ size: 2048, mtimeMs: 2000 } as any)
@@ -182,9 +169,7 @@ describe("TTS Routes", () => {
 
       await cleanupOldestFiles(1500); // Need 1500 bytes freed
 
-      expect(mockUnlink).toHaveBeenCalledWith(
-        expect.stringContaining("file1.mp3"),
-      );
+      expect(mockUnlink).toHaveBeenCalledWith(expect.stringContaining("file1.mp3"));
     });
 
     it("should return cache statistics for files", async () => {
@@ -202,11 +187,7 @@ describe("TTS Routes", () => {
     });
 
     it("should cleanup expired cache files", async () => {
-      mockReaddir.mockResolvedValue([
-        "file1.mp3",
-        "file2.mp3",
-        "expired.mp3",
-      ] as any);
+      mockReaddir.mockResolvedValue(["file1.mp3", "file2.mp3", "expired.mp3"] as any);
       mockStat
         .mockResolvedValueOnce({ size: 1024, mtimeMs: Date.now() } as any)
         .mockResolvedValueOnce({ size: 2048, mtimeMs: Date.now() } as any)
@@ -219,9 +200,7 @@ describe("TTS Routes", () => {
       const cleaned = await cleanupExpiredCache();
 
       expect(cleaned).toBe(1);
-      expect(mockUnlink).toHaveBeenCalledWith(
-        expect.stringContaining("expired.mp3"),
-      );
+      expect(mockUnlink).toHaveBeenCalledWith(expect.stringContaining("expired.mp3"));
     });
 
     it("should log error when file stat fails during cleanup", async () => {

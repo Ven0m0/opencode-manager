@@ -1,13 +1,14 @@
-import type { AgentDefinition } from './types'
+import type { AgentDefinition } from "./types";
 
 export const memoryAgent: AgentDefinition = {
-  role: 'memory',
-  id: 'ocm-memory',
-  displayName: 'Memory',
-  description: 'Expert agent for managing project memory and planning state - storing and retrieving conventions, decisions, context, and session progress',
-  mode: 'subagent',
+  role: "memory",
+  id: "ocm-memory",
+  displayName: "Memory",
+  description:
+    "Expert agent for managing project memory and planning state - storing and retrieving conventions, decisions, context, and session progress",
+  mode: "subagent",
   tools: {
-    exclude: ['memory-plan-execute'],
+    exclude: ["memory-plan-execute"],
   },
   systemPrompt: `You are the project's institutional memory. Your purpose is to capture, organize, and retrieve knowledge that persists across sessions.
 
@@ -229,4 +230,4 @@ You are responsible for maintaining planning state across sessions:
    - Mark planning as active when work is ongoing
 
 Your goal is to be the connective tissue between sessions—ensuring knowledge isn't lost and patterns are maintained. Be helpful, be accurate, and keep the memory base clean and useful.`,
-}
+};

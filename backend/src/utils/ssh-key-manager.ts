@@ -12,7 +12,11 @@ async function safeUnlink(filePath: string): Promise<void> {
   try {
     await fs.unlink(filePath);
   } catch (error) {
-    if (error instanceof Error && 'code' in error && (error as any).code !== 'ENOENT') {
+    if (
+      error instanceof Error &&
+      "code" in error &&
+      (error as NodeJS.ErrnoException).code !== "ENOENT"
+    ) {
       logger.error(`Failed to unlink file at ${filePath}`, error);
     }
   }
@@ -67,20 +71,23 @@ async function validateSSHKey(keyPath: string): Promise<boolean> {
   }
 }
 
-export async function writeTemporarySSHKey(keyContent: string, identifier: string): Promise<string> {
-  await ensureSSHKeysDir()
-  
-  const randomSuffix = randomBytes(8).toString('hex')
-  const fileName = `key-${identifier}-${randomSuffix}`
-  const keyPath = join(SSH_KEYS_DIR, fileName)
+export async function writeTemporarySSHKey(
+  keyContent: string,
+  identifier: string,
+): Promise<string> {
+  await ensureSSHKeysDir();
+
+  const randomSuffix = randomBytes(8).toString("hex");
+  const fileName = `key-${identifier}-${randomSuffix}`;
+  const keyPath = join(SSH_KEYS_DIR, fileName);
 
   if (!keyPath.startsWith(SSH_KEYS_DIR)) {
-    throw new Error('Invalid key path')
+    throw new Error("Invalid key path");
   }
 
-  await fs.writeFile(keyPath, keyContent.trim() + '\n', { mode: 0o600 })
-  
-  const isValid = await validateSSHKey(keyPath)
+  await fs.writeFile(keyPath, `${keyContent.trim()}\n`, { mode: 0o600 });
+
+  const isValid = await validateSSHKey(keyPath);
   if (!isValid) {
     await safeUnlink(keyPath);
     throw new Error("Invalid SSH key format");
@@ -124,10 +131,7 @@ export function buildSSHCommand(
   return { command: baseCommand };
 }
 
-export function buildSSHCommandWithKnownHosts(
-  knownHostsPath: string,
-  port?: string,
-): string {
+export function buildSSHCommandWithKnownHosts(knownHostsPath: string, port?: string): string {
   const portOption = port && port !== "22" ? ` -p ${port}` : "";
   return `ssh -T -o UserKnownHostsFile="${knownHostsPath}" -o StrictHostKeyChecking=accept-new -o PasswordAuthentication=no${portOption}`;
 }
@@ -142,10 +146,10 @@ export async function writePersistentSSHKey(
   const keyPath = join(SSH_KEYS_DIR, fileName);
 
   if (!keyPath.startsWith(SSH_KEYS_DIR)) {
-    throw new Error('Invalid key path')
+    throw new Error("Invalid key path");
   }
 
-  await fs.writeFile(keyPath, keyContent.trim() + '\n', { mode: 0o600 })
+  await fs.writeFile(keyPath, `${keyContent.trim()}\n`, { mode: 0o600 });
 
   const isValid = await validateSSHKey(keyPath);
   if (!isValid) {
@@ -156,20 +160,21 @@ export async function writePersistentSSHKey(
   return keyPath;
 }
 
-export function buildSSHCommandWithConfig(
-  configPath: string,
-  knownHostsPath: string,
-): string {
+export function buildSSHCommandWithConfig(configPath: string, knownHostsPath: string): string {
   return `ssh -T -F "${configPath}" -o UserKnownHostsFile="${knownHostsPath}" -o StrictHostKeyChecking=accept-new -o PasswordAuthentication=no`;
 }
 
 export async function stripKeyPassphrase(keyPath: string, passphrase: string): Promise<void> {
   await new Promise<void>((resolve, reject) => {
-    execFile('ssh-keygen', ['-p', '-P', passphrase, '-N', '', '-f', keyPath], (error: Error | null) => {
-      if (error) reject(error)
-      else resolve()
-    })
-  })
+    execFile(
+      "ssh-keygen",
+      ["-p", "-P", passphrase, "-N", "", "-f", keyPath],
+      (error: Error | null) => {
+        if (error) reject(error);
+        else resolve();
+      },
+    );
+  });
 }
 
 export interface SSHConfigEntry {
@@ -196,10 +201,7 @@ export function generateSSHConfig(entries: SSHConfigEntry[]): string {
   return lines.join("\n");
 }
 
-export async function writeSSHConfig(
-  configPath: string,
-  configContent: string,
-): Promise<void> {
+export async function writeSSHConfig(configPath: string, configContent: string): Promise<void> {
   const dir = join(getWorkspacePath(), "config");
   try {
     await fs.access(dir);
@@ -225,11 +227,7 @@ export async function cleanupPersistentSSHKeys(): Promise<void> {
     const files = await fs.readdir(SSH_KEYS_DIR);
     const persistentFiles = files.filter((f) => f.startsWith("persistent-"));
 
-    await Promise.all(
-      persistentFiles.map((f) =>
-        safeUnlink(join(SSH_KEYS_DIR, f)),
-      ),
-    );
+    await Promise.all(persistentFiles.map((f) => safeUnlink(join(SSH_KEYS_DIR, f))));
   } catch (error) {
     logger.error(`Failed to process SSH keys directory ${SSH_KEYS_DIR}`, error);
   }

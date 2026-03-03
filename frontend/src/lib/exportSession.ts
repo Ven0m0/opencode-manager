@@ -78,10 +78,7 @@ function formatPatchPart(part: Part): string {
   return content;
 }
 
-export function generateSessionMarkdown(
-  messages: MessageWithParts[],
-  session: Session,
-): string {
+export function generateSessionMarkdown(messages: MessageWithParts[], session: Session): string {
   const lines: string[] = [];
 
   lines.push(`# ${session.title || "Untitled Session"}`);

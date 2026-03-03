@@ -1,7 +1,7 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { createOpenCodeClient } from '@/api/opencode'
-import { showToast } from '@/lib/toast'
-import type { MessageWithParts } from '@/api/types'
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createOpenCodeClient } from "@/api/opencode";
+import type { MessageWithParts } from "@/api/types";
+import { showToast } from "@/lib/toast";
 
 interface UseUndoMessageOptions {
   opcodeUrl: string | null;
@@ -11,36 +11,45 @@ interface UseUndoMessageOptions {
 }
 
 interface UndoMessageContext {
-  previousMessages?: MessageWithParts[]
+  previousMessages?: MessageWithParts[];
 }
 
-export function useUndoMessage({ 
-  opcodeUrl, 
-  sessionId, 
+export function useUndoMessage({
+  opcodeUrl,
+  sessionId,
   directory,
   onSuccess,
 }: UseUndoMessageOptions) {
   const queryClient = useQueryClient();
 
-  return useMutation<string, Error, { messageID: string; messageContent: string }, UndoMessageContext>({
-    mutationFn: async ({ messageID, messageContent }: { messageID: string, messageContent: string }) => {
-      if (!opcodeUrl) throw new Error('OpenCode URL not available')
-      
-      const client = createOpenCodeClient(opcodeUrl, directory)
-      await client.revertMessage(sessionId, { messageID })
-      return messageContent
+  return useMutation<
+    string,
+    Error,
+    { messageID: string; messageContent: string },
+    UndoMessageContext
+  >({
+    mutationFn: async ({
+      messageID,
+      messageContent,
+    }: {
+      messageID: string;
+      messageContent: string;
+    }) => {
+      if (!opcodeUrl) throw new Error("OpenCode URL not available");
+
+      const client = createOpenCodeClient(opcodeUrl, directory);
+      await client.revertMessage(sessionId, { messageID });
+      return messageContent;
     },
     onMutate: async ({ messageID }) => {
-      const queryKey = ['opencode', 'messages', opcodeUrl, sessionId, directory]
-      
-      await queryClient.cancelQueries({ queryKey })
-      
-      const previousMessages = queryClient.getQueryData<MessageWithParts[]>(queryKey)
-      
+      const queryKey = ["opencode", "messages", opcodeUrl, sessionId, directory];
+
+      await queryClient.cancelQueries({ queryKey });
+
+      const previousMessages = queryClient.getQueryData<MessageWithParts[]>(queryKey);
+
       if (previousMessages) {
-        const messageIndex = previousMessages.findIndex(
-          (m) => m.info.id === messageID,
-        );
+        const messageIndex = previousMessages.findIndex((m) => m.info.id === messageID);
         if (messageIndex !== -1) {
           const newMessages = previousMessages.slice(0, messageIndex);
           queryClient.setQueryData(queryKey, newMessages);
@@ -52,9 +61,9 @@ export function useUndoMessage({
     onError: (_error, _variables, _context: UndoMessageContext | undefined) => {
       if (_context?.previousMessages) {
         queryClient.setQueryData(
-          ['opencode', 'messages', opcodeUrl, sessionId, directory],
-          _context.previousMessages
-        )
+          ["opencode", "messages", opcodeUrl, sessionId, directory],
+          _context.previousMessages,
+        );
       }
 
       showToast.error("Failed to undo message");

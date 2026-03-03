@@ -7,16 +7,16 @@ import type { GitFileStatus, GitFileStatusType } from "@/types/git";
 import { GitFlatFileItem } from "./GitFlatFileItem";
 
 interface GitFlatFileListProps {
-  files: GitFileStatus[]
-  staged: boolean
-  onSelect: (path: string, staged: boolean) => void
-  onStage?: (paths: string[]) => void
-  onUnstage?: (paths: string[]) => void
-  onDiscard?: (paths: string[], staged: boolean) => void
-  selectedFile?: string
-  readOnly?: boolean
-  totalAdditions?: number
-  totalDeletions?: number
+  files: GitFileStatus[];
+  staged: boolean;
+  onSelect: (path: string, staged: boolean) => void;
+  onStage?: (paths: string[]) => void;
+  onUnstage?: (paths: string[]) => void;
+  onDiscard?: (paths: string[], staged: boolean) => void;
+  selectedFile?: string;
+  readOnly?: boolean;
+  totalAdditions?: number;
+  totalDeletions?: number;
 }
 
 interface GroupedFiles {
@@ -45,9 +45,7 @@ export function GitFlatFileList({
   totalAdditions,
   totalDeletions,
 }: GitFlatFileListProps) {
-  const [collapsedGroups, setCollapsedGroups] = useState<
-    Set<GitFileStatusType>
-  >(new Set());
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<GitFileStatusType>>(new Set());
 
   const filteredFiles = useMemo(() => {
     return files;
@@ -101,11 +99,14 @@ export function GitFlatFileList({
   };
 
   const handleDiscardAll = (e: React.MouseEvent) => {
-    e.stopPropagation()
+    e.stopPropagation();
     if (onDiscard) {
-      onDiscard(filteredFiles.map(f => f.path), staged)
+      onDiscard(
+        filteredFiles.map((f) => f.path),
+        staged,
+      );
     }
-  }
+  };
 
   if (filteredFiles.length === 0) {
     return null;
@@ -117,10 +118,15 @@ export function GitFlatFileList({
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           {staged ? "Staged Changes" : "Changes"} ({filteredFiles.length})
         </span>
-        {(totalAdditions !== undefined && totalAdditions > 0 || totalDeletions !== undefined && totalDeletions > 0) && (
+        {((totalAdditions !== undefined && totalAdditions > 0) ||
+          (totalDeletions !== undefined && totalDeletions > 0)) && (
           <div className="flex items-center gap-1 text-xs">
-            {totalAdditions !== undefined && totalAdditions > 0 && <span className="text-green-500">+{totalAdditions}</span>}
-            {totalDeletions !== undefined && totalDeletions > 0 && <span className="text-red-500">-{totalDeletions}</span>}
+            {totalAdditions !== undefined && totalAdditions > 0 && (
+              <span className="text-green-500">+{totalAdditions}</span>
+            )}
+            {totalDeletions !== undefined && totalDeletions > 0 && (
+              <span className="text-red-500">-{totalDeletions}</span>
+            )}
           </div>
         )}
         {!readOnly && (
@@ -171,14 +177,10 @@ export function GitFlatFileList({
               ) : (
                 <ChevronDown className="w-3 h-3 text-muted-foreground" />
               )}
-              <span
-                className={cn("text-xs font-medium", GIT_STATUS_COLORS[status])}
-              >
+              <span className={cn("text-xs font-medium", GIT_STATUS_COLORS[status])}>
                 {GIT_STATUS_LABELS[status]}
               </span>
-              <span className="text-xs text-muted-foreground">
-                ({groupFiles.length})
-              </span>
+              <span className="text-xs text-muted-foreground">({groupFiles.length})</span>
             </button>
 
             {!isCollapsed && (
@@ -191,7 +193,13 @@ export function GitFlatFileList({
                     onSelect={onSelect}
                     onStage={readOnly ? undefined : handleStageFile}
                     onUnstage={readOnly ? undefined : handleUnstageFile}
-                    onDiscard={readOnly ? undefined : onDiscard ? ((path: string, staged: boolean) => onDiscard([path], staged)) : undefined}
+                    onDiscard={
+                      readOnly
+                        ? undefined
+                        : onDiscard
+                          ? (path: string, staged: boolean) => onDiscard([path], staged)
+                          : undefined
+                    }
                   />
                 ))}
               </div>

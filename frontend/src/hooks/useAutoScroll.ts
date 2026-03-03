@@ -1,14 +1,14 @@
-import { useRef, useEffect, useCallback } from 'react'
-import type { Message } from '@/api/types'
+import { useCallback, useEffect, useRef } from "react";
+import type { Message } from "@/api/types";
 
 const SCROLL_LOCK_MS = 300;
 
 interface UseAutoScrollOptions {
-  containerRef?: React.RefObject<HTMLDivElement | null>
-  messages?: Message[]
-  sessionId?: string
-  contentVersion?: number
-  onScrollStateChange?: (isScrolledUp: boolean) => void
+  containerRef?: React.RefObject<HTMLDivElement | null>;
+  messages?: Message[];
+  sessionId?: string;
+  contentVersion?: number;
+  onScrollStateChange?: (isScrolledUp: boolean) => void;
 }
 
 interface UseAutoScrollReturn {
@@ -20,16 +20,16 @@ export function useAutoScroll({
   messages,
   sessionId,
   contentVersion,
-  onScrollStateChange
+  onScrollStateChange,
 }: UseAutoScrollOptions): UseAutoScrollReturn {
-  const lastMessageCountRef = useRef(0)
-  const hasInitialScrolledRef = useRef(false)
-  const userScrolledAtRef = useRef(0)
-  const userDisengagedRef = useRef(false)
-  const pointerStartYRef = useRef<number | null>(null)
-  const onScrollStateChangeRef = useRef(onScrollStateChange)
-  
-  onScrollStateChangeRef.current = onScrollStateChange
+  const lastMessageCountRef = useRef(0);
+  const hasInitialScrolledRef = useRef(false);
+  const userScrolledAtRef = useRef(0);
+  const userDisengagedRef = useRef(false);
+  const pointerStartYRef = useRef<number | null>(null);
+  const onScrollStateChangeRef = useRef(onScrollStateChange);
+
+  onScrollStateChangeRef.current = onScrollStateChange;
 
   const scrollToBottom = useCallback(() => {
     if (!containerRef?.current) return;
@@ -139,10 +139,10 @@ export function useAutoScroll({
     }
 
     if (currentCount > prevCount) {
-      const newMessage = messages[currentCount - 1]
-      if (newMessage?.role === 'user') {
-        scrollToBottom()
-        return
+      const newMessage = messages[currentCount - 1];
+      if (newMessage?.role === "user") {
+        scrollToBottom();
+        return;
       }
     }
 
@@ -153,8 +153,8 @@ export function useAutoScroll({
       return;
     }
 
-    scrollToBottom()
-  }, [messages, containerRef, scrollToBottom, contentVersion])
+    scrollToBottom();
+  }, [messages, containerRef, scrollToBottom, contentVersion]);
 
   return { scrollToBottom };
 }

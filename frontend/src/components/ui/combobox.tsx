@@ -46,9 +46,7 @@ export function Combobox({
     }
   }, [value, options, isUserTyping]);
 
-  const isExactMatch = options.some(
-    (o) => o.value === value || o.label === inputValue,
-  );
+  const isExactMatch = options.some((o) => o.value === value || o.label === inputValue);
 
   const filteredOptions =
     isExactMatch && !isUserTyping
@@ -57,9 +55,7 @@ export function Combobox({
           (option) =>
             option.value.toLowerCase().includes(inputValue.toLowerCase()) ||
             option.label.toLowerCase().includes(inputValue.toLowerCase()) ||
-            option.description
-              ?.toLowerCase()
-              .includes(inputValue.toLowerCase()),
+            option.description?.toLowerCase().includes(inputValue.toLowerCase()),
         );
 
   const groupedOptions = filteredOptions.reduce(
@@ -82,10 +78,7 @@ export function Combobox({
     if (!isOpen) return;
 
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
         if (allowCustomValue) {
           onChange(inputValue);
@@ -134,9 +127,7 @@ export function Combobox({
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
-          setSelectedIndex((prev) =>
-            Math.min(prev + 1, flatFilteredOptions.length - 1),
-          );
+          setSelectedIndex((prev) => Math.min(prev + 1, flatFilteredOptions.length - 1));
           break;
         case "ArrowUp":
           e.preventDefault();
@@ -226,12 +217,7 @@ export function Combobox({
           className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           tabIndex={-1}
         >
-          <ChevronDown
-            className={cn(
-              "h-4 w-4 transition-transform",
-              isOpen && "rotate-180",
-            )}
-          />
+          <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
         </button>
       </div>
 
@@ -260,9 +246,7 @@ export function Combobox({
                     onClick={() => handleSelect(option.value)}
                     className={cn(
                       "w-full px-3 py-2 text-left text-sm transition-colors",
-                      isSelected
-                        ? "bg-accent text-accent-foreground"
-                        : "hover:bg-muted",
+                      isSelected ? "bg-accent text-accent-foreground" : "hover:bg-muted",
                     )}
                   >
                     <div className="font-medium">{option.label}</div>
@@ -279,17 +263,13 @@ export function Combobox({
         </div>
       )}
 
-      {isOpen &&
-        flatFilteredOptions.length === 0 &&
-        inputValue &&
-        allowCustomValue && (
-          <div className="absolute z-50 mt-1 w-full bg-popover border border-border rounded-md shadow-lg p-3">
-            <div className="text-sm text-muted-foreground">
-              Press Enter to use "
-              <span className="font-medium text-foreground">{inputValue}</span>"
-            </div>
+      {isOpen && flatFilteredOptions.length === 0 && inputValue && allowCustomValue && (
+        <div className="absolute z-50 mt-1 w-full bg-popover border border-border rounded-md shadow-lg p-3">
+          <div className="text-sm text-muted-foreground">
+            Press Enter to use "<span className="font-medium text-foreground">{inputValue}</span>"
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 }

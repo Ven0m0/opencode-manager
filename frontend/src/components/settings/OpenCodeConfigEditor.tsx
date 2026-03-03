@@ -34,9 +34,7 @@ export function OpenCodeConfigEditor({
 
   useEffect(() => {
     if (config && isOpen) {
-      setEditConfigContent(
-        config.rawContent || JSON.stringify(config.content, null, 2),
-      );
+      setEditConfigContent(config.rawContent || JSON.stringify(config.content, null, 2));
       setEditError("");
       setEditErrorLine(null);
     }
@@ -52,13 +50,10 @@ export function OpenCodeConfigEditor({
     if (!config) return;
 
     try {
-      const parsedContent =
-        parseJsonc<Record<string, unknown>>(editConfigContent);
+      const parsedContent = parseJsonc<Record<string, unknown>>(editConfigContent);
 
       const forbiddenFields = ["id", "createdAt", "updatedAt"];
-      const foundForbidden = forbiddenFields.filter(
-        (field) => field in parsedContent,
-      );
+      const foundForbidden = forbiddenFields.filter((field) => field in parsedContent);
       if (foundForbidden.length > 0) {
         throw new Error(
           `Invalid fields found: ${foundForbidden.join(", ")}. These fields are managed automatically.`,
@@ -74,9 +69,7 @@ export function OpenCodeConfigEditor({
         setEditErrorLine(line);
         setEditError("Invalid JSON/JSONC format");
       } else {
-        setEditError(
-          "Failed to save. Please check your changes and try again.",
-        );
+        setEditError("Failed to save. Please check your changes and try again.");
       }
     }
   };
@@ -85,7 +78,10 @@ export function OpenCodeConfigEditor({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent mobileFullscreen className="gap-0 flex flex-col p-0 md:p-6 w-full min-w-0 sm:max-w-4xl max-h-[90vh] sm:max-h-[85vh]">
+      <DialogContent
+        mobileFullscreen
+        className="gap-0 flex flex-col p-0 md:p-6 w-full min-w-0 sm:max-w-4xl max-h-[90vh] sm:max-h-[85vh]"
+      >
         <DialogHeader className="p-4 sm:p-6 border-b flex flex-row items-center justify-between space-y-0">
           <DialogTitle className="text-lg sm:text-xl font-semibold">
             {`Edit Config: ${config.name}`}
@@ -108,20 +104,14 @@ export function OpenCodeConfigEditor({
             <div className="absolute bottom-0 left-0 right-0 bg-background/95 border-t p-2 sm:p-3">
               <p className="text-xs sm:text-sm text-red-500">
                 {editError}
-                {editErrorLine && (
-                  <span className="ml-2 text-xs">(Line {editErrorLine})</span>
-                )}
+                {editErrorLine && <span className="ml-2 text-xs">(Line {editErrorLine})</span>}
               </p>
             </div>
           )}
         </div>
 
         <DialogFooter className="p-3 sm:p-4 border-t gap-2">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="flex-1 sm:flex-none"
-          >
+          <Button variant="outline" onClick={onClose} className="flex-1 sm:flex-none">
             Cancel
           </Button>
           <Button

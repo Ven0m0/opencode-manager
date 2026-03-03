@@ -1,11 +1,4 @@
-import {
-  Bell,
-  HelpCircle,
-  Loader2,
-  MoreVertical,
-  Settings,
-  X,
-} from "lucide-react";
+import { Bell, HelpCircle, Loader2, MoreVertical, Settings, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { EditSessionTitleDialog } from "@/components/session/EditSessionTitleDialog";
@@ -40,13 +33,7 @@ function HeaderBase({ children, className, ...props }: HeaderProps) {
   );
 }
 
-function HeaderBackButton({
-  to,
-  className,
-}: {
-  to?: string;
-  className?: string;
-}) {
+function HeaderBackButton({ to, className }: { to?: string; className?: string }) {
   return to ? <BackButton to={to} className={className} /> : null;
 }
 
@@ -63,11 +50,7 @@ function HeaderTitle({ children, logo, className }: HeaderTitleProps) {
     <div className={cn("flex items-center gap-2", className)}>
       {logo && typeof children === "string" && children === "OpenCode" ? (
         <img
-          src={
-            theme === "light"
-              ? "/opencode-wordmark-light.svg"
-              : "/opencode-wordmark-dark.svg"
-          }
+          src={theme === "light" ? "/opencode-wordmark-light.svg" : "/opencode-wordmark-dark.svg"}
           alt="OpenCode"
           className="h-6 w-auto sm:h-8"
         />
@@ -145,10 +128,7 @@ function HeaderEditableTitle({
         />
       )}
       {isEditing && !isMobile ? (
-        <form
-          onSubmit={handleTitleSubmit}
-          className="flex items-center gap-1 min-w-0"
-        >
+        <form onSubmit={handleTitleSubmit} className="flex items-center gap-1 min-w-0">
           <input
             type="text"
             value={editTitle}
@@ -199,16 +179,8 @@ function HeaderEditableTitle({
   );
 }
 
-function HeaderActions({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={cn("flex items-center gap-2", className)}>{children}</div>
-  );
+function HeaderActions({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={cn("flex items-center gap-2", className)}>{children}</div>;
 }
 
 function HeaderMobileDropdown({
@@ -255,10 +227,7 @@ function HeaderMobileDropdown({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {permissionCount > 0 && (
-          <DropdownMenuItem
-            onClick={() => setShowDialog(true)}
-            className="gap-2"
-          >
+          <DropdownMenuItem onClick={() => setShowDialog(true)} className="gap-2">
             <Bell className="w-4 h-4 text-orange-500" />
             <span>
               {permissionCount} pending permission

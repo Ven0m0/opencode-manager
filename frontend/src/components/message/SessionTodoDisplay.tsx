@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react'
-import { ChevronDown, ChevronRight } from 'lucide-react'
-import { TodoItem } from './TodoItem'
-import { useSessionTodosForSession } from '@/stores/sessionTodosStore'
-import { useSessionStatusForSession } from '@/stores/sessionStatusStore'
-import type { components } from '@/api/opencode-types'
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { useMemo, useState } from "react";
+import type { components } from "@/api/opencode-types";
+import { useSessionStatusForSession } from "@/stores/sessionStatusStore";
+import { useSessionTodosForSession } from "@/stores/sessionTodosStore";
+import { TodoItem } from "./TodoItem";
 
 export type Todo = components["schemas"]["Todo"];
 
@@ -12,33 +12,39 @@ interface SessionTodoDisplayProps {
 }
 
 export function SessionTodoDisplay({ sessionID }: SessionTodoDisplayProps) {
-  const todos = useSessionTodosForSession(sessionID)
-  const sessionStatus = useSessionStatusForSession(sessionID)
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const todos = useSessionTodosForSession(sessionID);
+  const sessionStatus = useSessionStatusForSession(sessionID);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const isSessionActive = sessionStatus.type === 'busy' || sessionStatus.type === 'compact' || sessionStatus.type === 'retry'
+  const isSessionActive =
+    sessionStatus.type === "busy" ||
+    sessionStatus.type === "compact" ||
+    sessionStatus.type === "retry";
 
   const stats = useMemo(() => {
-    const completed = todos.filter((t) => t.status === 'completed').length
-    const total = todos.length
-    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0
-    return { completed, total, percentage }
-  }, [todos])
+    const completed = todos.filter((t) => t.status === "completed").length;
+    const total = todos.length;
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+    return { completed, total, percentage };
+  }, [todos]);
 
-  const { inProgress, pending, completedTodos } = useMemo(() => ({
-    inProgress: todos.filter((t) => t.status === 'in_progress'),
-    pending: todos.filter((t) => t.status === 'pending'),
-    completedTodos: todos.filter((t) => t.status === 'completed'),
-  }), [todos])
+  const { inProgress, pending, completedTodos } = useMemo(
+    () => ({
+      inProgress: todos.filter((t) => t.status === "in_progress"),
+      pending: todos.filter((t) => t.status === "pending"),
+      completedTodos: todos.filter((t) => t.status === "completed"),
+    }),
+    [todos],
+  );
 
   const hasMultipleGroups =
     (inProgress.length > 0 ? 1 : 0) +
-    (pending.length > 0 ? 1 : 0) +
-    (completedTodos.length > 0 ? 1 : 0) >
-    1
+      (pending.length > 0 ? 1 : 0) +
+      (completedTodos.length > 0 ? 1 : 0) >
+    1;
 
   const renderGroup = (label: string, items: typeof todos) => {
-    if (items.length === 0) return null
+    if (items.length === 0) return null;
     return (
       <div className="mb-1 last:mb-0">
         {hasMultipleGroups && (
@@ -54,11 +60,11 @@ export function SessionTodoDisplay({ sessionID }: SessionTodoDisplayProps) {
           ))}
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   if (!sessionID || !isSessionActive || todos.length === 0 || stats.completed === stats.total) {
-    return null
+    return null;
   }
 
   if (isCollapsed) {
@@ -80,7 +86,7 @@ export function SessionTodoDisplay({ sessionID }: SessionTodoDisplayProps) {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -101,9 +107,9 @@ export function SessionTodoDisplay({ sessionID }: SessionTodoDisplayProps) {
         </div>
       </div>
       <div className="max-h-[80px] sm:max-h-[160px] overflow-y-auto p-1.5 sm:p-2 bg-muted/30">
-        {renderGroup('In Progress', inProgress)}
-        {renderGroup('Pending', pending)}
-        {renderGroup('Completed', completedTodos)}
+        {renderGroup("In Progress", inProgress)}
+        {renderGroup("Pending", pending)}
+        {renderGroup("Completed", completedTodos)}
       </div>
     </div>
   );

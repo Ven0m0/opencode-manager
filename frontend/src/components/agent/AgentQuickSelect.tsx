@@ -1,17 +1,16 @@
 import { Check } from "lucide-react";
 import { useMemo } from "react";
 
-const capitalize = (str: string) =>
-  str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { useAgents } from '@/hooks/useOpenCode'
-import { getAgentStyleVars } from '@/lib/agent-colors'
+} from "@/components/ui/dropdown-menu";
+import { useAgents } from "@/hooks/useOpenCode";
+import { getAgentStyleVars } from "@/lib/agent-colors";
 
 interface AgentQuickSelectProps {
   opcodeUrl: string | null | undefined;
@@ -23,33 +22,33 @@ interface AgentQuickSelectProps {
 }
 
 interface AgentInfo {
-  name: string
-  color?: string
-  description?: string
-  mode?: string
-  hidden?: boolean
+  name: string;
+  color?: string;
+  description?: string;
+  mode?: string;
+  hidden?: boolean;
 }
 
 const findAgentColor = (agents: AgentInfo[], agentName: string): string | undefined => {
-  return agents.find(a => a.name.toLowerCase() === agentName.toLowerCase())?.color
-}
+  return agents.find((a) => a.name.toLowerCase() === agentName.toLowerCase())?.color;
+};
 
 const bashStyleVars: Record<string, string> = {
-  '--agent-color-light': '#a753ae',
-  '--agent-color-dark': '#edb2f1',
-  '--agent-bg-light': 'rgba(167, 83, 174, 0.2)',
-  '--agent-bg-dark': 'rgba(237, 178, 241, 0.2)',
-  '--agent-bg-hover-light': 'rgba(167, 83, 174, 0.3)',
-  '--agent-bg-hover-dark': 'rgba(237, 178, 241, 0.3)',
-  '--agent-border-light': 'rgba(167, 83, 174, 0.6)',
-  '--agent-border-dark': 'rgba(237, 178, 241, 0.6)',
-  '--agent-border-hover-light': 'rgba(167, 83, 174, 0.5)',
-  '--agent-border-hover-dark': 'rgba(237, 178, 241, 0.5)',
-  '--agent-shadow-light': 'rgba(167, 83, 174, 0.2)',
-  '--agent-shadow-dark': 'rgba(237, 178, 241, 0.2)',
-  '--agent-shadow-hover-light': 'rgba(167, 83, 174, 0.3)',
-  '--agent-shadow-hover-dark': 'rgba(237, 178, 241, 0.3)',
-}
+  "--agent-color-light": "#a753ae",
+  "--agent-color-dark": "#edb2f1",
+  "--agent-bg-light": "rgba(167, 83, 174, 0.2)",
+  "--agent-bg-dark": "rgba(237, 178, 241, 0.2)",
+  "--agent-bg-hover-light": "rgba(167, 83, 174, 0.3)",
+  "--agent-bg-hover-dark": "rgba(237, 178, 241, 0.3)",
+  "--agent-border-light": "rgba(167, 83, 174, 0.6)",
+  "--agent-border-dark": "rgba(237, 178, 241, 0.6)",
+  "--agent-border-hover-light": "rgba(167, 83, 174, 0.5)",
+  "--agent-border-hover-dark": "rgba(237, 178, 241, 0.5)",
+  "--agent-shadow-light": "rgba(167, 83, 174, 0.2)",
+  "--agent-shadow-dark": "rgba(237, 178, 241, 0.2)",
+  "--agent-shadow-hover-light": "rgba(167, 83, 174, 0.3)",
+  "--agent-shadow-hover-dark": "rgba(237, 178, 241, 0.3)",
+};
 
 export function AgentQuickSelect({
   opcodeUrl,
@@ -63,8 +62,7 @@ export function AgentQuickSelect({
 
   const primaryAgents = useMemo(() => {
     return agents.filter(
-      (agent) =>
-        (agent.mode === "primary" || agent.mode === "all") && !agent.hidden,
+      (agent) => (agent.mode === "primary" || agent.mode === "all") && !agent.hidden,
     );
   }, [agents]);
 
@@ -72,10 +70,10 @@ export function AgentQuickSelect({
     onAgentChange(agentName);
   };
 
-  const styleVars = isBashMode 
-    ? bashStyleVars 
-    : getAgentStyleVars(currentAgent, findAgentColor(agents, currentAgent))
-  const displayName = isBashMode ? 'Bash' : capitalize(currentAgent)
+  const styleVars = isBashMode
+    ? bashStyleVars
+    : getAgentStyleVars(currentAgent, findAgentColor(agents, currentAgent));
+  const displayName = isBashMode ? "Bash" : capitalize(currentAgent);
 
   const buttonContent = (
     <button
@@ -95,10 +93,10 @@ export function AgentQuickSelect({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-64">
         {primaryAgents.map((agent) => {
-          const apiColor = agent.color
-          const itemStyleVars = getAgentStyleVars(agent.name, apiColor)
-          const isSelected = agent.name.toLowerCase() === currentAgent.toLowerCase()
-          
+          const apiColor = agent.color;
+          const itemStyleVars = getAgentStyleVars(agent.name, apiColor);
+          const isSelected = agent.name.toLowerCase() === currentAgent.toLowerCase();
+
           return (
             <DropdownMenuItem
               key={agent.name}
@@ -106,9 +104,9 @@ export function AgentQuickSelect({
               className="group flex items-center justify-between"
             >
               <div className="flex flex-col min-w-0">
-                <span 
+                <span
                   className="font-medium"
-                  style={{ color: itemStyleVars['--agent-color-light'] }}
+                  style={{ color: itemStyleVars["--agent-color-light"] }}
                 >
                   {capitalize(agent.name)}
                 </span>

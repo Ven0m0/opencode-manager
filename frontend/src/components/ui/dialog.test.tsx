@@ -79,9 +79,7 @@ describe("DialogContent", () => {
         </DialogContent>
       </Dialog>,
     );
-    expect(
-      screen.queryByRole("button", { name: /close/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /close/i })).not.toBeInTheDocument();
   });
 
   it("shows close button when mobileFullscreen is true", () => {
@@ -103,9 +101,7 @@ describe("DialogContent", () => {
         </DialogContent>
       </Dialog>,
     );
-    expect(
-      screen.queryByRole("button", { name: /close/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /close/i })).not.toBeInTheDocument();
   });
 
   it("merges custom className with default classes", () => {

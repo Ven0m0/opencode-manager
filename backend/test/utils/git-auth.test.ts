@@ -1,6 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { fetchGitHubUserInfo, findGitHubCredential, resolveGitIdentity, createGitIdentityEnv } from '../../src/utils/git-auth'
-import type { GitCredential } from '@opencode-manager/shared'
+import type { GitCredential } from "@opencode-manager/shared";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  createGitIdentityEnv,
+  fetchGitHubUserInfo,
+  findGitHubCredential,
+  resolveGitIdentity,
+} from "../../src/utils/git-auth";
 
 describe("fetchGitHubUserInfo", () => {
   beforeEach(() => {
@@ -20,14 +25,10 @@ describe("fetchGitHubUserInfo", () => {
       ok: true,
       json: vi
         .fn()
-        .mockResolvedValue([
-          { email: "verified@email.com", primary: true, verified: true },
-        ]),
+        .mockResolvedValue([{ email: "verified@email.com", primary: true, verified: true }]),
     };
     global.fetch = vi.fn() as any;
-    (global.fetch as any)
-      .mockResolvedValueOnce(userResponse)
-      .mockResolvedValueOnce(emailsResponse);
+    (global.fetch as any).mockResolvedValueOnce(userResponse).mockResolvedValueOnce(emailsResponse);
 
     const result = await fetchGitHubUserInfo("test_token");
 
@@ -47,9 +48,7 @@ describe("fetchGitHubUserInfo", () => {
     };
     const emailsResponse = { ok: false };
     global.fetch = vi.fn() as any;
-    (global.fetch as any)
-      .mockResolvedValueOnce(userResponse)
-      .mockResolvedValueOnce(emailsResponse);
+    (global.fetch as any).mockResolvedValueOnce(userResponse).mockResolvedValueOnce(emailsResponse);
 
     const result = await fetchGitHubUserInfo("test_token");
 
@@ -70,9 +69,7 @@ describe("fetchGitHubUserInfo", () => {
       json: vi.fn().mockResolvedValue([]),
     };
     global.fetch = vi.fn() as any;
-    (global.fetch as any)
-      .mockResolvedValueOnce(userResponse)
-      .mockResolvedValueOnce(emailsResponse);
+    (global.fetch as any).mockResolvedValueOnce(userResponse).mockResolvedValueOnce(emailsResponse);
 
     const result = await fetchGitHubUserInfo("test_token");
 
@@ -92,14 +89,10 @@ describe("fetchGitHubUserInfo", () => {
       ok: true,
       json: vi
         .fn()
-        .mockResolvedValue([
-          { email: "unverified@email.com", primary: false, verified: false },
-        ]),
+        .mockResolvedValue([{ email: "unverified@email.com", primary: false, verified: false }]),
     };
     global.fetch = vi.fn() as any;
-    (global.fetch as any)
-      .mockResolvedValueOnce(userResponse)
-      .mockResolvedValueOnce(emailsResponse);
+    (global.fetch as any).mockResolvedValueOnce(userResponse).mockResolvedValueOnce(emailsResponse);
 
     const result = await fetchGitHubUserInfo("test_token");
 
@@ -161,9 +154,7 @@ describe("fetchGitHubUserInfo", () => {
     };
     const emailsResponse = { ok: false };
     global.fetch = vi.fn() as any;
-    (global.fetch as any)
-      .mockResolvedValueOnce(userResponse)
-      .mockResolvedValueOnce(emailsResponse);
+    (global.fetch as any).mockResolvedValueOnce(userResponse).mockResolvedValueOnce(emailsResponse);
 
     const result = await fetchGitHubUserInfo("test_token");
 
@@ -193,23 +184,15 @@ describe("fetchGitHubUserInfo", () => {
       ok: true,
       json: vi
         .fn()
-        .mockResolvedValue([
-          { email: "verified@email.com", primary: true, verified: true },
-        ]),
+        .mockResolvedValue([{ email: "verified@email.com", primary: true, verified: true }]),
     };
     global.fetch = vi.fn() as any;
-    (global.fetch as any)
-      .mockResolvedValueOnce(userResponse)
-      .mockResolvedValueOnce(emailsResponse);
+    (global.fetch as any).mockResolvedValueOnce(userResponse).mockResolvedValueOnce(emailsResponse);
 
     await fetchGitHubUserInfo("test_token");
 
     expect(fetch).toHaveBeenCalledTimes(2);
-    expect(fetch).toHaveBeenNthCalledWith(
-      1,
-      "https://api.github.com/user",
-      expect.any(Object),
-    );
+    expect(fetch).toHaveBeenNthCalledWith(1, "https://api.github.com/user", expect.any(Object));
     expect(fetch).toHaveBeenNthCalledWith(
       2,
       "https://api.github.com/user/emails",
@@ -334,17 +317,11 @@ describe("resolveGitIdentity", () => {
     };
     const emailsResponse = {
       ok: true,
-      json: vi
-        .fn()
-        .mockResolvedValue([
-          { email: "gh@example.com", primary: true, verified: true },
-        ]),
+      json: vi.fn().mockResolvedValue([{ email: "gh@example.com", primary: true, verified: true }]),
     };
 
     global.fetch = vi.fn() as any;
-    (global.fetch as any)
-      .mockResolvedValueOnce(userResponse)
-      .mockResolvedValueOnce(emailsResponse);
+    (global.fetch as any).mockResolvedValueOnce(userResponse).mockResolvedValueOnce(emailsResponse);
 
     const result = await resolveGitIdentity(manual, credentials);
 
@@ -377,15 +354,11 @@ describe("resolveGitIdentity", () => {
       ok: true,
       json: vi
         .fn()
-        .mockResolvedValue([
-          { email: "test@example.com", primary: true, verified: true },
-        ]),
+        .mockResolvedValue([{ email: "test@example.com", primary: true, verified: true }]),
     };
 
     global.fetch = vi.fn() as any;
-    (global.fetch as any)
-      .mockResolvedValueOnce(userResponse)
-      .mockResolvedValueOnce(emailsResponse);
+    (global.fetch as any).mockResolvedValueOnce(userResponse).mockResolvedValueOnce(emailsResponse);
 
     const result = await resolveGitIdentity(manual, credentials);
 
@@ -418,15 +391,11 @@ describe("resolveGitIdentity", () => {
       ok: true,
       json: vi
         .fn()
-        .mockResolvedValue([
-          { email: "test@example.com", primary: true, verified: true },
-        ]),
+        .mockResolvedValue([{ email: "test@example.com", primary: true, verified: true }]),
     };
 
     global.fetch = vi.fn() as any;
-    (global.fetch as any)
-      .mockResolvedValueOnce(userResponse)
-      .mockResolvedValueOnce(emailsResponse);
+    (global.fetch as any).mockResolvedValueOnce(userResponse).mockResolvedValueOnce(emailsResponse);
 
     const result = await resolveGitIdentity(manual, credentials);
 

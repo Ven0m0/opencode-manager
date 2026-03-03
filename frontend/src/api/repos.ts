@@ -1,6 +1,6 @@
-import type { Repo } from './types'
-import { FetchError, fetchWrapper, fetchWrapperVoid, fetchWrapperBlob } from './fetchWrapper'
-import { API_BASE_URL } from '@/config'
+import { API_BASE_URL } from "@/config";
+import { FetchError, fetchWrapper, fetchWrapperBlob, fetchWrapperVoid } from "./fetchWrapper";
+import type { Repo } from "./types";
 
 export async function createRepo(
   repoUrl?: string,
@@ -8,55 +8,62 @@ export async function createRepo(
   branch?: string,
   openCodeConfigName?: string,
   useWorktree?: boolean,
-  skipSSHVerification?: boolean
+  skipSSHVerification?: boolean,
 ): Promise<Repo> {
   return fetchWrapper(`${API_BASE_URL}/api/repos`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ repoUrl, localPath, branch, openCodeConfigName, useWorktree, skipSSHVerification }),
-  })
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      repoUrl,
+      localPath,
+      branch,
+      openCodeConfigName,
+      useWorktree,
+      skipSSHVerification,
+    }),
+  });
 }
 
 export async function listRepos(): Promise<Repo[]> {
-  return fetchWrapper(`${API_BASE_URL}/api/repos`)
+  return fetchWrapper(`${API_BASE_URL}/api/repos`);
 }
 
 export async function getRepo(id: number): Promise<Repo> {
-  return fetchWrapper(`${API_BASE_URL}/api/repos/${id}`)
+  return fetchWrapper(`${API_BASE_URL}/api/repos/${id}`);
 }
 
 export async function deleteRepo(id: number): Promise<void> {
   return fetchWrapperVoid(`${API_BASE_URL}/api/repos/${id}`, {
-    method: 'DELETE',
-  })
+    method: "DELETE",
+  });
 }
 
 export async function startServer(id: number, openCodeConfigName?: string): Promise<Repo> {
   return fetchWrapper(`${API_BASE_URL}/api/repos/${id}/server/start`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ openCodeConfigName }),
-  })
+  });
 }
 
 export async function stopServer(id: number): Promise<Repo> {
   return fetchWrapper(`${API_BASE_URL}/api/repos/${id}/server/stop`, {
-    method: 'POST',
-  })
+    method: "POST",
+  });
 }
 
 export async function pullRepo(id: number): Promise<Repo> {
   return fetchWrapper(`${API_BASE_URL}/api/repos/${id}/pull`, {
-    method: 'POST',
-  })
+    method: "POST",
+  });
 }
 
 export async function switchRepoConfig(id: number, configName: string): Promise<Repo> {
   return fetchWrapper(`${API_BASE_URL}/api/repos/${id}/config/switch`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ configName }),
-  })
+  });
 }
 
 export class GitAuthError extends Error {
@@ -71,15 +78,15 @@ export class GitAuthError extends Error {
 export async function switchBranch(id: number, branch: string): Promise<Repo> {
   try {
     return await fetchWrapper(`${API_BASE_URL}/api/repos/${id}/branch/switch`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ branch }),
-    })
+    });
   } catch (error) {
-    if (error instanceof FetchError && error.code === 'AUTH_FAILED') {
-      throw new GitAuthError(error.message, error.code)
+    if (error instanceof FetchError && error.code === "AUTH_FAILED") {
+      throw new GitAuthError(error.message, error.code);
     }
-    throw error
+    throw error;
   }
 }
 
@@ -93,22 +100,24 @@ interface GitBranch {
   isWorktree?: boolean;
 }
 
-export async function listBranches(id: number): Promise<{ branches: GitBranch[], status: { ahead: number, behind: number } }> {
-  return fetchWrapper(`${API_BASE_URL}/api/repos/${id}/git/branches`)
+export async function listBranches(
+  id: number,
+): Promise<{ branches: GitBranch[]; status: { ahead: number; behind: number } }> {
+  return fetchWrapper(`${API_BASE_URL}/api/repos/${id}/git/branches`);
 }
 
 export async function createBranch(id: number, branch: string): Promise<Repo> {
   try {
     return await fetchWrapper(`${API_BASE_URL}/api/repos/${id}/branch/create`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ branch }),
-    })
+    });
   } catch (error) {
-    if (error instanceof FetchError && error.code === 'AUTH_FAILED') {
-      throw new GitAuthError(error.message, error.code)
+    if (error instanceof FetchError && error.code === "AUTH_FAILED") {
+      throw new GitAuthError(error.message, error.code);
     }
-    throw error
+    throw error;
   }
 }
 
@@ -124,32 +133,31 @@ export async function downloadRepo(
 ): Promise<void> {
   const params = new URLSearchParams();
   if (options?.includeGit) params.append("includeGit", "true");
-  if (options?.includePaths?.length)
-    params.append("includePaths", options.includePaths.join(","));
+  if (options?.includePaths?.length) params.append("includePaths", options.includePaths.join(","));
 
-  const url = `${API_BASE_URL}/api/repos/${id}/download${params.toString() ? '?' + params.toString() : ''}`
-  
-  const blob = await fetchWrapperBlob(url)
-  const urlObj = window.URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = urlObj
-  a.download = `${repoName}.zip`
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  window.URL.revokeObjectURL(urlObj)
+  const url = `${API_BASE_URL}/api/repos/${id}/download${params.toString() ? `?${params.toString()}` : ""}`;
+
+  const blob = await fetchWrapperBlob(url);
+  const urlObj = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = urlObj;
+  a.download = `${repoName}.zip`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(urlObj);
 }
 
 export async function updateRepoOrder(order: number[]): Promise<void> {
   return fetchWrapperVoid(`${API_BASE_URL}/api/repos/order`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ order }),
-  })
+  });
 }
 
 export async function resetRepoPermissions(id: number): Promise<void> {
   return fetchWrapperVoid(`${API_BASE_URL}/api/repos/${id}/reset-permissions`, {
-    method: 'POST',
-  })
+    method: "POST",
+  });
 }

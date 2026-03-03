@@ -1,18 +1,17 @@
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogTrigger } from '@/components/ui/dialog'
-import { Plus, Loader2, RefreshCw } from 'lucide-react'
-import { DeleteDialog } from '@/components/ui/delete-dialog'
-import { AddMcpServerDialog } from './AddMcpServerDialog'
-import { McpServerCard } from './McpServerCard'
-import { McpOAuthDialog } from './McpOAuthDialog'
-import { useMcpServers } from '@/hooks/useMcpServers'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { invalidateConfigCaches } from '@/lib/queryInvalidation'
-import type { McpServerConfig } from '@/api/mcp'
-import { mcpApi } from '@/api/mcp'
-import type { McpAuthStartResponse } from '@/api/mcp'
-import { showToast } from '@/lib/toast'
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Loader2, Plus, RefreshCw } from "lucide-react";
+import { useState } from "react";
+import type { McpAuthStartResponse, McpServerConfig } from "@/api/mcp";
+import { mcpApi } from "@/api/mcp";
+import { Button } from "@/components/ui/button";
+import { DeleteDialog } from "@/components/ui/delete-dialog";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { useMcpServers } from "@/hooks/useMcpServers";
+import { invalidateConfigCaches } from "@/lib/queryInvalidation";
+import { showToast } from "@/lib/toast";
+import { AddMcpServerDialog } from "./AddMcpServerDialog";
+import { McpOAuthDialog } from "./McpOAuthDialog";
+import { McpServerCard } from "./McpServerCard";
 
 interface McpManagerProps {
   config: {
@@ -20,29 +19,18 @@ interface McpManagerProps {
     content: Record<string, unknown>;
   } | null;
   onUpdate: (content: Record<string, unknown>) => Promise<void>;
-  onConfigUpdate?: (
-    configName: string,
-    content: Record<string, unknown>,
-  ) => Promise<void>;
+  onConfigUpdate?: (configName: string, content: Record<string, unknown>) => Promise<void>;
 }
 
-export function McpManager({
-  config,
-  onUpdate,
-  onConfigUpdate,
-}: McpManagerProps) {
+export function McpManager({ config, onUpdate, onConfigUpdate }: McpManagerProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [deleteConfirmServer, setDeleteConfirmServer] = useState<{
     id: string;
     name: string;
   } | null>(null);
   const [togglingServerId, setTogglingServerId] = useState<string | null>(null);
-  const [authDialogServerId, setAuthDialogServerId] = useState<string | null>(
-    null,
-  );
-  const [removeAuthConfirmServer, setRemoveAuthConfirmServer] = useState<
-    string | null
-  >(null);
+  const [authDialogServerId, setAuthDialogServerId] = useState<string | null>(null);
+  const [removeAuthConfirmServer, setRemoveAuthConfirmServer] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
   const {
@@ -52,22 +40,22 @@ export function McpManager({
     connect,
     disconnect,
     removeAuthAsync,
-    isRemovingAuth
-  } = useMcpServers()
+    isRemovingAuth,
+  } = useMcpServers();
 
   const deleteServerMutation = useMutation({
     mutationFn: async (serverId: string) => {
-      if (!config) return
-      
-      const currentStatus = mcpStatus?.[serverId]
-      if (currentStatus?.status === 'connected') {
-        await disconnect(serverId)
+      if (!config) return;
+
+      const currentStatus = mcpStatus?.[serverId];
+      if (currentStatus?.status === "connected") {
+        await disconnect(serverId);
       }
-      
-      const currentMcp = (config.content?.mcp as Record<string, McpServerConfig>) || {}
-      const { [serverId]: _, ...rest } = currentMcp
-      void _
-      
+
+      const currentMcp = (config.content?.mcp as Record<string, McpServerConfig>) || {};
+      const { [serverId]: _, ...rest } = currentMcp;
+      void _;
+
       const updatedConfig = {
         ...config.content,
         mcp: rest,
@@ -76,18 +64,18 @@ export function McpManager({
       await onUpdate(updatedConfig);
     },
     onSuccess: async () => {
-      invalidateConfigCaches(queryClient)
-      await refetchStatus()
-      setDeleteConfirmServer(null)
+      invalidateConfigCaches(queryClient);
+      await refetchStatus();
+      setDeleteConfirmServer(null);
     },
     onError: () => {
-      showToast.error('Failed to delete MCP server')
+      showToast.error("Failed to delete MCP server");
     },
-  })
+  });
 
-  const mcpServers = config?.content?.mcp as Record<string, McpServerConfig> || {}
-  
-  const isAnyOperationPending = deleteServerMutation.isPending || togglingServerId !== null
+  const mcpServers = (config?.content?.mcp as Record<string, McpServerConfig>) || {};
+
+  const isAnyOperationPending = deleteServerMutation.isPending || togglingServerId !== null;
 
   const handleToggleServer = async (serverId: string) => {
     const currentStatus = mcpStatus?.[serverId];
@@ -101,9 +89,7 @@ export function McpManager({
       isRemote &&
       /oauth|auth.*state/i.test(currentStatus.error);
     const isOAuthServer =
-      hasOAuthConfig ||
-      hasOAuthError ||
-      (currentStatus.status === "needs_auth" && isRemote);
+      hasOAuthConfig || hasOAuthError || (currentStatus.status === "needs_auth" && isRemote);
 
     if (
       currentStatus.status === "needs_auth" ||
@@ -133,18 +119,18 @@ export function McpManager({
   };
 
   const handleOAuthStartAuth = async (): Promise<McpAuthStartResponse> => {
-    if (!authDialogServerId) throw new Error('No server ID')
-    const serverConfig = mcpServers[authDialogServerId]
-    if (!serverConfig?.url) throw new Error('Server URL not found')
-    const oauthConfig = typeof serverConfig.oauth === 'object' ? serverConfig.oauth : undefined
+    if (!authDialogServerId) throw new Error("No server ID");
+    const serverConfig = mcpServers[authDialogServerId];
+    if (!serverConfig?.url) throw new Error("Server URL not found");
+    const oauthConfig = typeof serverConfig.oauth === "object" ? serverConfig.oauth : undefined;
     return await mcpApi.startAuth(
       authDialogServerId,
       serverConfig.url,
       oauthConfig?.scope,
       oauthConfig?.clientId,
       oauthConfig?.clientSecret,
-    )
-  }
+    );
+  };
 
   const handleOAuthCompleteAuth = async (code: string) => {
     if (!authDialogServerId) return;
@@ -154,19 +140,19 @@ export function McpManager({
   };
 
   const handleOAuthCheckStatus = async (): Promise<boolean> => {
-    if (!authDialogServerId) return false
-    const status = await mcpApi.getStatus()
-    const serverStatus = status[authDialogServerId]
-    if (serverStatus?.status === 'connected') {
-      refetchStatus()
-      return true
+    if (!authDialogServerId) return false;
+    const status = await mcpApi.getStatus();
+    const serverStatus = status[authDialogServerId];
+    if (serverStatus?.status === "connected") {
+      refetchStatus();
+      return true;
     }
-    return false
-  }
+    return false;
+  };
 
   const handleOAuthSuccess = () => {
-    refetchStatus()
-  }
+    refetchStatus();
+  };
 
   const handleRemoveAuth = (serverId: string) => {
     setRemoveAuthConfirmServer(serverId);
@@ -174,9 +160,9 @@ export function McpManager({
 
   const handleConfirmRemoveAuth = async () => {
     if (removeAuthConfirmServer) {
-      await removeAuthAsync(removeAuthConfirmServer)
-      setRemoveAuthConfirmServer(null)
-      refetchStatus()
+      await removeAuthAsync(removeAuthConfirmServer);
+      setRemoveAuthConfirmServer(null);
+      refetchStatus();
     }
   };
 
@@ -197,9 +183,7 @@ export function McpManager({
   if (!config) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground">
-          Select a configuration to manage MCP servers.
-        </p>
+        <p className="text-muted-foreground">Select a configuration to manage MCP servers.</p>
       </div>
     );
   }
@@ -234,9 +218,7 @@ export function McpManager({
             onClick={() => refetchStatus()}
             disabled={isLoadingStatus}
           >
-            <RefreshCw
-              className={`h-3 w-3 ${isLoadingStatus ? "animate-spin" : ""}`}
-            />
+            <RefreshCw className={`h-3 w-3 ${isLoadingStatus ? "animate-spin" : ""}`} />
           </Button>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
@@ -280,9 +262,7 @@ export function McpManager({
                 onToggleServer={handleToggleServer}
                 onAuthenticate={handleAuthenticate}
                 onRemoveAuth={handleRemoveAuth}
-                onDeleteServer={(id, name) =>
-                  setDeleteConfirmServer({ id, name })
-                }
+                onDeleteServer={(id, name) => setDeleteConfirmServer({ id, name })}
               />
             );
           })}
@@ -303,7 +283,7 @@ export function McpManager({
       <McpOAuthDialog
         open={!!authDialogServerId}
         onOpenChange={(open) => !open && setAuthDialogServerId(null)}
-        serverName={authDialogServerId || ''}
+        serverName={authDialogServerId || ""}
         onStartAuth={handleOAuthStartAuth}
         onCompleteAuth={handleOAuthCompleteAuth}
         onCheckStatus={handleOAuthCheckStatus}

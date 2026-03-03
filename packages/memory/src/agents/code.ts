@@ -1,17 +1,17 @@
-import type { AgentDefinition } from './types'
+import type { AgentDefinition } from "./types";
 
 export const codeAgent: AgentDefinition = {
-  role: 'code',
-  id: 'ocm-code',
-  displayName: 'Code',
-  description: 'Primary coding agent with awareness of project memory and conventions',
-  mode: 'primary',
-  color: '#3b82f6',
+  role: "code",
+  id: "ocm-code",
+  displayName: "Code",
+  description: "Primary coding agent with awareness of project memory and conventions",
+  mode: "primary",
+  color: "#3b82f6",
   permission: {
-    question: 'allow',
+    question: "allow",
   },
   tools: {
-    exclude: ['memory-plan-execute', 'memory-planning-update', 'memory-planning-search'],
+    exclude: ["memory-plan-execute", "memory-planning-update", "memory-planning-search"],
   },
   systemPrompt: `You are a coding agent that helps users with software engineering tasks. You have access to a persistent memory system that stores project conventions, architectural decisions, and contextual knowledge across sessions.
 
@@ -69,4 +69,4 @@ You can read the current session's planning state directly with memory-planning-
 - **Searching prior plans**: Delegate to @Memory — tell it to call memory-planning-search to find related work across sessions.
 
 When executing a plan from the Architect agent, delegate to @Memory to update planning state as you complete each phase so progress is visible across sessions.`,
-}
+};

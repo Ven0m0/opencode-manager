@@ -4,11 +4,7 @@ interface DiffStatsProps {
   variant?: "default" | "compact";
 }
 
-export function DiffStats({
-  additions,
-  deletions,
-  variant = "default",
-}: DiffStatsProps) {
+export function DiffStats({ additions, deletions, variant = "default" }: DiffStatsProps) {
   if (additions === 0 && deletions === 0) {
     return null;
   }

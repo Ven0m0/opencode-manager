@@ -20,9 +20,9 @@ export const MODAL_TRANSITION_MS = 300;
  */
 export function getRepoDisplayName(repoUrl?: string | null, localPath?: string | null): string {
   if (repoUrl) {
-    return repoUrl.split("/").pop()?.replace(".git", "") || "Repository"
+    return repoUrl.split("/").pop()?.replace(".git", "") || "Repository";
   }
-  return localPath || "Repository"
+  return localPath || "Repository";
 }
 
 export function sanitizeForTTS(text: string): string {

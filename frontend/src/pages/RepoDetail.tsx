@@ -68,9 +68,7 @@ export function RepoDetail() {
   const { data: settings } = useQuery({
     queryKey: ["opencode-config"],
     queryFn: async () => {
-      const response = await fetch(
-        `${API_BASE_URL}/api/settings/opencode-configs/default`,
-      );
+      const response = await fetch(`${API_BASE_URL}/api/settings/opencode-configs/default`);
       if (!response.ok) throw new Error("Failed to fetch config");
       return response.json();
     },
@@ -98,10 +96,7 @@ export function RepoDetail() {
     },
   });
 
-  const handleCreateSession = async (options?: {
-    agentSlug?: string;
-    promptSlug?: string;
-  }) => {
+  const handleCreateSession = async (options?: { agentSlug?: string; promptSlug?: string }) => {
     const session = await createSessionMutation.mutateAsync({
       agent: options?.agentSlug,
     });
@@ -134,9 +129,7 @@ export function RepoDetail() {
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground">
-            {repo.cloneStatus === "cloning"
-              ? "Cloning repository..."
-              : "Repository not ready"}
+            {repo.cloneStatus === "cloning" ? "Cloning repository..." : "Repository not ready"}
           </p>
         </div>
       </div>
@@ -147,9 +140,7 @@ export function RepoDetail() {
     ? repo.repoUrl.split("/").pop()?.replace(".git", "") || "Repository"
     : repo.localPath || "Local Repository";
   const branchToDisplay = repo.currentBranch || repo.branch;
-  const displayName = branchToDisplay
-    ? `${repoName} (${branchToDisplay})`
-    : repoName;
+  const displayName = branchToDisplay ? `${repoName} (${branchToDisplay})` : repoName;
   const currentBranch = repo.currentBranch || repo.branch || "main";
   const isWorktree = repo.isWorktree || false;
 
@@ -287,18 +278,14 @@ export function RepoDetail() {
         />
       )}
 
-      <Dialog
-        open={resetPermissionsOpen}
-        onOpenChange={setResetPermissionsOpen}
-      >
+      <Dialog open={resetPermissionsOpen} onOpenChange={setResetPermissionsOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Reset Permissions</DialogTitle>
             <DialogDescription>
-              This will clear all "Allow Always" permissions for this
-              repository. You will be prompted again for permission when
-              opencode needs to perform actions like running commands or editing
-              files.
+              This will clear all "Allow Always" permissions for this repository. You will be
+              prompted again for permission when opencode needs to perform actions like running
+              commands or editing files.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

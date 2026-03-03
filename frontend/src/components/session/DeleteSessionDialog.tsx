@@ -22,8 +22,8 @@ export function DeleteSessionDialog({
   const description = isMultiple ? (
     <>
       Are you sure you want to delete{" "}
-      <span className="text-destructive font-bold text-lg">{sessionCount}</span>{" "}
-      sessions? This action cannot be undone.
+      <span className="text-destructive font-bold text-lg">{sessionCount}</span> sessions? This
+      action cannot be undone.
     </>
   ) : (
     "Are you sure you want to delete this session? This action cannot be undone."

@@ -23,14 +23,11 @@ export function createOAuthRoutes() {
 
       // Proxy to OpenCode server
       const response = await proxyRequest(
-        new Request(
-          `${OPENCODE_SERVER_URL}/provider/${providerId}/oauth/authorize`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(validated),
-          },
-        ),
+        new Request(`${OPENCODE_SERVER_URL}/provider/${providerId}/oauth/authorize`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(validated),
+        }),
       );
 
       if (!response.ok) {
@@ -46,10 +43,7 @@ export function createOAuthRoutes() {
     } catch (error) {
       logger.error("OAuth authorize error:", error);
       if (error instanceof z.ZodError) {
-        return c.json(
-          { error: "Invalid request data", details: error.issues },
-          400,
-        );
+        return c.json({ error: "Invalid request data", details: error.issues }, 400);
       }
       return c.json({ error: "OAuth authorization failed" }, 500);
     }
@@ -63,14 +57,11 @@ export function createOAuthRoutes() {
 
       // Proxy to OpenCode server
       const response = await proxyRequest(
-        new Request(
-          `${OPENCODE_SERVER_URL}/provider/${providerId}/oauth/callback`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(validated),
-          },
-        ),
+        new Request(`${OPENCODE_SERVER_URL}/provider/${providerId}/oauth/callback`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(validated),
+        }),
       );
 
       if (!response.ok) {
@@ -81,19 +72,14 @@ export function createOAuthRoutes() {
 
       const data = await response.json();
 
-      logger.info(
-        `OAuth callback successful for ${providerId}, reloading OpenCode configuration`,
-      );
+      logger.info(`OAuth callback successful for ${providerId}, reloading OpenCode configuration`);
       await opencodeServerManager.reloadConfig();
 
       return c.json(data);
     } catch (error) {
       logger.error("OAuth callback error:", error);
       if (error instanceof z.ZodError) {
-        return c.json(
-          { error: "Invalid request data", details: error.issues },
-          400,
-        );
+        return c.json({ error: "Invalid request data", details: error.issues }, 400);
       }
       return c.json({ error: "OAuth callback failed" }, 500);
     }
@@ -122,10 +108,7 @@ export function createOAuthRoutes() {
     } catch (error) {
       logger.error("Provider auth methods error:", error);
       if (error instanceof z.ZodError) {
-        return c.json(
-          { error: "Invalid response data", details: error.issues },
-          500,
-        );
+        return c.json({ error: "Invalid response data", details: error.issues }, 500);
       }
       return c.json({ error: "Failed to get provider auth methods" }, 500);
     }

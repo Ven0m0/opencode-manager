@@ -36,11 +36,7 @@ export function Setup() {
     setError(null);
     setIsSubmitting(true);
     try {
-      const result = await signUpWithEmail(
-        data.email,
-        data.password,
-        data.name,
-      );
+      const result = await signUpWithEmail(data.email, data.password, data.name);
       if (result.error) {
         setError(result.error);
       }
@@ -54,11 +50,7 @@ export function Setup() {
       <div className="w-full max-w-sm space-y-6">
         <div className="flex flex-col items-center space-y-2">
           <img
-            src={
-              theme === "light"
-                ? "/opencode-wordmark-light.svg"
-                : "/opencode-wordmark-dark.svg"
-            }
+            src={theme === "light" ? "/opencode-wordmark-light.svg" : "/opencode-wordmark-dark.svg"}
             alt="OpenCode"
             className="h-8 w-auto"
           />
@@ -86,11 +78,7 @@ export function Setup() {
                 {...register("name")}
                 aria-invalid={!!errors.name}
               />
-              {errors.name && (
-                <p className="text-sm text-destructive">
-                  {errors.name.message}
-                </p>
-              )}
+              {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm text-muted-foreground">
@@ -104,17 +92,10 @@ export function Setup() {
                 {...register("email")}
                 aria-invalid={!!errors.email}
               />
-              {errors.email && (
-                <p className="text-sm text-destructive">
-                  {errors.email.message}
-                </p>
-              )}
+              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label
-                htmlFor="password"
-                className="text-sm text-muted-foreground"
-              >
+              <Label htmlFor="password" className="text-sm text-muted-foreground">
                 Password
               </Label>
               <Input
@@ -126,9 +107,7 @@ export function Setup() {
                 aria-invalid={!!errors.password}
               />
               {errors.password && (
-                <p className="text-sm text-destructive">
-                  {errors.password.message}
-                </p>
+                <p className="text-sm text-destructive">{errors.password.message}</p>
               )}
             </div>
             <Button type="submit" className="w-full" disabled={isSubmitting}>

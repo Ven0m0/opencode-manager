@@ -1,20 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
-import {
-  createContext,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, type ReactNode, useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  type AuthUser,
-  authClient,
-  signIn,
-  signOut,
-  signUp,
-  useSession,
-} from "@/lib/auth-client";
+import { type AuthUser, authClient, signIn, signOut, signUp, useSession } from "@/lib/auth-client";
 
 interface AuthConfig {
   enabledProviders: string[];
@@ -28,19 +15,10 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isLoading: boolean;
   config: AuthConfig | null;
-  signInWithEmail: (
-    email: string,
-    password: string,
-  ) => Promise<{ error?: string }>;
-  signInWithProvider: (
-    provider: "github" | "google" | "discord",
-  ) => Promise<{ error?: string }>;
+  signInWithEmail: (email: string, password: string) => Promise<{ error?: string }>;
+  signInWithProvider: (provider: "github" | "google" | "discord") => Promise<{ error?: string }>;
   signInWithPasskey: () => Promise<{ error?: string }>;
-  signUpWithEmail: (
-    email: string,
-    password: string,
-    name: string,
-  ) => Promise<{ error?: string }>;
+  signUpWithEmail: (email: string, password: string, name: string) => Promise<{ error?: string }>;
   addPasskey: (name?: string) => Promise<{ error?: string }>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -94,19 +72,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     [refetch, navigate, location],
   );
 
-  const signInWithProvider = useCallback(
-    async (provider: "github" | "google" | "discord") => {
-      try {
-        await signIn.social({ provider, callbackURL: "/" });
-        return {};
-      } catch (err) {
-        return {
-          error: err instanceof Error ? err.message : "OAuth sign in failed",
-        };
-      }
-    },
-    [],
-  );
+  const signInWithProvider = useCallback(async (provider: "github" | "google" | "discord") => {
+    try {
+      await signIn.social({ provider, callbackURL: "/" });
+      return {};
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : "OAuth sign in failed",
+      };
+    }
+  }, []);
 
   const signInWithPasskey = useCallback(async () => {
     try {

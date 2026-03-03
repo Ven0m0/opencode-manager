@@ -1,12 +1,15 @@
-import { fetchWrapper } from './fetchWrapper'
-import { API_BASE_URL } from '@/config'
+import { API_BASE_URL } from "@/config";
+import { fetchWrapper } from "./fetchWrapper";
 
 interface SSHHostKeyResponse {
-  success: boolean
-  error?: string
+  success: boolean;
+  error?: string;
 }
 
-export async function respondSSHHostKey(requestId: string, approved: boolean): Promise<SSHHostKeyResponse> {
+export async function respondSSHHostKey(
+  requestId: string,
+  approved: boolean,
+): Promise<SSHHostKeyResponse> {
   return fetchWrapper(`${API_BASE_URL}/api/ssh/host-key/respond`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

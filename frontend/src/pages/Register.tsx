@@ -45,11 +45,7 @@ export function Register() {
     setError(null);
     setIsSubmitting(true);
     try {
-      const result = await signUpWithEmail(
-        data.email,
-        data.password,
-        data.name,
-      );
+      const result = await signUpWithEmail(data.email, data.password, data.name);
       if (result.error) {
         setError(result.error);
       }
@@ -63,18 +59,12 @@ export function Register() {
       <div className="w-full max-w-sm space-y-6">
         <div className="flex flex-col items-center space-y-2">
           <img
-            src={
-              theme === "light"
-                ? "/opencode-wordmark-light.svg"
-                : "/opencode-wordmark-dark.svg"
-            }
+            src={theme === "light" ? "/opencode-wordmark-light.svg" : "/opencode-wordmark-dark.svg"}
             alt="OpenCode"
             className="h-8 w-auto"
           />
           <p className="text-sm text-muted-foreground">
-            {config.isFirstUser
-              ? "Create the first admin account"
-              : "Create your account"}
+            {config.isFirstUser ? "Create the first admin account" : "Create your account"}
           </p>
         </div>
 
@@ -99,11 +89,7 @@ export function Register() {
                 {...register("name")}
                 aria-invalid={!!errors.name}
               />
-              {errors.name && (
-                <p className="text-sm text-destructive">
-                  {errors.name.message}
-                </p>
-              )}
+              {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm text-muted-foreground">
@@ -117,17 +103,10 @@ export function Register() {
                 {...register("email")}
                 aria-invalid={!!errors.email}
               />
-              {errors.email && (
-                <p className="text-sm text-destructive">
-                  {errors.email.message}
-                </p>
-              )}
+              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label
-                htmlFor="password"
-                className="text-sm text-muted-foreground"
-              >
+              <Label htmlFor="password" className="text-sm text-muted-foreground">
                 Password
               </Label>
               <Input
@@ -139,16 +118,11 @@ export function Register() {
                 aria-invalid={!!errors.password}
               />
               {errors.password && (
-                <p className="text-sm text-destructive">
-                  {errors.password.message}
-                </p>
+                <p className="text-sm text-destructive">{errors.password.message}</p>
               )}
             </div>
             <div className="space-y-2">
-              <Label
-                htmlFor="confirmPassword"
-                className="text-sm text-muted-foreground"
-              >
+              <Label htmlFor="confirmPassword" className="text-sm text-muted-foreground">
                 Confirm Password
               </Label>
               <Input
@@ -160,9 +134,7 @@ export function Register() {
                 aria-invalid={!!errors.confirmPassword}
               />
               {errors.confirmPassword && (
-                <p className="text-sm text-destructive">
-                  {errors.confirmPassword.message}
-                </p>
+                <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
               )}
             </div>
             <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -178,10 +150,7 @@ export function Register() {
 
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{" "}
-          <Link
-            to="/login"
-            className="text-primary hover:underline transition-colors"
-          >
+          <Link to="/login" className="text-primary hover:underline transition-colors">
             Sign in
           </Link>
         </p>

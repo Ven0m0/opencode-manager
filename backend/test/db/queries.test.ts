@@ -175,9 +175,7 @@ describe("Database Queries", () => {
 
       db.updateRepoStatus(mockDb, 1, "ready");
 
-      expect(mockDb.prepare).toHaveBeenCalledWith(
-        "UPDATE repos SET clone_status = ? WHERE id = ?",
-      );
+      expect(mockDb.prepare).toHaveBeenCalledWith("UPDATE repos SET clone_status = ? WHERE id = ?");
       expect(stmt.run).toHaveBeenCalledWith("ready", 1);
     });
   });
@@ -207,9 +205,7 @@ describe("Database Queries", () => {
 
       db.updateLastPulled(mockDb, 1);
 
-      expect(mockDb.prepare).toHaveBeenCalledWith(
-        "UPDATE repos SET last_pulled = ? WHERE id = ?",
-      );
+      expect(mockDb.prepare).toHaveBeenCalledWith("UPDATE repos SET last_pulled = ? WHERE id = ?");
       expect(stmt.run).toHaveBeenCalledWith(expect.any(Number), 1);
     });
   });
@@ -223,9 +219,7 @@ describe("Database Queries", () => {
 
       db.deleteRepo(mockDb, 1);
 
-      expect(mockDb.prepare).toHaveBeenCalledWith(
-        "DELETE FROM repos WHERE id = ?",
-      );
+      expect(mockDb.prepare).toHaveBeenCalledWith("DELETE FROM repos WHERE id = ?");
       expect(stmt.run).toHaveBeenCalledWith(1);
     });
   });

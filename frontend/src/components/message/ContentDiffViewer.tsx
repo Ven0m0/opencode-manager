@@ -102,9 +102,7 @@ export function ContentDiffViewer({ before, after }: ContentDiffViewerProps) {
   const hiddenCount = allLines.length - compressedLines.length;
 
   if (compressedLines.length === 0) {
-    return (
-      <div className="px-3 py-2 text-xs text-muted-foreground">No changes</div>
-    );
+    return <div className="px-3 py-2 text-xs text-muted-foreground">No changes</div>;
   }
 
   return (
@@ -125,12 +123,8 @@ export function ContentDiffViewer({ before, after }: ContentDiffViewerProps) {
             >
               {!isMobile && (
                 <div className="flex-shrink-0 w-14 flex text-muted-foreground/50 text-[10px]">
-                  <span className="w-7 px-1 text-right">
-                    {line.oldLineNumber || ""}
-                  </span>
-                  <span className="w-7 px-1 text-right">
-                    {line.newLineNumber || ""}
-                  </span>
+                  <span className="w-7 px-1 text-right">{line.oldLineNumber || ""}</span>
+                  <span className="w-7 px-1 text-right">{line.newLineNumber || ""}</span>
                 </div>
               )}
               <div className="w-4 flex-shrink-0 flex items-center justify-center">

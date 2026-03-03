@@ -169,8 +169,7 @@ export function useCommands(opcodeUrl: string | null) {
         const commandList = await client.listCommands();
         const allCommands = [...BUILTIN_COMMANDS, ...commandList];
         const uniqueCommands = allCommands.filter(
-          (command, index, self) =>
-            index === self.findIndex((c) => c.name === command.name),
+          (command, index, self) => index === self.findIndex((c) => c.name === command.name),
         );
         setCommands(uniqueCommands);
       } catch (err) {
@@ -189,9 +188,7 @@ export function useCommands(opcodeUrl: string | null) {
     if (!query.trim()) return commands;
 
     const searchTerm = query.toLowerCase();
-    return commands.filter((command) =>
-      command.name.toLowerCase().includes(searchTerm),
-    );
+    return commands.filter((command) => command.name.toLowerCase().includes(searchTerm));
   };
 
   return {

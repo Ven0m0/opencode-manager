@@ -32,10 +32,7 @@ class SSEManager {
     return SSEManager.instance;
   }
 
-  subscribe(
-    onMessage: SSEEventHandler,
-    onStatusChange?: SSEStatusHandler,
-  ): () => void {
+  subscribe(onMessage: SSEEventHandler, onStatusChange?: SSEStatusHandler): () => void {
     const id = `sub_${++this.subscriberIdCounter}`;
     const subscriber: SSESubscriber = {
       id,
@@ -157,10 +154,7 @@ class SSEManager {
   private buildUrl(): string {
     const url = new URL("/api/sse/stream", window.location.origin);
     if (this.directoryRefCounts.size > 0) {
-      url.searchParams.set(
-        "directories",
-        Array.from(this.directoryRefCounts.keys()).join(","),
-      );
+      url.searchParams.set("directories", Array.from(this.directoryRefCounts.keys()).join(","));
     }
     return url.toString();
   }
@@ -240,10 +234,7 @@ class SSEManager {
 
     this.reconnectTimeout = setTimeout(() => {
       this.reconnectTimeout = null;
-      this.reconnectDelay = Math.min(
-        this.reconnectDelay * 2,
-        MAX_RECONNECT_DELAY_MS,
-      );
+      this.reconnectDelay = Math.min(this.reconnectDelay * 2, MAX_RECONNECT_DELAY_MS);
       this.connect();
     }, this.reconnectDelay);
   }
@@ -283,12 +274,16 @@ class SSEManager {
   }
 
   reportVisibility(visible: boolean, activeSessionId?: string): void {
-    if (!this.clientId || !this.isConnected) return
-    fetch('/api/sse/visibility', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clientId: this.clientId, visible, activeSessionId: activeSessionId ?? null })
-    }).catch(() => {})
+    if (!this.clientId || !this.isConnected) return;
+    fetch("/api/sse/visibility", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        clientId: this.clientId,
+        visible,
+        activeSessionId: activeSessionId ?? null,
+      }),
+    }).catch(() => {});
   }
 
   async ensureConnected(timeoutMs: number = 5000): Promise<boolean> {

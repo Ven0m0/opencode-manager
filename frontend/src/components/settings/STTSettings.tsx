@@ -1,14 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  CheckCircle2,
-  Eye,
-  EyeOff,
-  Loader2,
-  Mic,
-  MicOff,
-  RefreshCw,
-  XCircle,
-} from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Loader2, Mic, MicOff, RefreshCw, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -27,10 +18,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useSettings } from "@/hooks/useSettings";
 import { useSTT } from "@/hooks/useSTT";
-import {
-  getAvailableLanguages,
-  isWebRecognitionSupported,
-} from "@/lib/webSpeechRecognizer";
+import { getAvailableLanguages, isWebRecognitionSupported } from "@/lib/webSpeechRecognizer";
 
 const sttFormSchema = z
   .object({
@@ -71,18 +59,12 @@ export function STTSettings() {
     isExternalProvider,
   } = useSTT();
 
-  const [saveStatus, setSaveStatus] = useState<
-    "idle" | "saving" | "saved" | "error"
-  >("idle");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [isTesting, setIsTesting] = useState(false);
   const [testTranscript, setTestTranscript] = useState("");
-  const [testResult, setTestResult] = useState<"idle" | "success" | "failed">(
-    "idle",
-  );
+  const [testResult, setTestResult] = useState<"idle" | "success" | "failed">("idle");
   const [showApiKey, setShowApiKey] = useState(false);
-  const [availableModels, setAvailableModels] = useState<string[]>([
-    "whisper-1",
-  ]);
+  const [availableModels, setAvailableModels] = useState<string[]>(["whisper-1"]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
 
   const isWebSpeechAvailable = isWebRecognitionSupported();
@@ -117,9 +99,7 @@ export function STTSettings() {
     setIsLoadingModels(true);
     try {
       const response = await sttApi.getModels("default", forceRefresh);
-      setAvailableModels(
-        response.models.length > 0 ? response.models : ["whisper-1"],
-      );
+      setAvailableModels(response.models.length > 0 ? response.models : ["whisper-1"]);
 
       if (!watchModel && response.models.length > 0) {
         setValue("model", response.models[0]);
@@ -138,7 +118,6 @@ export function STTSettings() {
       }, 500);
       return () => clearTimeout(timer);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchProvider, watchEndpoint, fetchModels]);
 
   const handleTest = async () => {
@@ -222,18 +201,14 @@ export function STTSettings() {
     return () => clearTimeout(timer);
   }, [isDirty, isValid, getValues, updateSettings]);
 
-  const canTestBuiltin =
-    watchEnabled && watchProvider === "builtin" && isWebSpeechAvailable;
-  const canTestExternal =
-    watchEnabled && watchProvider === "external" && watchEndpoint;
+  const canTestBuiltin = watchEnabled && watchProvider === "builtin" && isWebSpeechAvailable;
+  const canTestExternal = watchEnabled && watchProvider === "external" && watchEndpoint;
   const canTest = canTestBuiltin || canTestExternal;
 
   return (
     <div className="bg-card border border-border rounded-lg p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-foreground">
-          Speech-to-Text
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground">Speech-to-Text</h2>
         <div className="flex items-center gap-2 text-sm">
           {saveStatus === "saved" && (
             <>
@@ -259,15 +234,10 @@ export function STTSettings() {
               <FormItem className="flex flex-row items-center justify-between rounded-lg border border-border p-4">
                 <div className="space-y-0.5">
                   <FormLabel className="text-base">Enable STT</FormLabel>
-                  <FormDescription>
-                    Allow speech-to-text input for voice messages
-                  </FormDescription>
+                  <FormDescription>Allow speech-to-text input for voice messages</FormDescription>
                 </div>
                 <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
                 </FormControl>
               </FormItem>
             )}
@@ -325,8 +295,8 @@ export function STTSettings() {
                           />
                         </FormControl>
                         <FormDescription>
-                          Base URL for the Whisper-compatible API (e.g., OpenAI,
-                          local Whisper server)
+                          Base URL for the Whisper-compatible API (e.g., OpenAI, local Whisper
+                          server)
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -361,8 +331,7 @@ export function STTSettings() {
                           </div>
                         </FormControl>
                         <FormDescription>
-                          Your API key for the speech-to-text service (optional
-                          for some servers)
+                          Your API key for the speech-to-text service (optional for some servers)
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -431,9 +400,7 @@ export function STTSettings() {
                           allowCustomValue={false}
                         />
                       </FormControl>
-                      <FormDescription>
-                        Select the language for speech recognition
-                      </FormDescription>
+                      <FormDescription>Select the language for speech recognition</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -460,43 +427,33 @@ export function STTSettings() {
                   {(isTesting || isProcessing) && (
                     <div className="mt-2 p-2 bg-muted rounded max-h-24 overflow-y-auto">
                       <p className="text-sm">
-                        {testTranscript ||
-                          (isProcessing ? "Processing..." : "Listening...")}
+                        {testTranscript || (isProcessing ? "Processing..." : "Listening...")}
                       </p>
                       {isRecording && (
                         <div className="flex items-center gap-1 mt-1">
                           <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                          <span className="text-xs text-muted-foreground">
-                            Recording...
-                          </span>
+                          <span className="text-xs text-muted-foreground">Recording...</span>
                         </div>
                       )}
                       {isProcessing && !isRecording && (
                         <div className="flex items-center gap-1 mt-1">
                           <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                          <span className="text-xs text-muted-foreground">
-                            Transcribing...
-                          </span>
+                          <span className="text-xs text-muted-foreground">Transcribing...</span>
                         </div>
                       )}
                     </div>
                   )}
-                  {!isTesting &&
-                    !isProcessing &&
-                    testResult === "success" &&
-                    testTranscript && (
-                      <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded max-h-24 overflow-y-auto">
-                        <div className="flex items-center gap-1 mb-1">
-                          <CheckCircle2 className="h-3 w-3 text-green-600 dark:text-green-400" />
-                          <span className="text-xs font-medium text-green-700 dark:text-green-300">
-                            Test successful
-                          </span>
-                        </div>
-                        <p className="text-sm text-green-800 dark:text-green-200">
-                          {testTranscript}
-                        </p>
+                  {!isTesting && !isProcessing && testResult === "success" && testTranscript && (
+                    <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded max-h-24 overflow-y-auto">
+                      <div className="flex items-center gap-1 mb-1">
+                        <CheckCircle2 className="h-3 w-3 text-green-600 dark:text-green-400" />
+                        <span className="text-xs font-medium text-green-700 dark:text-green-300">
+                          Test successful
+                        </span>
                       </div>
-                    )}
+                      <p className="text-sm text-green-800 dark:text-green-200">{testTranscript}</p>
+                    </div>
+                  )}
                   {!isTesting && !isProcessing && testResult === "failed" && (
                     <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded">
                       <div className="flex items-center gap-1">

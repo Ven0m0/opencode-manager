@@ -1,13 +1,13 @@
-import type { PlanningState } from '../types'
+import type { PlanningState } from "../types";
 
 interface PromptResponsePart {
-  type: string
-  text?: string
+  type: string;
+  text?: string;
 }
 
 interface SessionMessage {
-  info: { role: string }
-  parts: PromptResponsePart[]
+  info: { role: string };
+  parts: PromptResponsePart[];
 }
 
 export function buildCustomCompactionPrompt(): string {
@@ -43,122 +43,126 @@ Preserve everything needed for seamless continuation.
 ## Rules
 - Use specific file paths.
 - State what tools returned, not just that they were called
-- Prefer completeness over brevity - this is the agent's entire working memory`
+- Prefer completeness over brevity - this is the agent's entire working memory`;
 }
 
 export function formatPlanningState(planningState: PlanningState | null): string | null {
-  if (!planningState) return null
+  if (!planningState) return null;
 
-  const sections: string[] = []
+  const sections: string[] = [];
 
   if (planningState.objective) {
-    sections.push(`**Objective:** ${planningState.objective}`)
+    sections.push(`**Objective:** ${planningState.objective}`);
   }
 
   if (planningState.current) {
-    sections.push(`**Current:** ${planningState.current}`)
+    sections.push(`**Current:** ${planningState.current}`);
   }
 
   if (planningState.next) {
-    sections.push(`**Next:** ${planningState.next}`)
+    sections.push(`**Next:** ${planningState.next}`);
   }
 
   if (planningState.phases && planningState.phases.length > 0) {
-    sections.push('\n### Phases:')
+    sections.push("\n### Phases:");
     for (const phase of planningState.phases) {
-      const statusIcon = phase.status === 'completed' ? '[x]' : phase.status === 'in_progress' ? '[~]' : '[ ]'
-      const notes = phase.notes ? ` - ${phase.notes}` : ''
-      sections.push(`- ${statusIcon} ${phase.title}${notes}`)
+      const statusIcon =
+        phase.status === "completed" ? "[x]" : phase.status === "in_progress" ? "[~]" : "[ ]";
+      const notes = phase.notes ? ` - ${phase.notes}` : "";
+      sections.push(`- ${statusIcon} ${phase.title}${notes}`);
     }
   }
 
   if (planningState.findings && planningState.findings.length > 0) {
-    sections.push('\n### Key Findings:')
+    sections.push("\n### Key Findings:");
     for (const finding of planningState.findings) {
-      sections.push(`- ${finding}`)
+      sections.push(`- ${finding}`);
     }
   }
 
   if (planningState.errors && planningState.errors.length > 0) {
-    sections.push('\n### Errors to Avoid:')
+    sections.push("\n### Errors to Avoid:");
     for (const error of planningState.errors) {
-      sections.push(`- ${error}`)
+      sections.push(`- ${error}`);
     }
   }
 
-  return sections.join('\n')
+  return sections.join("\n");
 }
 
 export function formatCompactionDiagnostics(stats: {
-  planningPhases: number
-  conventions: number
-  decisions: number
-  tokensInjected: number
+  planningPhases: number;
+  conventions: number;
+  decisions: number;
+  tokensInjected: number;
 }): string {
-  const parts: string[] = []
+  const parts: string[] = [];
 
   if (stats.planningPhases > 0) {
-    parts.push(`${stats.planningPhases} planning phase${stats.planningPhases !== 1 ? 's' : ''}`)
+    parts.push(`${stats.planningPhases} planning phase${stats.planningPhases !== 1 ? "s" : ""}`);
   }
 
   if (stats.conventions > 0) {
-    parts.push(`${stats.conventions} convention${stats.conventions !== 1 ? 's' : ''}`)
+    parts.push(`${stats.conventions} convention${stats.conventions !== 1 ? "s" : ""}`);
   }
 
   if (stats.decisions > 0) {
-    parts.push(`${stats.decisions} decision${stats.decisions !== 1 ? 's' : ''}`)
+    parts.push(`${stats.decisions} decision${stats.decisions !== 1 ? "s" : ""}`);
   }
 
-  if (parts.length === 0) return ''
+  if (parts.length === 0) return "";
 
-  return `> **Compaction preserved:** ${parts.join(', ')} (~${stats.tokensInjected} tokens injected)`
+  return `> **Compaction preserved:** ${parts.join(", ")} (~${stats.tokensInjected} tokens injected)`;
 }
 
 export function extractCompactionSummary(messages: SessionMessage[]): string | null {
-  const reversed = [...messages].reverse()
+  const reversed = [...messages].reverse();
   for (const msg of reversed) {
-    if (msg.info.role !== 'assistant') continue
+    if (msg.info.role !== "assistant") continue;
     const textParts = msg.parts
-      .filter((p): p is PromptResponsePart & { text: string } => p.type === 'text' && typeof p.text === 'string')
-      .map(p => p.text)
-    if (textParts.length > 0) return textParts.join('\n')
+      .filter(
+        (p): p is PromptResponsePart & { text: string } =>
+          p.type === "text" && typeof p.text === "string",
+      )
+      .map((p) => p.text);
+    if (textParts.length > 0) return textParts.join("\n");
   }
-  return null
+  return null;
 }
 
 export function estimateTokens(text: string): number {
-  return Math.ceil(text.length / 4)
+  return Math.ceil(text.length / 4);
 }
 
 export function trimToTokenBudget(
   content: string,
   maxTokens: number,
-  priority: 'high' | 'medium' | 'low'
+  priority: "high" | "medium" | "low",
 ): string {
-  const maxChars = maxTokens * 4
-  if (content.length <= maxChars) return content
+  const maxChars = maxTokens * 4;
+  if (content.length <= maxChars) return content;
 
-  if (priority === 'low') {
-    return content.slice(0, maxChars) + '...'
+  if (priority === "low") {
+    return content.slice(0, maxChars) + "...";
   }
 
-  const lines = content.split('\n')
-  const trimmed: string[] = []
+  const lines = content.split("\n");
+  const trimmed: string[] = [];
 
-  let currentChars = 0
-  const skipFromEnd = priority === 'medium' ? Math.floor(lines.length * 0.2) : 0
+  let currentChars = 0;
+  const skipFromEnd = priority === "medium" ? Math.floor(lines.length * 0.2) : 0;
 
-  const linesToUse = skipFromEnd > 0 ? lines.slice(0, -skipFromEnd) : lines
+  const linesToUse = skipFromEnd > 0 ? lines.slice(0, -skipFromEnd) : lines;
 
   for (const line of linesToUse) {
-    if (currentChars + line.length + 1 > maxChars) break
-    trimmed.push(line)
-    currentChars += line.length + 1
+    if (currentChars + line.length + 1 > maxChars) break;
+    trimmed.push(line);
+    currentChars += line.length + 1;
   }
 
   if (trimmed.length < linesToUse.length) {
-    trimmed.push('...')
+    trimmed.push("...");
   }
 
-  return trimmed.join('\n')
+  return trimmed.join("\n");
 }

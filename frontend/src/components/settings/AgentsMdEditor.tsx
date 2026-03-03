@@ -38,8 +38,7 @@ export function AgentsMdEditor() {
 
   const resetToDefaultMutation = useMutation({
     mutationFn: async () => {
-      const { content: defaultContent } =
-        await settingsApi.getDefaultAgentsMd();
+      const { content: defaultContent } = await settingsApi.getDefaultAgentsMd();
       await settingsApi.updateAgentsMd(defaultContent);
       return defaultContent;
     },
@@ -76,11 +75,7 @@ export function AgentsMdEditor() {
   }
 
   if (error) {
-    return (
-      <div className="text-center py-8 text-red-500">
-        Failed to load AGENTS.md
-      </div>
-    );
+    return <div className="text-center py-8 text-red-500">Failed to load AGENTS.md</div>;
   }
 
   return (
@@ -88,8 +83,8 @@ export function AgentsMdEditor() {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-muted-foreground">
-            Global instructions for AI agents. This file is merged with
-            repository-specific AGENTS.md files.
+            Global instructions for AI agents. This file is merged with repository-specific
+            AGENTS.md files.
           </p>
         </div>
         <div className="flex gap-2">
@@ -97,9 +92,7 @@ export function AgentsMdEditor() {
             variant="outline"
             size="sm"
             onClick={handleResetToDefault}
-            disabled={
-              updateMutation.isPending || resetToDefaultMutation.isPending
-            }
+            disabled={updateMutation.isPending || resetToDefaultMutation.isPending}
           >
             {resetToDefaultMutation.isPending ? (
               <Loader2 className="h-4 w-4 mr-1 animate-spin" />
@@ -111,11 +104,7 @@ export function AgentsMdEditor() {
           <Button
             size="sm"
             onClick={handleSave}
-            disabled={
-              !hasChanges ||
-              updateMutation.isPending ||
-              resetToDefaultMutation.isPending
-            }
+            disabled={!hasChanges || updateMutation.isPending || resetToDefaultMutation.isPending}
           >
             {updateMutation.isPending ? (
               <Loader2 className="h-4 w-4 mr-1 animate-spin" />
@@ -134,9 +123,7 @@ export function AgentsMdEditor() {
         placeholder="# Agent Instructions&#10;&#10;Add global instructions for AI agents here..."
       />
 
-      {hasChanges && (
-        <p className="text-xs text-amber-500">You have unsaved changes</p>
-      )}
+      {hasChanges && <p className="text-xs text-amber-500">You have unsaved changes</p>}
     </div>
   );
 }

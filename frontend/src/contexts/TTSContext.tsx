@@ -1,17 +1,8 @@
-import {
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { API_BASE_URL } from "@/config";
 import { useSettings } from "@/hooks/useSettings";
 import { sanitizeForTTS } from "@/lib/utils";
-import {
-  getWebSpeechSynthesizer,
-  isWebSpeechSupported,
-} from "@/lib/webSpeechSynthesizer";
+import { getWebSpeechSynthesizer, isWebSpeechSupported } from "@/lib/webSpeechSynthesizer";
 import { type TTSConfig, TTSContext, type TTSState } from "./tts-context";
 
 export {
@@ -25,9 +16,7 @@ const SENTENCE_REGEX = /(?<=[.!?])\s+/;
 const SENTENCES_PER_CHUNK = 2;
 
 function splitIntoChunks(text: string): string[] {
-  const sentences = text
-    .split(SENTENCE_REGEX)
-    .filter((s) => s.trim().length > 0);
+  const sentences = text.split(SENTENCE_REGEX).filter((s) => s.trim().length > 0);
   if (sentences.length === 0) return [text];
 
   const chunks: string[] = [];
@@ -59,9 +48,7 @@ export function TTSProvider({ children }: TTSProviderProps) {
   const fetchingIndexRef = useRef<number>(-1);
 
   // Web Speech API reference
-  const webSpeechSynthRef = useRef<ReturnType<
-    typeof getWebSpeechSynthesizer
-  > | null>(null);
+  const webSpeechSynthRef = useRef<ReturnType<typeof getWebSpeechSynthesizer> | null>(null);
 
   const ttsConfig = preferences?.tts;
   const isBuiltin = ttsConfig?.provider === "builtin";
@@ -147,10 +134,8 @@ export function TTSProvider({ children }: TTSProviderProps) {
             errorMessage = errorData.error || errorData.details || errorMessage;
           } catch {
             if (response.status === 401) errorMessage = "Invalid API key";
-            else if (response.status === 429)
-              errorMessage = "Rate limit exceeded";
-            else if (response.status >= 500)
-              errorMessage = "Service unavailable";
+            else if (response.status === 429) errorMessage = "Rate limit exceeded";
+            else if (response.status >= 500) errorMessage = "Service unavailable";
           }
           throw new Error(errorMessage);
         }

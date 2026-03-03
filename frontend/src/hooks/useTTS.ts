@@ -1,9 +1,5 @@
 import { useContext } from "react";
-import {
-  TTSContext,
-  type TTSContextValue,
-  type TTSState,
-} from "@/contexts/tts-context";
+import { TTSContext, type TTSContextValue, type TTSState } from "@/contexts/tts-context";
 
 export type { TTSState };
 

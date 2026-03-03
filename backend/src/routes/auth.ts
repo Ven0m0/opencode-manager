@@ -31,29 +31,26 @@ const isAdminConfigured = (): boolean => {
   return !!(ENV.AUTH.ADMIN_EMAIL && ENV.AUTH.ADMIN_PASSWORD);
 };
 
-export async function syncAdminFromEnv(
-  auth: AuthInstance,
-  db: Database,
-): Promise<void> {
+export async function syncAdminFromEnv(auth: AuthInstance, db: Database): Promise<void> {
   if (!isAdminConfigured()) return;
 
   const adminEmail = ENV.AUTH.ADMIN_EMAIL!;
   const adminPassword = ENV.AUTH.ADMIN_PASSWORD!;
 
-  const existingUser = db
-    .prepare('SELECT id, email FROM "user" WHERE email = ?')
-    .get(adminEmail) as { id: string; email: string } | undefined;
+  const existingUser = db.prepare('SELECT id, email FROM "user" WHERE email = ?').get(adminEmail) as
+    | { id: string; email: string }
+    | undefined;
 
   if (existingUser) {
     if (ENV.AUTH.ADMIN_PASSWORD_RESET) {
       const hashedPassword = await hashPassword(adminPassword);
-      db.prepare(
-        'UPDATE "account" SET password = ? WHERE "userId" = ? AND "providerId" = ?',
-      ).run(hashedPassword, existingUser.id, "credential");
-      logger.info(`Admin password reset from environment for ${adminEmail}`);
-      logger.warn(
-        "Remove ADMIN_PASSWORD_RESET=true from environment after password reset",
+      db.prepare('UPDATE "account" SET password = ? WHERE "userId" = ? AND "providerId" = ?').run(
+        hashedPassword,
+        existingUser.id,
+        "credential",
       );
+      logger.info(`Admin password reset from environment for ${adminEmail}`);
+      logger.warn("Remove ADMIN_PASSWORD_RESET=true from environment after password reset");
     }
     return;
   }
@@ -90,9 +87,7 @@ export function createAuthInfoRoutes(auth: AuthInstance, db: Database) {
 
     enabledProviders.push("passkey");
 
-    const hasUsers = db
-      .prepare('SELECT COUNT(*) as count FROM "user"')
-      .get() as { count: number };
+    const hasUsers = db.prepare('SELECT COUNT(*) as count FROM "user"').get() as { count: number };
     const adminConfigured = isAdminConfigured();
 
     return c.json({

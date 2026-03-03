@@ -1,19 +1,16 @@
 import type { QueryClient } from "@tanstack/react-query";
 
 export function invalidateConfigCaches(queryClient: QueryClient) {
-  queryClient.invalidateQueries({ queryKey: ['opencode', 'config'] })
-  queryClient.invalidateQueries({ queryKey: ['opencode', 'agents'] })
-  queryClient.invalidateQueries({ queryKey: ['opencode-config'] })
-  queryClient.invalidateQueries({ queryKey: ['health'] })
-  queryClient.invalidateQueries({ queryKey: ['mcp-status'] })
-  queryClient.invalidateQueries({ queryKey: ['providers'] })
-  queryClient.invalidateQueries({ queryKey: ['opencode', 'providers'] })
+  queryClient.invalidateQueries({ queryKey: ["opencode", "config"] });
+  queryClient.invalidateQueries({ queryKey: ["opencode", "agents"] });
+  queryClient.invalidateQueries({ queryKey: ["opencode-config"] });
+  queryClient.invalidateQueries({ queryKey: ["health"] });
+  queryClient.invalidateQueries({ queryKey: ["mcp-status"] });
+  queryClient.invalidateQueries({ queryKey: ["providers"] });
+  queryClient.invalidateQueries({ queryKey: ["opencode", "providers"] });
 }
 
-export function invalidateSettingsCaches(
-  queryClient: QueryClient,
-  userId = "default",
-) {
+export function invalidateSettingsCaches(queryClient: QueryClient, userId = "default") {
   queryClient.invalidateQueries({ queryKey: ["settings", userId] });
   invalidateConfigCaches(queryClient);
 }
@@ -28,10 +25,7 @@ export function invalidateSessionCaches(queryClient: QueryClient) {
   });
 }
 
-export function invalidateAllConfigRelatedCaches(
-  queryClient: QueryClient,
-  userId = "default",
-) {
+export function invalidateAllConfigRelatedCaches(queryClient: QueryClient, userId = "default") {
   invalidateSettingsCaches(queryClient, userId);
   invalidateSessionCaches(queryClient);
 }

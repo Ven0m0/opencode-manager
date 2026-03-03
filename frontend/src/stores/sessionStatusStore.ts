@@ -60,12 +60,8 @@ export const useSessionStatus = create<SessionStatusStore>((set, get) => ({
   },
 }));
 
-export const useSessionStatusForSession = (
-  sessionID: string | undefined,
-): SessionStatusType => {
+export const useSessionStatusForSession = (sessionID: string | undefined): SessionStatusType => {
   return useSessionStatus((state) =>
-    sessionID
-      ? (state.statuses.get(sessionID) ?? DEFAULT_STATUS)
-      : DEFAULT_STATUS,
+    sessionID ? (state.statuses.get(sessionID) ?? DEFAULT_STATUS) : DEFAULT_STATUS,
   );
 };

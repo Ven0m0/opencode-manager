@@ -16,9 +16,7 @@ export function PatchPart({ part, onFileClick }: PatchPartProps) {
   const [expanded, setExpanded] = useState(false);
 
   const hasMoreFiles = part.files.length > INITIAL_FILES_SHOWN;
-  const displayedFiles = expanded
-    ? part.files
-    : part.files.slice(0, INITIAL_FILES_SHOWN);
+  const displayedFiles = expanded ? part.files : part.files.slice(0, INITIAL_FILES_SHOWN);
   const hiddenCount = part.files.length - INITIAL_FILES_SHOWN;
 
   return (
@@ -32,9 +30,7 @@ export function PatchPart({ part, onFileClick }: PatchPartProps) {
           {part.files.length !== 1 ? "s" : ""})
         </span>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-muted-foreground text-xs font-mono">
-            {part.hash.slice(0, 8)}
-          </span>
+          <span className="text-muted-foreground text-xs font-mono">{part.hash.slice(0, 8)}</span>
           {expanded ? (
             <ChevronUp className="w-4 h-4 text-muted-foreground" />
           ) : (

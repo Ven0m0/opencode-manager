@@ -57,8 +57,8 @@ export function FileSuggestions({
           key={file}
           onMouseDown={(e) => e.preventDefault()}
           onTouchEnd={(e) => {
-            e.preventDefault()
-            onSelect(file)
+            e.preventDefault();
+            onSelect(file);
           }}
           onClick={() => onSelect(file)}
           className={`w-full px-3 py-2 text-left transition-colors ${
@@ -67,9 +67,7 @@ export function FileSuggestions({
               : "hover:bg-muted text-foreground"
           }`}
         >
-          <div className="font-mono text-sm font-medium">
-            {getFilename(file)}
-          </div>
+          <div className="font-mono text-sm font-medium">{getFilename(file)}</div>
           <div className="text-xs opacity-70 mt-0.5">{getDirectory(file)}</div>
         </button>
       ))}

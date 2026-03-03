@@ -42,9 +42,7 @@ export function createFileRoutes() {
         const archiveStream = archiveService.getArchiveStream(archivePath);
         const dirName = userPath.split("/").pop() || "download";
 
-        logger.info(
-          `ZIP archive created: ${archivePath} (${archiveSize} bytes)`,
-        );
+        logger.info(`ZIP archive created: ${archivePath} (${archiveSize} bytes)`);
 
         archiveStream.on("end", () => {
           archiveService.deleteArchive(archivePath);
@@ -72,10 +70,7 @@ export function createFileRoutes() {
     }
 
     if (path.endsWith("/ignored-paths")) {
-      const userPath = path.replace(
-        /\/api\/files\/(.+?)\/ignored-paths$/,
-        "$1",
-      );
+      const userPath = path.replace(/\/api\/files\/(.+?)\/ignored-paths$/, "$1");
 
       if (!userPath || userPath === "/ignored-paths") {
         return c.json({ error: "No path provided" }, 400);
@@ -113,11 +108,7 @@ export function createFileRoutes() {
           return c.json({ error: "Invalid line range parameters" }, 400);
         }
 
-        const result = await fileService.getFileRange(
-          userPath,
-          startLine,
-          endLine,
-        );
+        const result = await fileService.getFileRange(userPath, startLine, endLine);
         return c.json(result);
       }
 
@@ -134,9 +125,7 @@ export function createFileRoutes() {
       }
 
       if (download && !result.isDirectory) {
-        const content = result.content
-          ? Buffer.from(result.content, "base64")
-          : Buffer.alloc(0);
+        const content = result.content ? Buffer.from(result.content, "base64") : Buffer.alloc(0);
         return new Response(content, {
           headers: {
             "Content-Type": result.mimeType || "application/octet-stream",

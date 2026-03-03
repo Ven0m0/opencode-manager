@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { FileInfo, ImageAttachment } from "@/api/types";
 import {
   detectMentionTrigger,
   filterAgentsByQuery,
@@ -6,7 +7,6 @@ import {
   getFilename,
   parsePromptToParts,
 } from "./promptParser";
-import type { FileInfo, ImageAttachment } from "@/api/types";
 
 describe("promptParser", () => {
   describe("detectMentionTrigger", () => {
@@ -137,9 +137,7 @@ describe("promptParser", () => {
     });
 
     it("should return empty text part for empty input", () => {
-      expect(parsePromptToParts("", fileMap)).toEqual([
-        { type: "text", content: "" },
-      ]);
+      expect(parsePromptToParts("", fileMap)).toEqual([{ type: "text", content: "" }]);
     });
 
     it("should return only images if text is empty", () => {

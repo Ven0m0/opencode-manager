@@ -1,13 +1,19 @@
-import { useSettings } from '@/hooks/useSettings'
-import { useVersionCheck } from '@/hooks/useVersionCheck'
-import { Loader2 } from 'lucide-react'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
+import { Loader2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { useSettings } from "@/hooks/useSettings";
+import { useVersionCheck } from "@/hooks/useVersionCheck";
 
 export function GeneralSettings() {
-  const { preferences, isLoading, updateSettings, isUpdating } = useSettings()
-  const { data: versionInfo, isLoading: isVersionLoading } = useVersionCheck()
+  const { preferences, isLoading, updateSettings, isUpdating } = useSettings();
+  const { data: versionInfo, isLoading: isVersionLoading } = useVersionCheck();
 
   if (isLoading) {
     return (
@@ -19,9 +25,7 @@ export function GeneralSettings() {
 
   return (
     <div className="bg-card border border-border rounded-lg p-6">
-      <h2 className="text-lg font-semibold text-foreground mb-6">
-        General Preferences
-      </h2>
+      <h2 className="text-lg font-semibold text-foreground mb-6">General Preferences</h2>
 
       <div className="space-y-6">
         <div className="flex items-center justify-center gap-3 py-3">
@@ -35,7 +39,7 @@ export function GeneralSettings() {
               </span>
               {versionInfo.updateAvailable && versionInfo.latestVersion && (
                 <a
-                  href={versionInfo.releaseUrl ?? ''}
+                  href={versionInfo.releaseUrl ?? ""}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs font-medium text-green-500 hover:text-green-400 transition-colors"
@@ -66,9 +70,7 @@ export function GeneralSettings() {
               <SelectItem value="system">System</SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-sm text-muted-foreground">
-            Choose your preferred color scheme
-          </p>
+          <p className="text-sm text-muted-foreground">Choose your preferred color scheme</p>
         </div>
 
         <div className="flex flex-row items-center justify-between rounded-lg border border-border p-4">
@@ -83,9 +85,7 @@ export function GeneralSettings() {
           <Switch
             id="autoScroll"
             checked={preferences?.autoScroll ?? true}
-            onCheckedChange={(checked) =>
-              updateSettings({ autoScroll: checked })
-            }
+            onCheckedChange={(checked) => updateSettings({ autoScroll: checked })}
           />
         </div>
 
@@ -101,9 +101,7 @@ export function GeneralSettings() {
           <Switch
             id="showReasoning"
             checked={preferences?.showReasoning ?? false}
-            onCheckedChange={(checked) =>
-              updateSettings({ showReasoning: checked })
-            }
+            onCheckedChange={(checked) => updateSettings({ showReasoning: checked })}
           />
         </div>
 
@@ -119,9 +117,7 @@ export function GeneralSettings() {
           <Switch
             id="expandToolCalls"
             checked={preferences?.expandToolCalls ?? false}
-            onCheckedChange={(checked) =>
-              updateSettings({ expandToolCalls: checked })
-            }
+            onCheckedChange={(checked) => updateSettings({ expandToolCalls: checked })}
           />
         </div>
 
@@ -137,13 +133,9 @@ export function GeneralSettings() {
           <Switch
             id="expandDiffs"
             checked={preferences?.expandDiffs ?? true}
-            onCheckedChange={(checked) =>
-              updateSettings({ expandDiffs: checked })
-            }
+            onCheckedChange={(checked) => updateSettings({ expandDiffs: checked })}
           />
         </div>
-
-
 
         {isUpdating && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">

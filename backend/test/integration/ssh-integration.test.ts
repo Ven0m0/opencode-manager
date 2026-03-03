@@ -4,7 +4,7 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock('@opencode-manager/shared/config/env', () => ({
+vi.mock("@opencode-manager/shared/config/env", () => ({
   ENV: {
     AUTH: {
       SECRET: "test-secret-for-encryption-key-32c",
@@ -16,9 +16,9 @@ vi.mock('@opencode-manager/shared/config/env', () => ({
       PORT: 5003,
     },
   },
-  getWorkspacePath: vi.fn(() => '/tmp/test-workspace'),
-  getReposPath: vi.fn(() => '/tmp/test-repos')
-}))
+  getWorkspacePath: vi.fn(() => "/tmp/test-workspace"),
+  getReposPath: vi.fn(() => "/tmp/test-repos"),
+}));
 
 vi.mock("../../src/utils/logger", () => ({
   logger: {
@@ -50,14 +50,14 @@ import {
   writeTemporarySSHKey,
 } from "../../src/utils/ssh-key-manager";
 
-describe('SSH Integration Tests', () => {
-   beforeEach(async () => {
-     vi.clearAllMocks()
+describe("SSH Integration Tests", () => {
+  beforeEach(async () => {
+    vi.clearAllMocks();
 
-     const uniqueId = crypto.randomUUID()
-     testWorkspacePath = `/tmp/test-workspace-${uniqueId}`
+    const uniqueId = crypto.randomUUID();
+    testWorkspacePath = `/tmp/test-workspace-${uniqueId}`;
 
-     mockPrepare.mockReturnValue({
+    mockPrepare.mockReturnValue({
       run: vi.fn(),
       get: vi.fn().mockReturnValue(null),
       all: vi.fn().mockReturnValue([]),
@@ -73,9 +73,7 @@ describe('SSH Integration Tests', () => {
 
   afterEach(async () => {
     vi.clearAllMocks();
-    await fs
-      .rm(testWorkspacePath, { recursive: true, force: true })
-      .catch(() => {});
+    await fs.rm(testWorkspacePath, { recursive: true, force: true }).catch(() => {});
   });
 
   describe("Full SSH Authentication Flow", () => {
@@ -100,10 +98,7 @@ describe('SSH Integration Tests', () => {
       const validKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDRHw== test@host";
       const passphrase = "my-secret-passphrase";
 
-      const keyPath = await writeTemporarySSHKey(
-        validKey,
-        "integration-pass-test",
-      );
+      const keyPath = await writeTemporarySSHKey(validKey, "integration-pass-test");
 
       const sshResult = buildSSHCommand(keyPath, passphrase);
       expect(sshResult.command).toContain("sshpass -e");
@@ -174,17 +169,11 @@ describe('SSH Integration Tests', () => {
     it("should include known_hosts path when provided", async () => {
       const validKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDRHw== test@host";
       const keyPath = await writeTemporarySSHKey(validKey, "known-hosts-test");
-      const knownHostsPath = path.join(
-        testWorkspacePath,
-        "config",
-        "known_hosts",
-      );
+      const knownHostsPath = path.join(testWorkspacePath, "config", "known_hosts");
 
       const sshResult = buildSSHCommand(keyPath, undefined, knownHostsPath);
 
-      expect(sshResult.command).toContain(
-        `-o UserKnownHostsFile="${knownHostsPath}"`,
-      );
+      expect(sshResult.command).toContain(`-o UserKnownHostsFile="${knownHostsPath}"`);
 
       await cleanupSSHKey(keyPath);
     });

@@ -1,12 +1,7 @@
 import { Loader2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -16,11 +11,7 @@ import { parseJsonc } from "@/lib/jsonc";
 interface CreateConfigDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreate: (
-    name: string,
-    content: string,
-    isDefault: boolean,
-  ) => Promise<void>;
+  onCreate: (name: string, content: string, isDefault: boolean) => Promise<void>;
   isUpdating: boolean;
 }
 
@@ -118,7 +109,7 @@ export function CreateConfigDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl max-h-[90vh] sm:max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[90vh] sm:max-h-[85vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>Create OpenCode Config</DialogTitle>
         </DialogHeader>
@@ -163,19 +154,13 @@ export function CreateConfigDialog({
             {error && (
               <p className="text-sm text-red-500 mt-2">
                 {error}
-                {errorLine && (
-                  <span className="ml-2 text-xs">(Line {errorLine})</span>
-                )}
+                {errorLine && <span className="ml-2 text-xs">(Line {errorLine})</span>}
               </p>
             )}
           </div>
 
           <div className="flex items-center space-x-2">
-            <Switch
-              id="config-default"
-              checked={isDefault}
-              onCheckedChange={setIsDefault}
-            />
+            <Switch id="config-default" checked={isDefault} onCheckedChange={setIsDefault} />
             <Label htmlFor="config-default">Set as default configuration</Label>
           </div>
         </div>

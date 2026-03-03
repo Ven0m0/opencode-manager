@@ -4,10 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { notificationsApi } from "@/api/notifications";
 import type { NotificationPreferences } from "@/api/types/settings";
 import { useSettings } from "@/hooks/useSettings";
-import {
-  getServiceWorkerRegistration,
-  urlBase64ToUint8Array,
-} from "@/lib/serviceWorker";
+import { getServiceWorkerRegistration, urlBase64ToUint8Array } from "@/lib/serviceWorker";
 
 type PermissionState = NotificationPermission | "unsupported";
 
@@ -19,8 +16,7 @@ function getPermissionState(): PermissionState {
 export function useNotifications() {
   const queryClient = useQueryClient();
   const { preferences, updateSettings } = useSettings();
-  const [permission, setPermission] =
-    useState<PermissionState>(getPermissionState);
+  const [permission, setPermission] = useState<PermissionState>(getPermissionState);
 
   const notificationPrefs: NotificationPreferences =
     preferences?.notifications ?? DEFAULT_NOTIFICATION_PREFERENCES;
@@ -36,12 +32,11 @@ export function useNotifications() {
     retry: false,
   });
 
-  const { data: subscriptionsData, isLoading: isLoadingSubscriptions } =
-    useQuery({
-      queryKey: ["notifications", "subscriptions"],
-      queryFn: () => notificationsApi.getSubscriptions(),
-      enabled: notificationPrefs.enabled && permission === "granted",
-    });
+  const { data: subscriptionsData, isLoading: isLoadingSubscriptions } = useQuery({
+    queryKey: ["notifications", "subscriptions"],
+    queryFn: () => notificationsApi.getSubscriptions(),
+    enabled: notificationPrefs.enabled && permission === "granted",
+  });
 
   const subscribeMutation = useMutation({
     mutationFn: async (deviceName?: string) => {
@@ -57,8 +52,7 @@ export function useNotifications() {
 
       const subscription = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidData.publicKey)
-          .buffer as ArrayBuffer,
+        applicationServerKey: urlBase64ToUint8Array(vapidData.publicKey).buffer as ArrayBuffer,
       });
 
       const json = subscription.toJSON();
@@ -102,21 +96,20 @@ export function useNotifications() {
     mutationFn: () => notificationsApi.sendTest(),
   });
 
-  const requestPermissionAndSubscribe =
-    useCallback(async (): Promise<boolean> => {
-      if (!("Notification" in window)) return false;
+  const requestPermissionAndSubscribe = useCallback(async (): Promise<boolean> => {
+    if (!("Notification" in window)) return false;
 
-      const result = await Notification.requestPermission();
-      setPermission(result);
+    const result = await Notification.requestPermission();
+    setPermission(result);
 
-      if (result !== "granted") return false;
+    if (result !== "granted") return false;
 
-      const reg = await getServiceWorkerRegistration();
-      if (reg) {
-        await subscribeMutation.mutateAsync(undefined);
-      }
-      return true;
-    }, [subscribeMutation]);
+    const reg = await getServiceWorkerRegistration();
+    if (reg) {
+      await subscribeMutation.mutateAsync(undefined);
+    }
+    return true;
+  }, [subscribeMutation]);
 
   const enable = useCallback(async () => {
     const granted = await requestPermissionAndSubscribe();

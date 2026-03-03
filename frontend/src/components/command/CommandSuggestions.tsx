@@ -67,27 +67,21 @@ export function CommandSuggestions({
             key={command.name}
             onMouseDown={(e) => e.preventDefault()}
             onTouchEnd={(e) => {
-              e.preventDefault()
-              onSelect(command)
+              e.preventDefault();
+              onSelect(command);
             }}
             onClick={() => onSelect(command)}
             className={`w-full px-3 py-2 text-left transition-colors flex items-center gap-2 ${
-              isSelected
-                ? "bg-primary text-primary-foreground"
-                : "hover:bg-muted text-foreground"
+              isSelected ? "bg-primary text-primary-foreground" : "hover:bg-muted text-foreground"
             }`}
           >
             <Command
               className={`h-4 w-4 flex-shrink-0 ${isSelected ? "opacity-90" : "opacity-70"}`}
             />
             <div className="flex-1 min-w-0">
-              <div className="font-mono text-sm font-medium truncate">
-                {displayName}
-              </div>
+              <div className="font-mono text-sm font-medium truncate">{displayName}</div>
               {command.description && (
-                <div className="text-xs opacity-70 mt-0.5 truncate">
-                  {command.description}
-                </div>
+                <div className="text-xs opacity-70 mt-0.5 truncate">{command.description}</div>
               )}
             </div>
           </button>

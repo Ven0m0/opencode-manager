@@ -50,9 +50,7 @@ export function useVirtualizedContent({
   overscan = 50,
   enabled = true,
 }: UseVirtualizedContentOptions): UseVirtualizedContentReturn {
-  const [editedLines, setEditedLines] = useState<Map<number, string>>(
-    new Map(),
-  );
+  const [editedLines, setEditedLines] = useState<Map<number, string>>(new Map());
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<Error | null>(null);
 
@@ -66,11 +64,7 @@ export function useVirtualizedContent({
   } = useInfiniteQuery({
     queryKey: ["file-range", filePath],
     queryFn: async ({ pageParam }) => {
-      const result = await fetchFileRange(
-        filePath,
-        pageParam,
-        pageParam + chunkSize,
-      );
+      const result = await fetchFileRange(filePath, pageParam, pageParam + chunkSize);
       return result;
     },
     initialPageParam: 0,
@@ -115,8 +109,7 @@ export function useVirtualizedContent({
     (scrollTop: number, viewportHeight: number, lineHeight: number) => {
       const start = Math.max(0, Math.floor(scrollTop / lineHeight) - overscan);
       const visibleCount = Math.ceil(viewportHeight / lineHeight);
-      const upperBound =
-        totalLines > 0 ? totalLines : start + visibleCount + overscan * 2;
+      const upperBound = totalLines > 0 ? totalLines : start + visibleCount + overscan * 2;
       const end = Math.min(upperBound, start + visibleCount + overscan * 2);
       return { start, end };
     },
@@ -149,24 +142,24 @@ export function useVirtualizedContent({
       content: string;
     }> = [];
 
-    let rangeStart = sortedLineNums[0]
-    let rangeLines: string[] = [editedLines.get(rangeStart) ?? '']
-    let lastLine = rangeStart
+    let rangeStart = sortedLineNums[0];
+    let rangeLines: string[] = [editedLines.get(rangeStart) ?? ""];
+    let lastLine = rangeStart;
 
     for (let i = 1; i < sortedLineNums.length; i++) {
       const lineNum = sortedLineNums[i];
       if (lineNum === lastLine + 1) {
-        rangeLines.push(editedLines.get(lineNum) ?? '')
-        lastLine = lineNum
+        rangeLines.push(editedLines.get(lineNum) ?? "");
+        lastLine = lineNum;
       } else {
         ranges.push({
           startLine: rangeStart,
           endLine: lastLine + 1,
-          content: rangeLines.join('\n'),
-        })
-        rangeStart = lineNum
-        rangeLines = [editedLines.get(lineNum) ?? '']
-        lastLine = lineNum
+          content: rangeLines.join("\n"),
+        });
+        rangeStart = lineNum;
+        rangeLines = [editedLines.get(lineNum) ?? ""];
+        lastLine = lineNum;
       }
     }
 
@@ -200,8 +193,7 @@ export function useVirtualizedContent({
         clearEdits();
       }
     } catch (err) {
-      const error =
-        err instanceof Error ? err : new Error("Failed to save edits");
+      const error = err instanceof Error ? err : new Error("Failed to save edits");
       setSaveError(error);
       throw error;
     } finally {
@@ -211,11 +203,7 @@ export function useVirtualizedContent({
 
   const prefetchAdjacent = useCallback(
     (_visibleStart: number, visibleEnd: number) => {
-      if (
-        visibleEnd >= loadedEndLine - chunkSize &&
-        hasNextPage &&
-        !isFetchingNextPage
-      ) {
+      if (visibleEnd >= loadedEndLine - chunkSize && hasNextPage && !isFetchingNextPage) {
         fetchNextPage();
       }
     },

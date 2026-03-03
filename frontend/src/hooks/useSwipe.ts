@@ -1,19 +1,19 @@
-import { useState, useRef, useCallback } from 'react'
+import { useCallback, useRef, useState } from "react";
 
 interface SwipeOptions {
-  threshold?: number
-  directionRatio?: number
-  enabled?: boolean
-  onSwipeStart?: () => void
-  onSwipeEnd?: () => void
+  threshold?: number;
+  directionRatio?: number;
+  enabled?: boolean;
+  onSwipeStart?: () => void;
+  onSwipeEnd?: () => void;
 }
 
 interface SwipeState {
-  startX: number
-  startY: number
-  currentX: number
-  isSwiping: boolean
-  directionLocked: 'horizontal' | 'vertical' | null
+  startX: number;
+  startY: number;
+  currentX: number;
+  isSwiping: boolean;
+  directionLocked: "horizontal" | "vertical" | null;
 }
 
 export function useSwipe(options: SwipeOptions = {}) {
@@ -23,7 +23,7 @@ export function useSwipe(options: SwipeOptions = {}) {
     enabled = true,
     onSwipeStart,
     onSwipeEnd,
-  } = options
+  } = options;
 
   const swipeRef = useRef<SwipeState>({
     startX: 0,
@@ -31,103 +31,109 @@ export function useSwipe(options: SwipeOptions = {}) {
     currentX: 0,
     isSwiping: false,
     directionLocked: null,
-  })
+  });
 
-  const [swipeOffset, setSwipeOffset] = useState(0)
-  const [isOpen, setIsOpen] = useState(false)
-  const isSwipingBackRef = useRef(false)
-  const isAnimatingRef = useRef(false)
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
+  const isSwipingBackRef = useRef(false);
+  const isAnimatingRef = useRef(false);
 
-  const handleTouchStart = useCallback((e: TouchEvent) => {
-    if (!enabled) return
+  const handleTouchStart = useCallback(
+    (e: TouchEvent) => {
+      if (!enabled) return;
 
-    const touch = e.touches[0]
-    swipeRef.current = {
-      startX: touch.clientX,
-      startY: touch.clientY,
-      currentX: touch.clientX,
-      isSwiping: false,
-      directionLocked: null,
-    }
-    isAnimatingRef.current = false
-  }, [enabled])
+      const touch = e.touches[0];
+      swipeRef.current = {
+        startX: touch.clientX,
+        startY: touch.clientY,
+        currentX: touch.clientX,
+        isSwiping: false,
+        directionLocked: null,
+      };
+      isAnimatingRef.current = false;
+    },
+    [enabled],
+  );
 
-  const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (!enabled) return
+  const handleTouchMove = useCallback(
+    (e: TouchEvent) => {
+      if (!enabled) return;
 
-    const state = swipeRef.current
-    const touch = e.touches[0]
-    const deltaX = state.startX - touch.clientX
-    const deltaY = touch.clientY - state.startY
-    const absDeltaX = Math.abs(deltaX)
-    const absDeltaY = Math.abs(deltaY)
+      const state = swipeRef.current;
+      const touch = e.touches[0];
+      const deltaX = state.startX - touch.clientX;
+      const deltaY = touch.clientY - state.startY;
+      const absDeltaX = Math.abs(deltaX);
+      const absDeltaY = Math.abs(deltaY);
 
-    if (!state.directionLocked && (absDeltaX > 10 || absDeltaY > 10)) {
-      if (absDeltaX > absDeltaY * directionRatio) {
-        state.directionLocked = 'horizontal'
-      } else {
-        state.directionLocked = 'vertical'
-      }
-    }
-
-    if (state.directionLocked === 'vertical') {
-      return
-    }
-
-    if (state.directionLocked === 'horizontal') {
-      if (!state.isSwiping) {
-        state.isSwiping = true
-        onSwipeStart?.()
+      if (!state.directionLocked && (absDeltaX > 10 || absDeltaY > 10)) {
+        if (absDeltaX > absDeltaY * directionRatio) {
+          state.directionLocked = "horizontal";
+        } else {
+          state.directionLocked = "vertical";
+        }
       }
 
-      e.preventDefault()
-
-      let newOffset: number
-      if (deltaX > 0) {
-        isSwipingBackRef.current = false
-        newOffset = Math.min(deltaX, threshold)
-      } else if (deltaX < 0 && isOpen) {
-        isSwipingBackRef.current = true
-        newOffset = Math.max(0, threshold + deltaX)
-      } else {
-        isSwipingBackRef.current = false
-        newOffset = 0
+      if (state.directionLocked === "vertical") {
+        return;
       }
 
-      state.currentX = touch.clientX
-      setSwipeOffset(newOffset)
-    }
-  }, [enabled, threshold, directionRatio, isOpen, onSwipeStart])
+      if (state.directionLocked === "horizontal") {
+        if (!state.isSwiping) {
+          state.isSwiping = true;
+          onSwipeStart?.();
+        }
+
+        e.preventDefault();
+
+        let newOffset: number;
+        if (deltaX > 0) {
+          isSwipingBackRef.current = false;
+          newOffset = Math.min(deltaX, threshold);
+        } else if (deltaX < 0 && isOpen) {
+          isSwipingBackRef.current = true;
+          newOffset = Math.max(0, threshold + deltaX);
+        } else {
+          isSwipingBackRef.current = false;
+          newOffset = 0;
+        }
+
+        state.currentX = touch.clientX;
+        setSwipeOffset(newOffset);
+      }
+    },
+    [enabled, threshold, directionRatio, isOpen, onSwipeStart],
+  );
 
   const handleTouchEnd = useCallback(() => {
-    if (!enabled) return
+    if (!enabled) return;
 
-    isAnimatingRef.current = true
-    onSwipeEnd?.()
+    isAnimatingRef.current = true;
+    onSwipeEnd?.();
 
-    const state = swipeRef.current
+    const state = swipeRef.current;
 
     if (swipeOffset > threshold / 2) {
-      setIsOpen(true)
-      setSwipeOffset(threshold)
+      setIsOpen(true);
+      setSwipeOffset(threshold);
     } else {
-      setIsOpen(false)
-      setSwipeOffset(0)
+      setIsOpen(false);
+      setSwipeOffset(0);
     }
 
-    state.startX = 0
-    state.startY = 0
-    state.currentX = 0
-    state.isSwiping = false
-    state.directionLocked = null
-  }, [enabled, threshold, swipeOffset, onSwipeEnd])
+    state.startX = 0;
+    state.startY = 0;
+    state.currentX = 0;
+    state.isSwiping = false;
+    state.directionLocked = null;
+  }, [enabled, threshold, swipeOffset, onSwipeEnd]);
 
   const handleTouchCancel = useCallback(() => {
-    if (!enabled) return
+    if (!enabled) return;
 
-    isAnimatingRef.current = true
-    setIsOpen(false)
-    setSwipeOffset(0)
+    isAnimatingRef.current = true;
+    setIsOpen(false);
+    setSwipeOffset(0);
 
     swipeRef.current = {
       startX: 0,
@@ -135,38 +141,41 @@ export function useSwipe(options: SwipeOptions = {}) {
       currentX: 0,
       isSwiping: false,
       directionLocked: null,
-    }
-  }, [enabled])
+    };
+  }, [enabled]);
 
-  const bind = useCallback((element: HTMLElement | null) => {
-    if (!element || !enabled) return
+  const bind = useCallback(
+    (element: HTMLElement | null) => {
+      if (!element || !enabled) return;
 
-    element.addEventListener('touchstart', handleTouchStart, { passive: true })
-    element.addEventListener('touchmove', handleTouchMove, { passive: false })
-    element.addEventListener('touchend', handleTouchEnd, { passive: true })
-    element.addEventListener('touchcancel', handleTouchCancel, { passive: true })
+      element.addEventListener("touchstart", handleTouchStart, { passive: true });
+      element.addEventListener("touchmove", handleTouchMove, { passive: false });
+      element.addEventListener("touchend", handleTouchEnd, { passive: true });
+      element.addEventListener("touchcancel", handleTouchCancel, { passive: true });
 
-    return () => {
-      element.removeEventListener('touchstart', handleTouchStart)
-      element.removeEventListener('touchmove', handleTouchMove)
-      element.removeEventListener('touchend', handleTouchEnd)
-      element.removeEventListener('touchcancel', handleTouchCancel)
-    }
-  }, [enabled, handleTouchStart, handleTouchMove, handleTouchEnd, handleTouchCancel])
+      return () => {
+        element.removeEventListener("touchstart", handleTouchStart);
+        element.removeEventListener("touchmove", handleTouchMove);
+        element.removeEventListener("touchend", handleTouchEnd);
+        element.removeEventListener("touchcancel", handleTouchCancel);
+      };
+    },
+    [enabled, handleTouchStart, handleTouchMove, handleTouchEnd, handleTouchCancel],
+  );
 
   const close = useCallback(() => {
-    isAnimatingRef.current = true
-    setIsOpen(false)
-    setSwipeOffset(0)
-  }, [])
+    isAnimatingRef.current = true;
+    setIsOpen(false);
+    setSwipeOffset(0);
+  }, []);
 
   const swipeStyles = {
     transform: swipeOffset > 0 ? `translateX(-${swipeOffset}px)` : undefined,
-    transition: isAnimatingRef.current ? 'transform 0.2s ease-out' : undefined,
-    touchAction: 'pan-y',
-  }
+    transition: isAnimatingRef.current ? "transform 0.2s ease-out" : undefined,
+    touchAction: "pan-y",
+  };
 
-  const isSwipingBack = isSwipingBackRef.current
+  const isSwipingBack = isSwipingBackRef.current;
 
   return {
     bind,
@@ -175,5 +184,5 @@ export function useSwipe(options: SwipeOptions = {}) {
     isSwipingBack,
     close,
     swipeStyles,
-  }
+  };
 }

@@ -1,8 +1,6 @@
 type SessionKeyedItem = { id: string; sessionID: string };
 type SessionKeyedState<T> = Record<string, T[]>;
-type StateSetter<T> = React.Dispatch<
-  React.SetStateAction<SessionKeyedState<T>>
->;
+type StateSetter<T> = React.Dispatch<React.SetStateAction<SessionKeyedState<T>>>;
 
 export function addToSessionKeyedState<T extends SessionKeyedItem>(
   setter: StateSetter<T>,

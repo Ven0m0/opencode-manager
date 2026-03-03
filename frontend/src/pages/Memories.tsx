@@ -1,39 +1,39 @@
-import { useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { getRepo } from '@/api/repos'
-import { useProjectSummary } from '@/hooks/useMemories'
-import { Header } from '@/components/ui/header'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
-import { Loader2, Plus, Brain } from 'lucide-react'
-import { getRepoDisplayName } from '@/lib/utils'
-import { MemoryList } from '@/components/memory/MemoryList'
-import { MemoryFormDialog } from '@/components/memory/MemoryFormDialog'
+import { useQuery } from "@tanstack/react-query";
+import { Brain, Loader2, Plus } from "lucide-react";
+import { useState } from "react";
+import { useParams } from "react-router-dom";
+import { getRepo } from "@/api/repos";
+import { MemoryFormDialog } from "@/components/memory/MemoryFormDialog";
+import { MemoryList } from "@/components/memory/MemoryList";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Header } from "@/components/ui/header";
+import { useProjectSummary } from "@/hooks/useMemories";
+import { getRepoDisplayName } from "@/lib/utils";
 
 export function Memories() {
-  const { id } = useParams<{ id: string }>()
-  const repoId = id ? Number(id) : undefined
-  const [createOpen, setCreateOpen] = useState(false)
+  const { id } = useParams<{ id: string }>();
+  const repoId = id ? Number(id) : undefined;
+  const [createOpen, setCreateOpen] = useState(false);
 
   const { data: repo, isLoading: repoLoading } = useQuery({
-    queryKey: ['repo', repoId],
+    queryKey: ["repo", repoId],
     queryFn: () => getRepo(repoId!),
     enabled: repoId !== undefined,
-  })
+  });
 
-  const { data: projectSummary, isLoading: projectSummaryLoading } = useProjectSummary(repoId)
+  const { data: projectSummary, isLoading: projectSummaryLoading } = useProjectSummary(repoId);
 
-  const projectId = projectSummary?.projectId ?? null
-  const stats = projectSummary?.stats ?? null
+  const projectId = projectSummary?.projectId ?? null;
+  const stats = projectSummary?.stats ?? null;
 
   if (repoLoading || projectSummaryLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   if (!repo) {
@@ -41,22 +41,24 @@ export function Memories() {
       <div className="flex items-center justify-center min-h-screen bg-background">
         <p className="text-muted-foreground">Repository not found</p>
       </div>
-    )
+    );
   }
 
   if (!projectId) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
-        <p className="text-muted-foreground">No project ID found - the repository may not have any commits yet</p>
+        <p className="text-muted-foreground">
+          No project ID found - the repository may not have any commits yet
+        </p>
       </div>
-    )
+    );
   }
 
   const scopeLabels: Record<string, string> = {
-    convention: 'Convention',
-    decision: 'Decision',
-    context: 'Context',
-  }
+    convention: "Convention",
+    decision: "Decision",
+    context: "Context",
+  };
 
   return (
     <div className="h-dvh max-h-dvh overflow-hidden bg-gradient-to-br from-background via-background to-background flex flex-col">
@@ -105,11 +107,7 @@ export function Memories() {
         <MemoryList projectId={projectId} showFilters={true} />
       </div>
 
-      <MemoryFormDialog
-        projectId={projectId}
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-      />
+      <MemoryFormDialog projectId={projectId} open={createOpen} onOpenChange={setCreateOpen} />
     </div>
-  )
+  );
 }

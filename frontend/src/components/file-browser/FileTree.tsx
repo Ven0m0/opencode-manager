@@ -112,11 +112,7 @@ function TreeNode({
 
   const getFileIcon = () => {
     if (file.isDirectory) {
-      return expanded ? (
-        <FolderOpen className="w-4 h-4" />
-      ) : (
-        <Folder className="w-4 h-4" />
-      );
+      return expanded ? <FolderOpen className="w-4 h-4" /> : <Folder className="w-4 h-4" />;
     }
 
     const ext = file.name.split(".").pop()?.toLowerCase();
@@ -166,18 +162,11 @@ function TreeNode({
               }
             }}
           >
-            {expanded ? (
-              <ChevronDown className="w-3 h-3" />
-            ) : (
-              <ChevronRight className="w-3 h-3" />
-            )}
+            {expanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
           </Button>
         )}
 
-        <div
-          className="flex items-center gap-1 flex-1 min-w-0"
-          onClick={handleClick}
-        >
+        <div className="flex items-center gap-1 flex-1 min-w-0" onClick={handleClick}>
           {getFileIcon()}
 
           {editing ? (
@@ -287,17 +276,13 @@ export const FileTree = memo(function FileTree({
           className="flex items-center gap-1 px-2 py-1 hover:bg-muted rounded cursor-pointer"
           onClick={handleGoUp}
         >
-          <span className="w-4 h-4 flex items-center justify-center text-sm">
-            ↩️
-          </span>
+          <span className="w-4 h-4 flex items-center justify-center text-sm">↩️</span>
           <span className="text-sm text-muted-foreground">..</span>
         </div>
       )}
 
       {files.length === 0 ? (
-        <div className="text-center text-muted-foreground py-8">
-          No files in this directory
-        </div>
+        <div className="text-center text-muted-foreground py-8">No files in this directory</div>
       ) : (
         files.map((file) => (
           <TreeNode

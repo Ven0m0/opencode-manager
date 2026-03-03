@@ -137,10 +137,7 @@ interface ConfigModel {
 
 const LOCAL_PROVIDER_IDS = ["ollama", "lmstudio", "llamacpp", "jan"];
 
-function classifyProviderSource(
-  providerId: string,
-  isFromConfig: boolean,
-): ProviderSource {
+function classifyProviderSource(providerId: string, isFromConfig: boolean): ProviderSource {
   if (!isFromConfig) return "builtin";
   if (LOCAL_PROVIDER_IDS.includes(providerId.toLowerCase())) return "local";
   return "configured";
@@ -164,9 +161,8 @@ async function getProvidersFromOpenCodeServer(): Promise<{
     if (response?.all && Array.isArray(response.all)) {
       const connectedSet = new Set(response.connected || []);
 
-      const providers = response.all.map(
-        (openCodeProvider: OpenCodeProvider) => {
-          const models: Record<string, Model> = {};
+      const providers = response.all.map((openCodeProvider: OpenCodeProvider) => {
+        const models: Record<string, Model> = {};
 
         Object.entries(openCodeProvider.models).forEach(([modelId, openCodeModel]) => {
           models[modelId] = {
@@ -188,10 +184,16 @@ async function getProvidersFromOpenCodeServer(): Promise<{
             },
             modalities: {
               input: Object.keys(openCodeModel.capabilities.input).filter(
-                (key) => openCodeModel.capabilities.input[key as keyof typeof openCodeModel.capabilities.input]
+                (key) =>
+                  openCodeModel.capabilities.input[
+                    key as keyof typeof openCodeModel.capabilities.input
+                  ],
               ) as ("text" | "audio" | "image" | "video" | "pdf")[],
               output: Object.keys(openCodeModel.capabilities.output).filter(
-                (key) => openCodeModel.capabilities.output[key as keyof typeof openCodeModel.capabilities.output]
+                (key) =>
+                  openCodeModel.capabilities.output[
+                    key as keyof typeof openCodeModel.capabilities.output
+                  ],
               ) as ("text" | "audio" | "image" | "video" | "pdf")[],
             },
             provider: {
@@ -201,16 +203,15 @@ async function getProvidersFromOpenCodeServer(): Promise<{
           };
         });
 
-          return {
-            id: openCodeProvider.id,
-            name: openCodeProvider.name,
-            env: openCodeProvider.env,
-            models,
-            options: openCodeProvider.options,
-            isConnected: connectedSet.has(openCodeProvider.id),
-          };
-        },
-      );
+        return {
+          id: openCodeProvider.id,
+          name: openCodeProvider.name,
+          env: openCodeProvider.env,
+          models,
+          options: openCodeProvider.options,
+          isConnected: connectedSet.has(openCodeProvider.id),
+        };
+      });
 
       return { providers, connected: response.connected || [] };
     }
@@ -228,31 +229,22 @@ export async function getProviders(): Promise<{
   return await getProvidersFromOpenCodeServer();
 }
 
-async function getConfiguredProviders(
-  connectedIds: Set<string>,
-): Promise<ProviderWithModels[]> {
+async function getConfiguredProviders(connectedIds: Set<string>): Promise<ProviderWithModels[]> {
   try {
     const config = await settingsApi.getDefaultOpenCodeConfig();
     if (!config?.content?.provider) return [];
 
-    const configProviders = config.content.provider as Record<
-      string,
-      ConfigProvider
-    >;
+    const configProviders = config.content.provider as Record<string, ConfigProvider>;
     const result: ProviderWithModels[] = [];
 
-    for (const [providerId, providerConfig] of Object.entries(
-      configProviders,
-    )) {
+    for (const [providerId, providerConfig] of Object.entries(configProviders)) {
       if (!providerConfig || typeof providerConfig !== "object") continue;
 
       const source = classifyProviderSource(providerId, true);
       const models: Model[] = [];
 
       if (providerConfig.models) {
-        for (const [modelId, modelConfig] of Object.entries(
-          providerConfig.models,
-        )) {
+        for (const [modelId, modelConfig] of Object.entries(providerConfig.models)) {
           if (!modelConfig || typeof modelConfig !== "object") continue;
 
           models.push({
@@ -297,13 +289,11 @@ export async function getProvidersWithModels(): Promise<ProviderWithModels[]> {
   const builtinResult: ProviderWithModels[] = builtinProviders
     .filter((provider) => !configuredIds.has(provider.id))
     .map((provider) => {
-      const models = Object.entries(provider.models || {}).map(
-        ([id, model]) => ({
-          ...model,
-          id: id,
-          name: model.name || id,
-        }),
-      );
+      const models = Object.entries(provider.models || {}).map(([id, model]) => ({
+        ...model,
+        id: id,
+        name: model.name || id,
+      }));
       return {
         id: provider.id,
         name: provider.name,
@@ -328,10 +318,7 @@ export async function getProvidersWithModels(): Promise<ProviderWithModels[]> {
   return allProviders;
 }
 
-export async function getModel(
-  providerId: string,
-  modelId: string,
-): Promise<Model | null> {
+export async function getModel(providerId: string, modelId: string): Promise<Model | null> {
   const providers = await getProvidersWithModels();
   const provider = providers.find((p) => p.id === providerId);
   if (!provider) return null;
@@ -343,9 +330,7 @@ export function formatModelName(model: Model): string {
   return model.name || model.id;
 }
 
-export function formatProviderName(
-  provider: Provider | ProviderWithModels,
-): string {
+export function formatProviderName(provider: Provider | ProviderWithModels): string {
   return provider.name || provider.id;
 }
 
@@ -365,22 +350,16 @@ export const providerCredentialsApi = {
   },
 
   set: async (providerId: string, apiKey: string): Promise<void> => {
-    await fetchWrapper(
-      `${API_BASE_URL}/api/providers/${providerId}/credentials`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey }),
-      },
-    );
+    await fetchWrapper(`${API_BASE_URL}/api/providers/${providerId}/credentials`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ apiKey }),
+    });
   },
 
   delete: async (providerId: string): Promise<void> => {
-    await fetchWrapper(
-      `${API_BASE_URL}/api/providers/${providerId}/credentials`,
-      {
-        method: "DELETE",
-      },
-    );
+    await fetchWrapper(`${API_BASE_URL}/api/providers/${providerId}/credentials`, {
+      method: "DELETE",
+    });
   },
 };

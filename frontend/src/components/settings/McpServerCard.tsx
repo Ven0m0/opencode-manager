@@ -1,12 +1,4 @@
-import {
-  AlertCircle,
-  Key,
-  MoreVertical,
-  RefreshCw,
-  Shield,
-  Trash2,
-  XCircle,
-} from "lucide-react";
+import { AlertCircle, Key, MoreVertical, RefreshCw, Shield, Trash2, XCircle } from "lucide-react";
 import type { McpServerConfig, McpStatus } from "@/api/mcp";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -50,10 +42,7 @@ function getStatusBadge(status: McpStatus) {
       );
     case "failed":
       return (
-        <Badge
-          variant="destructive"
-          className="text-xs flex items-center gap-1"
-        >
+        <Badge variant="destructive" className="text-xs flex items-center gap-1">
           <AlertCircle className="h-3 w-3" />
           Failed
         </Badge>
@@ -130,14 +119,10 @@ export function McpServerCard({
   const isRemote = serverConfig.type === "remote";
   const hasOAuthConfig = isRemote && !!serverConfig.oauth;
   const hasOAuthError =
-    status?.status === "failed" &&
-    isRemote &&
-    /oauth|auth.*state/i.test(status.error);
-  const isOAuthServer =
-    hasOAuthConfig || hasOAuthError || (needsAuth && isRemote);
+    status?.status === "failed" && isRemote && /oauth|auth.*state/i.test(status.error);
+  const isOAuthServer = hasOAuthConfig || hasOAuthError || (needsAuth && isRemote);
   const connectedWithOAuth = isOAuthServer && isConnected;
-  const showAuthButton =
-    needsAuth || (isOAuthServer && status?.status === "failed");
+  const showAuthButton = needsAuth || (isOAuthServer && status?.status === "failed");
   const displayName = getServerDisplayName(serverId);
 
   return (
@@ -209,7 +194,7 @@ export function McpServerCard({
               </DropdownMenuItem>
             )}
             {connectedWithOAuth && onRemoveAuth && (
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onSelect={() => setTimeout(() => onRemoveAuth(serverId), 0)}
                 disabled={isRemovingAuth}
               >
@@ -218,9 +203,9 @@ export function McpServerCard({
               </DropdownMenuItem>
             )}
             {(showAuthButton || connectedWithOAuth) && <DropdownMenuSeparator />}
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onSelect={() => {
-                setTimeout(() => onDeleteServer(serverId, displayName), 0)
+                setTimeout(() => onDeleteServer(serverId, displayName), 0);
               }}
               className="text-red-600"
             >

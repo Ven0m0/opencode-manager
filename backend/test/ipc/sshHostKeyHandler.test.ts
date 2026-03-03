@@ -43,10 +43,7 @@ vi.mock("bun:sqlite", () => ({
   Database: vi.fn(() => mockDatabase),
 }));
 
-import {
-  createSSHHostKeyHandler,
-  type SSHHostKeyHandler,
-} from "../../src/ipc/sshHostKeyHandler";
+import { createSSHHostKeyHandler, type SSHHostKeyHandler } from "../../src/ipc/sshHostKeyHandler";
 
 describe("SSHHostKeyHandler", () => {
   let handler: SSHHostKeyHandler;
@@ -77,9 +74,7 @@ describe("SSHHostKeyHandler", () => {
 
   afterEach(async () => {
     vi.clearAllMocks();
-    await fs
-      .rm(testWorkspacePath, { recursive: true, force: true })
-      .catch(() => {});
+    await fs.rm(testWorkspacePath, { recursive: true, force: true }).catch(() => {});
   });
 
   describe("Public Key Retrieval", () => {
@@ -207,8 +202,7 @@ describe("SSHHostKeyHandler", () => {
 
     it("should handle bracketed host notation for non-standard ports", async () => {
       const host = "github.com:2222";
-      const publicKey =
-        "[github.com]:2222 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDRHw== test@host";
+      const publicKey = "[github.com]:2222 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDRHw== test@host";
 
       await handler.addToKnownHosts(host, publicKey);
 
@@ -235,9 +229,7 @@ describe("SSHHostKeyHandler", () => {
         all: vi.fn().mockReturnValue([]),
       });
 
-      const result = await handler.verifyHostKeyBeforeOperation(
-        "git@github.com:user/repo.git",
-      );
+      const result = await handler.verifyHostKeyBeforeOperation("git@github.com:user/repo.git");
 
       expect(result).toBe(true);
     });
@@ -320,9 +312,7 @@ describe("SSHHostKeyHandler", () => {
         }),
       });
 
-      await expect(
-        handler.loadFromDatabaseToKnownHosts(),
-      ).resolves.not.toThrow();
+      await expect(handler.loadFromDatabaseToKnownHosts()).resolves.not.toThrow();
     });
   });
 });

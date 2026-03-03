@@ -1,4 +1,4 @@
-import type { GitCredential } from '@opencode-manager/shared'
+import type { GitCredential } from "@opencode-manager/shared";
 
 export function isGitHubHttpsUrl(repoUrl: string): boolean {
   try {
@@ -31,19 +31,19 @@ export function isSSHUrl(url: string): boolean {
 }
 
 export function normalizeSSHUrl(url: string): string {
-  if (url.startsWith('ssh://')) {
-    return url
+  if (url.startsWith("ssh://")) {
+    return url;
   }
 
-  const match = url.match(/^git@([^:]+):(\d{1,5})\/(.+)$/)
+  const match = url.match(/^git@([^:]+):(\d{1,5})\/(.+)$/);
   if (match) {
-    const [, host, port, path] = match
-    const portNum = parseInt(port!, 10)
+    const [, host, port, path] = match;
+    const portNum = parseInt(port!, 10);
     if (portNum > 0 && portNum <= 65535) {
-      return `ssh://git@${host}:${port}/${path}`
+      return `ssh://git@${host}:${port}/${path}`;
     }
   }
-  return url
+  return url;
 }
 
 export function extractHostFromSSHUrl(url: string): string | null {
@@ -72,9 +72,7 @@ export function normalizeHost(host: string): string {
   return host;
 }
 
-export function createGitEnv(
-  credentials: GitCredential[],
-): Record<string, string> {
+export function createGitEnv(credentials: GitCredential[]): Record<string, string> {
   const env: Record<string, string> = {
     GIT_TERMINAL_PROMPT: "0",
     GIT_CONFIG_COUNT: "0",
@@ -93,13 +91,10 @@ export function createGitEnv(
 
     const host = normalizeHost(cred.host);
     const username = cred.username || getDefaultUsername(host);
-    const basicAuth = Buffer.from(`${username}:${cred.token}`, "utf8").toString(
-      "base64",
-    );
+    const basicAuth = Buffer.from(`${username}:${cred.token}`, "utf8").toString("base64");
 
     env[`GIT_CONFIG_KEY_${configIndex}`] = `http.${host}.extraheader`;
-    env[`GIT_CONFIG_VALUE_${configIndex}`] =
-      `AUTHORIZATION: basic ${basicAuth}`;
+    env[`GIT_CONFIG_VALUE_${configIndex}`] = `AUTHORIZATION: basic ${basicAuth}`;
     configIndex++;
   }
 
@@ -109,16 +104,18 @@ export function createGitEnv(
 }
 
 export function findGitHubCredential(credentials: GitCredential[]): GitCredential | null {
-  if (!credentials || credentials.length === 0) return null
+  if (!credentials || credentials.length === 0) return null;
 
-  return credentials.find(cred => {
-    try {
-      const parsed = new URL(cred.host)
-      return parsed.hostname.toLowerCase() === 'github.com'
-    } catch {
-      return false
-    }
-  }) || null
+  return (
+    credentials.find((cred) => {
+      try {
+        const parsed = new URL(cred.host);
+        return parsed.hostname.toLowerCase() === "github.com";
+      } catch {
+        return false;
+      }
+    }) || null
+  );
 }
 
 export function getCredentialForHost(
@@ -152,12 +149,8 @@ export function getSSHCredentialsForHost(
     try {
       const parsedCredHost = new URL(credHost);
       const credHostname = parsedCredHost.hostname.toLowerCase();
-      const credPort =
-        parsedCredHost.port ||
-        (parsedCredHost.protocol.includes("ssh") ? 22 : null);
-      const normalizedCredHost = credPort
-        ? `${credHostname}:${credPort}`
-        : credHostname;
+      const credPort = parsedCredHost.port || (parsedCredHost.protocol.includes("ssh") ? 22 : null);
+      const normalizedCredHost = credPort ? `${credHostname}:${credPort}` : credHostname;
 
       const parsedTargetHost = new URL(`ssh://dummy@${targetHost}`);
       const targetHostname = parsedTargetHost.hostname.toLowerCase();
@@ -220,9 +213,7 @@ export async function resolveGitIdentity(
   return null;
 }
 
-export function createGitIdentityEnv(
-  identity: GitIdentity,
-): Record<string, string> {
+export function createGitIdentityEnv(identity: GitIdentity): Record<string, string> {
   return {
     GIT_AUTHOR_NAME: identity.name,
     GIT_AUTHOR_EMAIL: identity.email,
@@ -231,9 +222,7 @@ export function createGitIdentityEnv(
   };
 }
 
-export async function fetchGitHubUserInfo(
-  token: string,
-): Promise<GitHubUserInfo | null> {
+export async function fetchGitHubUserInfo(token: string): Promise<GitHubUserInfo | null> {
   try {
     const [userResponse, emailsResponse] = await Promise.all([
       fetch("https://api.github.com/user", {

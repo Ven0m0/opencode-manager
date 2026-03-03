@@ -1,8 +1,8 @@
-import type { Migration } from '../migration-runner'
+import type { Migration } from "../migration-runner";
 
 const migration: Migration = {
   version: 1,
-  name: 'base-schema',
+  name: "base-schema",
 
   up(db) {
     db.run(`
@@ -19,9 +19,9 @@ const migration: Migration = {
         is_worktree BOOLEAN DEFAULT FALSE,
         is_local BOOLEAN DEFAULT FALSE
       )
-    `)
+    `);
 
-    db.run('CREATE INDEX IF NOT EXISTS idx_repo_clone_status ON repos(clone_status)')
+    db.run("CREATE INDEX IF NOT EXISTS idx_repo_clone_status ON repos(clone_status)");
 
     db.run(`
       CREATE TABLE IF NOT EXISTS user_preferences (
@@ -31,9 +31,9 @@ const migration: Migration = {
         updated_at INTEGER NOT NULL,
         UNIQUE(user_id)
       )
-    `)
+    `);
 
-    db.run('CREATE INDEX IF NOT EXISTS idx_user_id ON user_preferences(user_id)')
+    db.run("CREATE INDEX IF NOT EXISTS idx_user_id ON user_preferences(user_id)");
 
     db.run(`
       CREATE TABLE IF NOT EXISTS opencode_configs (
@@ -46,10 +46,12 @@ const migration: Migration = {
         updated_at INTEGER NOT NULL,
         UNIQUE(user_id, config_name)
       )
-    `)
+    `);
 
-    db.run('CREATE INDEX IF NOT EXISTS idx_opencode_user_id ON opencode_configs(user_id)')
-    db.run('CREATE INDEX IF NOT EXISTS idx_opencode_default ON opencode_configs(user_id, is_default)')
+    db.run("CREATE INDEX IF NOT EXISTS idx_opencode_user_id ON opencode_configs(user_id)");
+    db.run(
+      "CREATE INDEX IF NOT EXISTS idx_opencode_default ON opencode_configs(user_id, is_default)",
+    );
 
     db.run(`
       CREATE TABLE IF NOT EXISTS "user" (
@@ -62,7 +64,7 @@ const migration: Migration = {
         updatedAt INTEGER NOT NULL,
         role TEXT DEFAULT 'user'
       )
-    `)
+    `);
 
     db.run(`
       CREATE TABLE IF NOT EXISTS "session" (
@@ -75,10 +77,10 @@ const migration: Migration = {
         userAgent TEXT,
         userId TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE
       )
-    `)
+    `);
 
-    db.run('CREATE INDEX IF NOT EXISTS idx_session_userId ON "session"(userId)')
-    db.run('CREATE INDEX IF NOT EXISTS idx_session_token ON "session"(token)')
+    db.run('CREATE INDEX IF NOT EXISTS idx_session_userId ON "session"(userId)');
+    db.run('CREATE INDEX IF NOT EXISTS idx_session_token ON "session"(token)');
 
     db.run(`
       CREATE TABLE IF NOT EXISTS "account" (
@@ -96,10 +98,12 @@ const migration: Migration = {
         createdAt INTEGER NOT NULL,
         updatedAt INTEGER NOT NULL
       )
-    `)
+    `);
 
-    db.run('CREATE INDEX IF NOT EXISTS idx_account_userId ON "account"(userId)')
-    db.run('CREATE UNIQUE INDEX IF NOT EXISTS idx_account_provider ON "account"(providerId, accountId)')
+    db.run('CREATE INDEX IF NOT EXISTS idx_account_userId ON "account"(userId)');
+    db.run(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_account_provider ON "account"(providerId, accountId)',
+    );
 
     db.run(`
       CREATE TABLE IF NOT EXISTS "verification" (
@@ -110,9 +114,9 @@ const migration: Migration = {
         createdAt INTEGER,
         updatedAt INTEGER
       )
-    `)
+    `);
 
-    db.run('CREATE INDEX IF NOT EXISTS idx_verification_identifier ON "verification"(identifier)')
+    db.run('CREATE INDEX IF NOT EXISTS idx_verification_identifier ON "verification"(identifier)');
 
     db.run(`
       CREATE TABLE IF NOT EXISTS "passkey" (
@@ -128,10 +132,10 @@ const migration: Migration = {
         createdAt INTEGER,
         aaguid TEXT
       )
-    `)
+    `);
 
-    db.run('CREATE INDEX IF NOT EXISTS idx_passkey_userId ON "passkey"(userId)')
-    db.run('CREATE INDEX IF NOT EXISTS idx_passkey_credentialID ON "passkey"(credentialID)')
+    db.run('CREATE INDEX IF NOT EXISTS idx_passkey_userId ON "passkey"(userId)');
+    db.run('CREATE INDEX IF NOT EXISTS idx_passkey_credentialID ON "passkey"(credentialID)');
 
     db.run(`
       CREATE TABLE IF NOT EXISTS trusted_ssh_hosts (
@@ -142,9 +146,9 @@ const migration: Migration = {
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       )
-    `)
+    `);
 
-    db.run('CREATE INDEX IF NOT EXISTS idx_trusted_ssh_hosts_host ON trusted_ssh_hosts(host)')
+    db.run("CREATE INDEX IF NOT EXISTS idx_trusted_ssh_hosts_host ON trusted_ssh_hosts(host)");
 
     db.run(`
       CREATE TABLE IF NOT EXISTS repo_settings (
@@ -155,23 +159,23 @@ const migration: Migration = {
         updated_at INTEGER NOT NULL,
         UNIQUE(repo_id, key)
       )
-    `)
+    `);
 
-    db.run('CREATE INDEX IF NOT EXISTS idx_repo_settings_repo ON repo_settings(repo_id)')
+    db.run("CREATE INDEX IF NOT EXISTS idx_repo_settings_repo ON repo_settings(repo_id)");
   },
 
   down(db) {
-    db.run('DROP TABLE IF EXISTS repo_settings')
-    db.run('DROP TABLE IF EXISTS trusted_ssh_hosts')
-    db.run('DROP TABLE IF EXISTS "passkey"')
-    db.run('DROP TABLE IF EXISTS "verification"')
-    db.run('DROP TABLE IF EXISTS "account"')
-    db.run('DROP TABLE IF EXISTS "session"')
-    db.run('DROP TABLE IF EXISTS "user"')
-    db.run('DROP TABLE IF EXISTS opencode_configs')
-    db.run('DROP TABLE IF EXISTS user_preferences')
-    db.run('DROP TABLE IF EXISTS repos')
+    db.run("DROP TABLE IF EXISTS repo_settings");
+    db.run("DROP TABLE IF EXISTS trusted_ssh_hosts");
+    db.run('DROP TABLE IF EXISTS "passkey"');
+    db.run('DROP TABLE IF EXISTS "verification"');
+    db.run('DROP TABLE IF EXISTS "account"');
+    db.run('DROP TABLE IF EXISTS "session"');
+    db.run('DROP TABLE IF EXISTS "user"');
+    db.run("DROP TABLE IF EXISTS opencode_configs");
+    db.run("DROP TABLE IF EXISTS user_preferences");
+    db.run("DROP TABLE IF EXISTS repos");
   },
-}
+};
 
-export default migration
+export default migration;

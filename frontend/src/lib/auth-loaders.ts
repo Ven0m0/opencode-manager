@@ -10,27 +10,24 @@ export interface AuthConfig {
 
 async function fetchAuthConfig(): Promise<AuthConfig> {
   const defaultConfig: AuthConfig = {
-    enabledProviders: ['credentials'],
+    enabledProviders: ["credentials"],
     registrationEnabled: true,
     isFirstUser: false,
     adminConfigured: false,
-  }
-  const response = await fetch('/api/auth-info/config')
+  };
+  const response = await fetch("/api/auth-info/config");
   if (!response.ok) {
-    return defaultConfig
+    return defaultConfig;
   }
   try {
-    return await response.json()
+    return await response.json();
   } catch {
-    return defaultConfig
+    return defaultConfig;
   }
 }
 
 export async function loginLoader() {
-  const [config, session] = await Promise.all([
-    fetchAuthConfig(),
-    getSession(),
-  ]);
+  const [config, session] = await Promise.all([fetchAuthConfig(), getSession()]);
 
   if (session.data?.user) {
     return redirect("/");
@@ -44,10 +41,7 @@ export async function loginLoader() {
 }
 
 export async function setupLoader() {
-  const [config, session] = await Promise.all([
-    fetchAuthConfig(),
-    getSession(),
-  ]);
+  const [config, session] = await Promise.all([fetchAuthConfig(), getSession()]);
 
   if (session.data?.user) {
     return redirect("/");
@@ -61,10 +55,7 @@ export async function setupLoader() {
 }
 
 export async function registerLoader() {
-  const [config, session] = await Promise.all([
-    fetchAuthConfig(),
-    getSession(),
-  ]);
+  const [config, session] = await Promise.all([fetchAuthConfig(), getSession()]);
 
   if (session.data?.user) {
     return redirect("/");

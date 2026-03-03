@@ -79,13 +79,17 @@ export function CommitsTab({ repoId, onSelectCommit }: CommitsTabProps) {
                 <span>·</span>
                 <span className="flex-shrink-0">{formatRelativeTime(commit.date)}</span>
                 {commit.unpushed && (
-                  <span className={cn('flex items-center gap-0.5 px-1 rounded', GIT_UI_COLORS.unpushed)}>
+                  <span
+                    className={cn("flex items-center gap-0.5 px-1 rounded", GIT_UI_COLORS.unpushed)}
+                  >
                     <ArrowUp className="w-3 h-3" />
                     Local
                   </span>
                 )}
                 {!commit.unpushed && (
-                  <span className={cn('flex items-center gap-0.5 px-1 rounded', GIT_UI_COLORS.pushed)}>
+                  <span
+                    className={cn("flex items-center gap-0.5 px-1 rounded", GIT_UI_COLORS.pushed)}
+                  >
                     Remote
                   </span>
                 )}

@@ -32,7 +32,7 @@ function MermaidBlock({ code }: MermaidBlockProps) {
     mermaid.initialize({
       startOnLoad: false,
       theme: theme === "dark" ? "dark" : "default",
-      securityLevel: "loose",
+      securityLevel: "strict",
       fontFamily: "inherit",
       flowchart: {
         htmlLabels: false,
@@ -79,18 +79,12 @@ function MermaidBlock({ code }: MermaidBlockProps) {
             <AlertCircle className="w-4 h-4" />
             <span className="text-sm font-medium">Mermaid Error</span>
           </div>
-          <pre className="text-xs text-red-400 mb-3 whitespace-pre-wrap">
-            {error}
-          </pre>
+          <pre className="text-xs text-red-400 mb-3 whitespace-pre-wrap">{error}</pre>
           <pre className="bg-accent p-3 rounded-lg overflow-x-auto text-sm border border-border">
             <code>{code}</code>
           </pre>
         </div>
-        <CopyButton
-          content={code}
-          title="Copy code"
-          className="absolute top-2 right-2"
-        />
+        <CopyButton content={code} title="Copy code" className="absolute top-2 right-2" />
       </div>
     );
   }
@@ -138,10 +132,7 @@ function MermaidBlock({ code }: MermaidBlockProps) {
             >
               <X className="w-5 h-5" />
             </button>
-            <div
-              className="mermaid-expanded"
-              dangerouslySetInnerHTML={{ __html: svg }}
-            />
+            <div className="mermaid-expanded" dangerouslySetInnerHTML={{ __html: svg }} />
           </div>
         </div>
       )}
@@ -179,11 +170,7 @@ function CodeBlock({ children, className, ...props }: CodeBlockProps) {
       >
         {children}
       </pre>
-      <CopyButton
-        content={codeContent}
-        title="Copy code"
-        className="absolute top-2 right-2"
-      />
+      <CopyButton content={codeContent} title="Copy code" className="absolute top-2 right-2" />
     </div>
   );
 }
@@ -202,8 +189,8 @@ export function TextPart({ part }: TextPartProps) {
     return part.text ? isMermaidBlockComplete(part.text) : false;
   }, [part.text]);
 
-  if (!part.text || part.text.trim() === '') {
-    return null  
+  if (!part.text || part.text.trim() === "") {
+    return null;
   }
 
   return (
@@ -238,8 +225,7 @@ export function TextPart({ part }: TextPartProps) {
               return (
                 <code
                   className={
-                    className ||
-                    "bg-accent px-1.5 py-0.5 rounded text-sm text-foreground break-all"
+                    className || "bg-accent px-1.5 py-0.5 rounded text-sm text-foreground break-all"
                   }
                   {...props}
                 >
@@ -260,30 +246,16 @@ export function TextPart({ part }: TextPartProps) {
             return <p className="text-foreground my-0.5 md:my-1">{children}</p>;
           },
           strong({ children }) {
-            return (
-              <strong className="font-semibold text-foreground">
-                {children}
-              </strong>
-            );
+            return <strong className="font-semibold text-foreground">{children}</strong>;
           },
           ul({ children }) {
-            return (
-              <ul className="list-disc text-foreground my-0.5 md:my-1">
-                {children}
-              </ul>
-            );
+            return <ul className="list-disc text-foreground my-0.5 md:my-1">{children}</ul>;
           },
           ol({ children }) {
-            return (
-              <ol className="list-decimal text-foreground my-0.5 md:my-1">
-                {children}
-              </ol>
-            );
+            return <ol className="list-decimal text-foreground my-0.5 md:my-1">{children}</ol>;
           },
           li({ children }) {
-            return (
-              <li className="text-foreground my-0.5 md:my-1">{children}</li>
-            );
+            return <li className="text-foreground my-0.5 md:my-1">{children}</li>;
           },
           table({ children }) {
             return (

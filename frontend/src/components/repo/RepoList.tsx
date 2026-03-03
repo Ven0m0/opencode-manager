@@ -136,15 +136,15 @@ export function RepoList() {
     enabled: repoIds.length > 0,
     staleTime: 60 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
-  })
+  });
 
   const deleteMutation = useMutation({
     mutationFn: deleteRepo,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["repos"] })
-      queryClient.invalidateQueries({ queryKey: ["reposGitStatus"] })
-      setDeleteDialogOpen(false)
-      setRepoToDelete(null)
+      queryClient.invalidateQueries({ queryKey: ["repos"] });
+      queryClient.invalidateQueries({ queryKey: ["reposGitStatus"] });
+      setDeleteDialogOpen(false);
+      setRepoToDelete(null);
     },
   });
 
@@ -153,10 +153,10 @@ export function RepoList() {
       await Promise.all(repoIds.map((id) => deleteRepo(id)));
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["repos"] })
-      queryClient.invalidateQueries({ queryKey: ["reposGitStatus"] })
-      setDeleteDialogOpen(false)
-      setSelectedRepos(new Set())
+      queryClient.invalidateQueries({ queryKey: ["repos"] });
+      queryClient.invalidateQueries({ queryKey: ["reposGitStatus"] });
+      setDeleteDialogOpen(false);
+      setSelectedRepos(new Set());
     },
   });
 
@@ -183,8 +183,8 @@ export function RepoList() {
       queryClient.setQueryData(["repos"], context?.previousRepos);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["repos"] })
-      queryClient.invalidateQueries({ queryKey: ["reposGitStatus"] })
+      queryClient.invalidateQueries({ queryKey: ["repos"] });
+      queryClient.invalidateQueries({ queryKey: ["reposGitStatus"] });
     },
   });
 
@@ -216,9 +216,7 @@ export function RepoList() {
 
       if (oldIndex === -1 || newIndex === -1) return;
 
-      const newOrder = arrayMove(repos, oldIndex, newIndex).map(
-        (repo) => repo.id,
-      );
+      const newOrder = arrayMove(repos, oldIndex, newIndex).map((repo) => repo.id);
       updateOrderMutation.mutate(newOrder);
     }
   };
@@ -247,8 +245,7 @@ export function RepoList() {
   if (error) {
     return (
       <div className="text-center p-8 text-destructive">
-        Failed to load repositories:{" "}
-        {error instanceof Error ? error.message : "Unknown error"}
+        Failed to load repositories: {error instanceof Error ? error.message : "Unknown error"}
       </div>
     );
   }
@@ -257,9 +254,7 @@ export function RepoList() {
     return (
       <div className="text-center p-12">
         <GitBranch className="w-12 h-12 mx-auto mb-4 text-zinc-600" />
-        <p className="text-zinc-500">
-          No repositories yet. Add one to get started.
-        </p>
+        <p className="text-zinc-500">No repositories yet. Add one to get started.</p>
       </div>
     );
   }
@@ -269,9 +264,7 @@ export function RepoList() {
       acc.push(repo);
     } else {
       const key = repo.repoUrl || repo.localPath;
-      const existing = acc.find(
-        (r) => (r.repoUrl || r.localPath) === key && !r.isWorktree,
-      );
+      const existing = acc.find((r) => (r.repoUrl || r.localPath) === key && !r.isWorktree);
 
       if (!existing) {
         acc.push(repo);
@@ -303,9 +296,7 @@ export function RepoList() {
   };
 
   const handleSelectAll = () => {
-    const allFilteredSelected = filteredRepos.every((repo) =>
-      selectedRepos.has(repo.id),
-    );
+    const allFilteredSelected = filteredRepos.every((repo) => selectedRepos.has(repo.id));
 
     if (allFilteredSelected) {
       setSelectedRepos(new Set());
@@ -337,8 +328,7 @@ export function RepoList() {
             selectedCount={selectedRepos.size}
             totalCount={filteredRepos.length}
             allSelected={
-              filteredRepos.length > 0 &&
-              filteredRepos.every((repo) => selectedRepos.has(repo.id))
+              filteredRepos.length > 0 && filteredRepos.every((repo) => selectedRepos.has(repo.id))
             }
             onToggleSelectAll={handleSelectAll}
             onDelete={handleBatchDelete}
@@ -354,9 +344,7 @@ export function RepoList() {
             {filteredRepos.length === 0 ? (
               <div className="text-center p-12">
                 <Search className="w-12 h-12 mx-auto mb-4 text-zinc-600" />
-                <p className="text-zinc-500">
-                  No repositories found matching "{searchQuery}"
-                </p>
+                <p className="text-zinc-500">No repositories found matching "{searchQuery}"</p>
               </div>
             ) : isDragEnabled ? (
               <DndContext
@@ -377,9 +365,7 @@ export function RepoList() {
                           setRepoToDelete(id);
                           setDeleteDialogOpen(true);
                         }}
-                        isDeleting={
-                          deleteMutation.isPending && repoToDelete === repo.id
-                        }
+                        isDeleting={deleteMutation.isPending && repoToDelete === repo.id}
                         isSelected={selectedRepos.has(repo.id)}
                         onSelect={handleSelectRepo}
                         gitStatus={gitStatuses?.get(repo.id)}
@@ -398,9 +384,7 @@ export function RepoList() {
                       setRepoToDelete(id);
                       setDeleteDialogOpen(true);
                     }}
-                    isDeleting={
-                      deleteMutation.isPending && repoToDelete === repo.id
-                    }
+                    isDeleting={deleteMutation.isPending && repoToDelete === repo.id}
                     isSelected={selectedRepos.has(repo.id)}
                     onSelect={handleSelectRepo}
                     gitStatus={gitStatuses?.get(repo.id)}
@@ -427,11 +411,7 @@ export function RepoList() {
           setRepoToDelete(null);
           setSelectedRepos(new Set());
         }}
-        title={
-          selectedRepos.size > 0
-            ? "Delete Multiple Repositories"
-            : "Delete Repository"
-        }
+        title={selectedRepos.size > 0 ? "Delete Multiple Repositories" : "Delete Repository"}
         description={
           selectedRepos.size > 0
             ? `Are you sure you want to delete ${selectedRepos.size} repositor${selectedRepos.size === 1 ? "y" : "ies"}? This will remove all local files. This action cannot be undone.`

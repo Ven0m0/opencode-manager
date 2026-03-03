@@ -20,13 +20,13 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export function Login() {
-  const { signInWithEmail, signInWithProvider, signInWithPasskey } = useAuth()
-  const { config } = useLoaderData() as { config: AuthConfig }
-  const theme = useTheme()
-  const [error, setError] = useState<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isPasskeyLoading, setIsPasskeyLoading] = useState(false)
-  const [oauthLoading, setOauthLoading] = useState<string | null>(null)
+  const { signInWithEmail, signInWithProvider, signInWithPasskey } = useAuth();
+  const { config } = useLoaderData() as { config: AuthConfig };
+  const theme = useTheme();
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPasskeyLoading, setIsPasskeyLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState<string | null>(null);
 
   const {
     register,
@@ -63,21 +63,19 @@ export function Login() {
   };
 
   const handlePasskey = async () => {
-    setError(null)
-    setIsPasskeyLoading(true)
+    setError(null);
+    setIsPasskeyLoading(true);
     try {
       const result = await signInWithPasskey();
       if (result.error) {
         setError(result.error);
       }
     } finally {
-      setIsPasskeyLoading(false)
+      setIsPasskeyLoading(false);
     }
   };
 
-  const hasOAuth = config.enabledProviders.some((p) =>
-    ["github", "google", "discord"].includes(p),
-  );
+  const hasOAuth = config.enabledProviders.some((p) => ["github", "google", "discord"].includes(p));
   const hasPasskey = config.enabledProviders.includes("passkey");
   const hasCredentials = config.enabledProviders.includes("credentials");
 
@@ -86,11 +84,7 @@ export function Login() {
       <div className="w-full max-w-sm space-y-6">
         <div className="flex flex-col items-center space-y-2">
           <img
-            src={
-              theme === "light"
-                ? "/opencode-wordmark-light.svg"
-                : "/opencode-wordmark-dark.svg"
-            }
+            src={theme === "light" ? "/opencode-wordmark-light.svg" : "/opencode-wordmark-dark.svg"}
             alt="OpenCode"
             className="h-8 w-auto"
           />
@@ -198,9 +192,7 @@ export function Login() {
                 <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">
-                  Or continue with email
-                </span>
+                <span className="bg-card px-2 text-muted-foreground">Or continue with email</span>
               </div>
             </div>
           )}
@@ -208,10 +200,7 @@ export function Login() {
           {hasCredentials && (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label
-                  htmlFor="email"
-                  className="text-sm text-muted-foreground"
-                >
+                <Label htmlFor="email" className="text-sm text-muted-foreground">
                   Email
                 </Label>
                 <Input
@@ -222,17 +211,10 @@ export function Login() {
                   {...register("email")}
                   aria-invalid={!!errors.email}
                 />
-                {errors.email && (
-                  <p className="text-sm text-destructive">
-                    {errors.email.message}
-                  </p>
-                )}
+                {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
               </div>
               <div className="space-y-2">
-                <Label
-                  htmlFor="password"
-                  className="text-sm text-muted-foreground"
-                >
+                <Label htmlFor="password" className="text-sm text-muted-foreground">
                   Password
                 </Label>
                 <Input
@@ -244,9 +226,7 @@ export function Login() {
                   aria-invalid={!!errors.password}
                 />
                 {errors.password && (
-                  <p className="text-sm text-destructive">
-                    {errors.password.message}
-                  </p>
+                  <p className="text-sm text-destructive">{errors.password.message}</p>
                 )}
               </div>
               <Button type="submit" className="w-full" disabled={isSubmitting || isPasskeyLoading}>

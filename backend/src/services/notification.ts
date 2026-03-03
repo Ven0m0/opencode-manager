@@ -74,9 +74,7 @@ export class NotificationService {
         last_used_at INTEGER
       )
     `);
-    this.db.run(
-      "CREATE INDEX IF NOT EXISTS idx_push_sub_user ON push_subscriptions(user_id)",
-    );
+    this.db.run("CREATE INDEX IF NOT EXISTS idx_push_sub_user ON push_subscriptions(user_id)");
     this.db.run(
       "CREATE UNIQUE INDEX IF NOT EXISTS idx_push_sub_endpoint ON push_subscriptions(endpoint)",
     );
@@ -84,11 +82,7 @@ export class NotificationService {
 
   configureVapid(config: VapidConfig): void {
     this.vapidConfig = config;
-    webpush.setVapidDetails(
-      config.subject,
-      config.publicKey,
-      config.privateKey,
-    );
+    webpush.setVapidDetails(config.subject, config.publicKey, config.privateKey);
   }
 
   getVapidPublicKey(): string | null {
@@ -149,9 +143,7 @@ export class NotificationService {
   removeSubscription(endpoint: string, userId?: string): boolean {
     if (userId) {
       const result = this.db
-        .prepare(
-          "DELETE FROM push_subscriptions WHERE endpoint = ? AND user_id = ?",
-        )
+        .prepare("DELETE FROM push_subscriptions WHERE endpoint = ? AND user_id = ?")
         .run(endpoint, userId);
       return result.changes > 0;
     }
@@ -170,9 +162,7 @@ export class NotificationService {
 
   getSubscriptions(userId: string): PushSubscriptionRecord[] {
     const rows = this.db
-      .prepare(
-        "SELECT * FROM push_subscriptions WHERE user_id = ? ORDER BY created_at DESC",
-      )
+      .prepare("SELECT * FROM push_subscriptions WHERE user_id = ? ORDER BY created_at DESC")
       .all(userId) as Array<{
       id: number;
       user_id: string;
@@ -197,16 +187,13 @@ export class NotificationService {
   }
 
   getAllUserIds(): string[] {
-    const rows = this.db
-      .prepare("SELECT DISTINCT user_id FROM push_subscriptions")
-      .all() as Array<{ user_id: string }>;
+    const rows = this.db.prepare("SELECT DISTINCT user_id FROM push_subscriptions").all() as Array<{
+      user_id: string;
+    }>;
     return rows.map((r) => r.user_id);
   }
 
-  async handleSSEEvent(
-    _directory: string,
-    event: SSEEvent
-  ): Promise<void> {
+  async handleSSEEvent(_directory: string, event: SSEEvent): Promise<void> {
     const config = EVENT_CONFIG[event.type];
     if (!config) return;
 
@@ -219,8 +206,7 @@ export class NotificationService {
 
     for (const userId of userIds) {
       const settings = this.settingsService.getSettings(userId);
-      const notifPrefs =
-        settings.preferences.notifications ?? DEFAULT_NOTIFICATION_PREFERENCES;
+      const notifPrefs = settings.preferences.notifications ?? DEFAULT_NOTIFICATION_PREFERENCES;
 
       if (!notifPrefs.enabled) continue;
       if (!notifPrefs.events[config.preferencesKey]) continue;
@@ -274,10 +260,7 @@ export class NotificationService {
     });
   }
 
-  private async sendToUser(
-    userId: string,
-    payload: PushNotificationPayload,
-  ): Promise<void> {
+  private async sendToUser(userId: string, payload: PushNotificationPayload): Promise<void> {
     const subscriptions = this.getSubscriptions(userId);
     const expiredEndpoints: string[] = [];
 
@@ -293,9 +276,7 @@ export class NotificationService {
           );
 
           this.db
-            .prepare(
-              "UPDATE push_subscriptions SET last_used_at = ? WHERE id = ?",
-            )
+            .prepare("UPDATE push_subscriptions SET last_used_at = ? WHERE id = ?")
             .run(Date.now(), sub.id);
         } catch (error) {
           const statusCode = (error as { statusCode?: number }).statusCode;
@@ -303,10 +284,7 @@ export class NotificationService {
           if (statusCode === 404 || statusCode === 410) {
             expiredEndpoints.push(sub.endpoint);
           } else {
-            logger.error(
-              `Push delivery failed for ${sub.endpoint.slice(0, 50)}:`,
-              error,
-            );
+            logger.error(`Push delivery failed for ${sub.endpoint.slice(0, 50)}:`, error);
           }
         }
       }),

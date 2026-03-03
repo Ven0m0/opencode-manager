@@ -1,14 +1,7 @@
 import type { ReadStream } from "node:fs";
 import type { ChunkedFileInfo, FileInfo } from "@opencode-manager/shared";
 import { Hono } from "hono";
-import {
-  beforeEach,
-  describe,
-  expect,
-  it,
-  type MockedFunction,
-  vi,
-} from "vitest";
+import { beforeEach, describe, expect, it, type MockedFunction, vi } from "vitest";
 import { createFileRoutes } from "../../src/routes/files";
 import * as archiveService from "../../src/services/archive";
 import * as fileService from "../../src/services/files";
@@ -53,15 +46,9 @@ vi.mock("../../src/services/archive", () => ({
   deleteArchive: vi.fn(),
 }));
 
-const getFile = fileService.getFile as MockedFunction<
-  typeof fileService.getFile
->;
-const getFileRange = fileService.getFileRange as MockedFunction<
-  typeof fileService.getFileRange
->;
-const uploadFile = fileService.uploadFile as MockedFunction<
-  typeof fileService.uploadFile
->;
+const getFile = fileService.getFile as MockedFunction<typeof fileService.getFile>;
+const getFileRange = fileService.getFileRange as MockedFunction<typeof fileService.getFileRange>;
+const uploadFile = fileService.uploadFile as MockedFunction<typeof fileService.uploadFile>;
 const createFileOrFolder = fileService.createFileOrFolder as MockedFunction<
   typeof fileService.createFileOrFolder
 >;
@@ -75,10 +62,9 @@ const applyFilePatches = fileService.applyFilePatches as MockedFunction<
   typeof fileService.applyFilePatches
 >;
 
-const createDirectoryArchive =
-  archiveService.createDirectoryArchive as MockedFunction<
-    typeof archiveService.createDirectoryArchive
-  >;
+const createDirectoryArchive = archiveService.createDirectoryArchive as MockedFunction<
+  typeof archiveService.createDirectoryArchive
+>;
 const getArchiveSize = archiveService.getArchiveSize as MockedFunction<
   typeof archiveService.getArchiveSize
 >;
@@ -109,14 +95,10 @@ describe("File Routes", () => {
 
       await app.request("/api/files/test-repo/src/download-zip");
 
-      expect(createDirectoryArchive).toHaveBeenCalledWith(
-        "test-repo/src",
-        undefined,
-        {
-          includeGit: false,
-          includePaths: undefined,
-        },
-      );
+      expect(createDirectoryArchive).toHaveBeenCalledWith("test-repo/src", undefined, {
+        includeGit: false,
+        includePaths: undefined,
+      });
       expect(getArchiveSize).toHaveBeenCalledWith("/tmp/test-repo-123.zip");
       expect(getArchiveStream).toHaveBeenCalledWith("/tmp/test-repo-123.zip");
       expect(getFile).not.toHaveBeenCalled();
@@ -135,9 +117,7 @@ describe("File Routes", () => {
     });
 
     it("should return 500 when archive creation fails", async () => {
-      createDirectoryArchive.mockRejectedValue(
-        new Error("Directory not found"),
-      );
+      createDirectoryArchive.mockRejectedValue(new Error("Directory not found"));
 
       const response = await app.request("/api/files/non-repo/download-zip");
       const body = (await response.json()) as { error: string };
@@ -206,9 +186,7 @@ describe("File Routes", () => {
         statusCode: 404,
       });
 
-      const response = await app.request(
-        "/api/files/test-repo/nonexistent.txt",
-      );
+      const response = await app.request("/api/files/test-repo/nonexistent.txt");
       const body = (await response.json()) as { error: string };
 
       expect(response.status).toBe(404);
@@ -234,9 +212,7 @@ describe("File Routes", () => {
     it("should return file range for valid parameters", async () => {
       getFileRange.mockResolvedValue(mockChunkedInfo);
 
-      const response = await app.request(
-        "/api/files/test-repo/test.ts?startLine=5&endLine=10",
-      );
+      const response = await app.request("/api/files/test-repo/test.ts?startLine=5&endLine=10");
       const body = (await response.json()) as ChunkedFileInfo;
 
       expect(response.status).toBe(200);
@@ -268,9 +244,7 @@ describe("File Routes", () => {
     });
 
     it("should return 400 when startLine equals endLine", async () => {
-      const response = await app.request(
-        "/api/files/test-repo/test.ts?startLine=10&endLine=10",
-      );
+      const response = await app.request("/api/files/test-repo/test.ts?startLine=10&endLine=10");
       const body = (await response.json()) as { error: string };
 
       expect(response.status).toBe(400);
@@ -278,9 +252,7 @@ describe("File Routes", () => {
     });
 
     it("should return 400 for negative startLine", async () => {
-      const response = await app.request(
-        "/api/files/test-repo/test.ts?startLine=-5&endLine=10",
-      );
+      const response = await app.request("/api/files/test-repo/test.ts?startLine=-5&endLine=10");
       const body = (await response.json()) as { error: string };
 
       expect(response.status).toBe(400);
@@ -447,12 +419,9 @@ describe("File Routes", () => {
       error.statusCode = 404;
       deleteFileOrFolder.mockRejectedValue(error);
 
-      const response = await app.request(
-        "/api/files/test-repo/nonexistent.ts",
-        {
-          method: "DELETE",
-        },
-      );
+      const response = await app.request("/api/files/test-repo/nonexistent.ts", {
+        method: "DELETE",
+      });
       const body = (await response.json()) as { error: string };
 
       expect(response.status).toBe(404);
@@ -542,14 +511,11 @@ describe("File Routes", () => {
         error.statusCode = 404;
         renameOrMoveFile.mockRejectedValue(error);
 
-        const response = await app.request(
-          "/api/files/test-repo/nonexistent.ts",
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ newPath: "test-repo/new.ts" }),
-          },
-        );
+        const response = await app.request("/api/files/test-repo/nonexistent.ts", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ newPath: "test-repo/new.ts" }),
+        });
         const body = (await response.json()) as { error: string };
 
         expect(response.status).toBe(404);

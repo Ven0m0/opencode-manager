@@ -1,9 +1,15 @@
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Copy } from 'lucide-react'
-import { oauthApi, type OAuthAuthorizeResponse } from '@/api/oauth'
-import { mapOAuthError, OAuthMethod } from '@/lib/oauthErrors'
+import { Copy } from "lucide-react";
+import { useState } from "react";
+import { type OAuthAuthorizeResponse, oauthApi } from "@/api/oauth";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { mapOAuthError, OAuthMethod } from "@/lib/oauthErrors";
 
 interface OAuthAuthorizeDialogProps {
   providerId: string;

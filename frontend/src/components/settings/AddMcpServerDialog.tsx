@@ -26,10 +26,7 @@ interface AddMcpServerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   configName?: string;
-  onUpdate?: (
-    configName: string,
-    content: Record<string, unknown>,
-  ) => Promise<void>;
+  onUpdate?: (configName: string, content: Record<string, unknown>) => Promise<void>;
 }
 
 interface EnvironmentVariable {
@@ -37,11 +34,7 @@ interface EnvironmentVariable {
   value: string;
 }
 
-export function AddMcpServerDialog({
-  open,
-  onOpenChange,
-  onUpdate,
-}: AddMcpServerDialogProps) {
+export function AddMcpServerDialog({ open, onOpenChange, onUpdate }: AddMcpServerDialogProps) {
   const [serverId, setServerId] = useState("");
   const [serverType, setServerType] = useState<"local" | "remote">("local");
   const [command, setCommand] = useState("");
@@ -94,11 +87,9 @@ export function AddMcpServerDialog({
         if (oauthEnabled) {
           const oauthConfig: Record<string, string> = {};
           if (oauthClientId.trim()) oauthConfig.clientId = oauthClientId.trim();
-          if (oauthClientSecret.trim())
-            oauthConfig.clientSecret = oauthClientSecret.trim();
+          if (oauthClientSecret.trim()) oauthConfig.clientSecret = oauthClientSecret.trim();
           if (oauthScope.trim()) oauthConfig.scope = oauthScope.trim();
-          mcpConfig.oauth =
-            Object.keys(oauthConfig).length > 0 ? oauthConfig : true;
+          mcpConfig.oauth = Object.keys(oauthConfig).length > 0 ? oauthConfig : true;
         }
       }
 
@@ -123,8 +114,7 @@ export function AddMcpServerDialog({
           if (serverType !== "remote" || !oauthEnabled) return undefined;
           const cfg: Record<string, string> = {};
           if (oauthClientId.trim()) cfg.clientId = oauthClientId.trim();
-          if (oauthClientSecret.trim())
-            cfg.clientSecret = oauthClientSecret.trim();
+          if (oauthClientSecret.trim()) cfg.clientSecret = oauthClientSecret.trim();
           if (oauthScope.trim()) cfg.scope = oauthScope.trim();
           return Object.keys(cfg).length > 0 ? cfg : true;
         };
@@ -135,9 +125,7 @@ export function AddMcpServerDialog({
             type: serverType,
             enabled,
             command:
-              serverType === "local"
-                ? command.split(" ").filter((arg) => arg.trim())
-                : undefined,
+              serverType === "local" ? command.split(" ").filter((arg) => arg.trim()) : undefined,
             url: serverType === "remote" ? url.trim() : undefined,
             environment:
               serverType === "local" && Object.keys(environment).length > 0
@@ -151,10 +139,7 @@ export function AddMcpServerDialog({
                     {} as Record<string, string>,
                   )
                 : undefined,
-            timeout:
-              timeout && parseInt(timeout, 10)
-                ? parseInt(timeout, 10)
-                : undefined,
+            timeout: timeout && parseInt(timeout, 10) ? parseInt(timeout, 10) : undefined,
             oauth: buildOauthField(),
           },
         });
@@ -182,11 +167,7 @@ export function AddMcpServerDialog({
     setEnvironment(environment.filter((_, i) => i !== index));
   };
 
-  const handleUpdateEnvironmentVar = (
-    index: number,
-    field: "key" | "value",
-    value: string,
-  ) => {
+  const handleUpdateEnvironmentVar = (index: number, field: "key" | "value", value: string) => {
     const updated = [...environment];
     updated[index][field] = value;
     setEnvironment(updated);
@@ -242,9 +223,7 @@ export function AddMcpServerDialog({
               <Label htmlFor="serverType">Server Type</Label>
               <Select
                 value={serverType}
-                onValueChange={(value: "local" | "remote") =>
-                  setServerType(value)
-                }
+                onValueChange={(value: "local" | "remote") => setServerType(value)}
               >
                 <SelectTrigger className="bg-background border-border">
                   <SelectValue />
@@ -256,7 +235,7 @@ export function AddMcpServerDialog({
               </Select>
             </div>
 
-            {serverType === 'local' ? (
+            {serverType === "local" ? (
               <div className="space-y-1.5">
                 <Label htmlFor="command">Command</Label>
                 <Input
@@ -280,27 +259,20 @@ export function AddMcpServerDialog({
                   placeholder="http://localhost:3000/mcp"
                   className="bg-background border-border font-mono"
                 />
-                <p className="text-xs text-muted-foreground">
-                  URL of the remote MCP server
-                </p>
+                <p className="text-xs text-muted-foreground">URL of the remote MCP server</p>
               </div>
             )}
 
             {serverType === "remote" && (
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
-                  <Switch
-                    id="oauth"
-                    checked={oauthEnabled}
-                    onCheckedChange={setOauthEnabled}
-                  />
+                  <Switch id="oauth" checked={oauthEnabled} onCheckedChange={setOauthEnabled} />
                   <Label htmlFor="oauth">Enable OAuth</Label>
                 </div>
                 {oauthEnabled && (
                   <div className="space-y-3 pl-4 border-l-2 border-border">
                     <p className="text-xs text-muted-foreground">
-                      Leave fields blank to use the server's default OAuth
-                      discovery
+                      Leave fields blank to use the server's default OAuth discovery
                     </p>
                     <div className="space-y-1.5">
                       <Label htmlFor="oauthClientId">Client ID</Label>
@@ -338,7 +310,7 @@ export function AddMcpServerDialog({
               </div>
             )}
 
-            {serverType === 'local' && (
+            {serverType === "local" && (
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label>Environment Variables</Label>
@@ -356,21 +328,13 @@ export function AddMcpServerDialog({
                   <div key={index} className="flex gap-2">
                     <Input
                       value={env.key}
-                      onChange={(e) =>
-                        handleUpdateEnvironmentVar(index, "key", e.target.value)
-                      }
+                      onChange={(e) => handleUpdateEnvironmentVar(index, "key", e.target.value)}
                       placeholder="API_KEY"
                       className="bg-background border-border font-mono"
                     />
                     <Input
                       value={env.value}
-                      onChange={(e) =>
-                        handleUpdateEnvironmentVar(
-                          index,
-                          "value",
-                          e.target.value,
-                        )
-                      }
+                      onChange={(e) => handleUpdateEnvironmentVar(index, "value", e.target.value)}
                       placeholder="your-api-key-here"
                       className="bg-background border-border font-mono"
                     />
@@ -407,11 +371,7 @@ export function AddMcpServerDialog({
             </div>
 
             <div className="flex items-center space-x-2">
-              <Switch
-                id="enabled"
-                checked={enabled}
-                onCheckedChange={setEnabled}
-              />
+              <Switch id="enabled" checked={enabled} onCheckedChange={setEnabled} />
               <Label htmlFor="enabled">Connect immediately after adding</Label>
             </div>
           </div>

@@ -27,9 +27,7 @@ vi.mock("../../src/db/queries", () => ({
 
 vi.mock("../../src/services/settings", () => ({
   SettingsService: vi.fn().mockImplementation(() => ({
-    getSettings: vi
-      .fn()
-      .mockReturnValue({ preferences: { gitCredentials: [] } }),
+    getSettings: vi.fn().mockReturnValue({ preferences: { gitCredentials: [] } }),
   })),
 }));
 

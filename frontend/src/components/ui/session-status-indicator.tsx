@@ -1,8 +1,5 @@
 import { memo, useEffect, useState } from "react";
-import {
-  type SessionStatusType,
-  useSessionStatusForSession,
-} from "@/stores/sessionStatusStore";
+import { type SessionStatusType, useSessionStatusForSession } from "@/stores/sessionStatusStore";
 
 interface SessionStatusIndicatorProps {
   sessionID: string;
@@ -22,11 +19,7 @@ export const SessionStatusIndicator = memo(function SessionStatusIndicator({
   const [retryCountdown, setRetryCountdown] = useState(0);
 
   useEffect(() => {
-    if (
-      status.type !== "busy" &&
-      status.type !== "retry" &&
-      status.type !== "compact"
-    ) {
+    if (status.type !== "busy" && status.type !== "retry" && status.type !== "compact") {
       return;
     }
 
@@ -58,10 +51,7 @@ export const SessionStatusIndicator = memo(function SessionStatusIndicator({
     setRetryCountdown(remaining);
 
     const interval = setInterval(() => {
-      const newRemaining = Math.max(
-        0,
-        Math.ceil((status.next - Date.now()) / 1000),
-      );
+      const newRemaining = Math.max(0, Math.ceil((status.next - Date.now()) / 1000));
       setRetryCountdown(newRemaining);
     }, 1000);
 
@@ -72,10 +62,7 @@ export const SessionStatusIndicator = memo(function SessionStatusIndicator({
     return null;
   }
 
-  const getSegmentColor = (
-    index: number,
-    statusType: SessionStatusType["type"],
-  ) => {
+  const getSegmentColor = (index: number, statusType: SessionStatusType["type"]) => {
     const distance = Math.abs(index - (position + SCANNER_WIDTH / 2));
     const maxDistance = SCANNER_WIDTH / 2;
 
@@ -119,9 +106,7 @@ export const SessionStatusIndicator = memo(function SessionStatusIndicator({
         {status.type === "retry" && (
           <>
             Retry #{status.attempt}
-            {retryCountdown > 0 && (
-              <span className="text-amber-500 ml-1">({retryCountdown}s)</span>
-            )}
+            {retryCountdown > 0 && <span className="text-amber-500 ml-1">({retryCountdown}s)</span>}
           </>
         )}
       </span>
@@ -142,12 +127,7 @@ export const CompactStatusIndicator = memo(function CompactStatusIndicator({
   const [frame, setFrame] = useState(0);
 
   useEffect(() => {
-    if (
-      status.type !== "busy" &&
-      status.type !== "retry" &&
-      status.type !== "compact"
-    )
-      return;
+    if (status.type !== "busy" && status.type !== "retry" && status.type !== "compact") return;
 
     const interval = setInterval(() => {
       setFrame((prev) => (prev + 1) % 8);

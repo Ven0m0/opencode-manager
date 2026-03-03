@@ -1,14 +1,14 @@
-import { useState, useRef, useEffect } from 'react'
-import type { components } from '@/api/opencode-types'
-import { useSettings } from '@/hooks/useSettings'
-import { useUserBash } from '@/stores/userBashStore'
-import { usePermissions, useQuestions } from '@/contexts/EventContext'
-import { detectFileReferences } from '@/lib/fileReferences'
-import { ExternalLink, Loader2 } from 'lucide-react'
-import { CopyButton } from '@/components/ui/copy-button'
-import { getToolSpecificRender } from './FileToolRender'
+import { ExternalLink, Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import type { components } from "@/api/opencode-types";
+import { CopyButton } from "@/components/ui/copy-button";
+import { usePermissions, useQuestions } from "@/contexts/EventContext";
+import { useSettings } from "@/hooks/useSettings";
+import { detectFileReferences } from "@/lib/fileReferences";
+import { useUserBash } from "@/stores/userBashStore";
+import { getToolSpecificRender } from "./FileToolRender";
 
-type ToolPart = components['schemas']['ToolPart']
+type ToolPart = components["schemas"]["ToolPart"];
 
 interface ToolCallPartProps {
   part: ToolPart;
@@ -71,24 +71,25 @@ function ClickableJson({
 }
 
 export function ToolCallPart({ part, onFileClick, onChildSessionClick }: ToolCallPartProps) {
-  const { preferences } = useSettings()
-  const { userBashCommands } = useUserBash()
-  const { getForCallID: getPermissionForCallID } = usePermissions()
-  const { getForCallID: getQuestionForCallID } = useQuestions()
-  const outputRef = useRef<HTMLDivElement>(null)
-  const isUserBashCommand = part.tool === 'bash' &&
-    part.state.status === 'completed' &&
-    typeof part.state.input?.command === 'string' &&
-    userBashCommands.has(part.state.input.command)
-  const isTodoTool = part.tool === 'todowrite' || part.tool === 'todoread'
-  const [expanded, setExpanded] = useState(isUserBashCommand || isTodoTool || (preferences?.expandToolCalls ?? false))
+  const { preferences } = useSettings();
+  const { userBashCommands } = useUserBash();
+  const { getForCallID: getPermissionForCallID } = usePermissions();
+  const { getForCallID: getQuestionForCallID } = useQuestions();
+  const outputRef = useRef<HTMLDivElement>(null);
+  const isUserBashCommand =
+    part.tool === "bash" &&
+    part.state.status === "completed" &&
+    typeof part.state.input?.command === "string" &&
+    userBashCommands.has(part.state.input.command);
+  const isTodoTool = part.tool === "todowrite" || part.tool === "todoread";
+  const [expanded, setExpanded] = useState(
+    isUserBashCommand || isTodoTool || (preferences?.expandToolCalls ?? false),
+  );
 
   const pendingPermission = getPermissionForCallID(part.callID, part.sessionID);
-  const isWaitingPermission =
-    part.state.status === "running" && !!pendingPermission;
+  const isWaitingPermission = part.state.status === "running" && !!pendingPermission;
   const pendingQuestion = getQuestionForCallID(part.callID, part.sessionID);
-  const isWaitingQuestion =
-    part.state.status === "running" && !!pendingQuestion;
+  const isWaitingQuestion = part.state.status === "running" && !!pendingQuestion;
 
   useEffect(() => {
     if (part.tool === "bash" && expanded && outputRef.current) {
@@ -123,9 +124,7 @@ export function ToolCallPart({ part, onFileClick, onChildSessionClick }: ToolCal
       case "running":
         return <Loader2 className="w-3.5 h-3.5 animate-spin" />;
       case "pending":
-        return (
-          <span className="inline-block w-2 h-2 rounded-full bg-current animate-pulse" />
-        );
+        return <span className="inline-block w-2 h-2 rounded-full bg-current animate-pulse" />;
       default:
         return <span>○</span>;
     }
@@ -160,8 +159,8 @@ export function ToolCallPart({ part, onFileClick, onChildSessionClick }: ToolCal
     }
   };
 
-  const previewText = getPreviewText()
-  const isFileTool = ['read', 'write', 'edit'].includes(part.tool)
+  const previewText = getPreviewText();
+  const isFileTool = ["read", "write", "edit"].includes(part.tool);
 
   if (isTodoTool) {
     if (part.state.status === "pending") {
@@ -183,11 +182,7 @@ export function ToolCallPart({ part, onFileClick, onChildSessionClick }: ToolCal
     }
 
     if (part.state.status === "completed") {
-      return (
-        <div className="my-2 text-xs text-muted-foreground">
-          Task list updated
-        </div>
-      );
+      return <div className="my-2 text-xs text-muted-foreground">Task list updated</div>;
     }
 
     if (part.state.status === "error") {
@@ -217,10 +212,7 @@ export function ToolCallPart({ part, onFileClick, onChildSessionClick }: ToolCal
           <span className="text-foreground">{command}</span>
           {part.state.status === "completed" && part.state.time && (
             <span className="text-muted-foreground text-xs ml-auto">
-              {((part.state.time.end - part.state.time.start) / 1000).toFixed(
-                2,
-              )}
-              s
+              {((part.state.time.end - part.state.time.start) / 1000).toFixed(2)}s
             </span>
           )}
         </div>
@@ -228,11 +220,7 @@ export function ToolCallPart({ part, onFileClick, onChildSessionClick }: ToolCal
           <pre className="bg-accent p-3 rounded text-xs overflow-x-auto whitespace-pre-wrap">
             {output}
           </pre>
-          <CopyButton
-            content={output}
-            title="Copy output"
-            className="absolute top-2 right-2"
-          />
+          <CopyButton content={output} title="Copy output" className="absolute top-2 right-2" />
         </div>
       </div>
     );
@@ -241,10 +229,8 @@ export function ToolCallPart({ part, onFileClick, onChildSessionClick }: ToolCal
   const getBorderStyle = () => {
     switch (part.state.status) {
       case "running":
-        if (isWaitingPermission)
-          return "border-orange-500/50 shadow-sm shadow-orange-500/20";
-        if (isWaitingQuestion)
-          return "border-blue-500/50 shadow-sm shadow-blue-500/20";
+        if (isWaitingPermission) return "border-orange-500/50 shadow-sm shadow-orange-500/20";
+        if (isWaitingQuestion) return "border-blue-500/50 shadow-sm shadow-blue-500/20";
         return "border-yellow-500/50 shadow-sm shadow-yellow-500/10";
       case "pending":
         return "border-blue-500/30";
@@ -283,21 +269,13 @@ export function ToolCallPart({ part, onFileClick, onChildSessionClick }: ToolCal
             {previewText}
           </span>
         ) : previewText ? (
-          <span className="text-muted-foreground text-xs truncate">
-            {previewText}
-          </span>
+          <span className="text-muted-foreground text-xs truncate">{previewText}</span>
         ) : null}
 
         {part.tool === "task" &&
           (() => {
-            let sessionId: string | undefined = part.metadata?.sessionId as
-              | string
-              | undefined;
-            if (
-              !sessionId &&
-              part.state.status !== "pending" &&
-              "metadata" in part.state
-            ) {
+            let sessionId: string | undefined = part.metadata?.sessionId as string | undefined;
+            if (!sessionId && part.state.status !== "pending" && "metadata" in part.state) {
               sessionId = part.state.metadata?.sessionId as string | undefined;
             }
             return sessionId ? (
@@ -354,46 +332,31 @@ export function ToolCallPart({ part, onFileClick, onChildSessionClick }: ToolCal
                   <div className="text-muted-foreground">Command:</div>
                   <CopyButton
                     content={
-                      typeof part.state.input?.command === "string"
-                        ? part.state.input.command
-                        : ""
+                      typeof part.state.input?.command === "string" ? part.state.input.command : ""
                     }
                     title="Copy command"
                   />
                 </div>
                 <div className="bg-accent p-2 rounded text-xs overflow-x-auto whitespace-pre-wrap break-words">
                   <span className="text-green-600 dark:text-green-400">$</span>{" "}
-                  {typeof part.state.input?.command === "string"
-                    ? part.state.input.command
-                    : ""}
+                  {typeof part.state.input?.command === "string" ? part.state.input.command : ""}
                 </div>
                 <div
                   className={`flex items-center gap-2 mt-2 text-xs ${isWaitingPermission ? "text-orange-600 dark:text-orange-400" : "text-yellow-600 dark:text-yellow-400"}`}
                 >
                   <Loader2 className="w-3 h-3 animate-spin" />
-                  <span>
-                    {isWaitingPermission
-                      ? "Waiting for permission..."
-                      : "Running..."}
-                  </span>
+                  <span>{isWaitingPermission ? "Waiting for permission..." : "Running..."}</span>
                 </div>
               </div>
             ) : (
               <div className="text-sm">
                 <div className="text-muted-foreground mb-1">Input:</div>
-                <ClickableJson
-                  json={part.state.input}
-                  onFileClick={onFileClick}
-                />
+                <ClickableJson json={part.state.input} onFileClick={onFileClick} />
                 <div
                   className={`flex items-center gap-2 mt-2 text-xs ${isWaitingPermission ? "text-orange-600 dark:text-orange-400" : "text-yellow-600 dark:text-yellow-400"}`}
                 >
                   <Loader2 className="w-3 h-3 animate-spin" />
-                  <span>
-                    {isWaitingPermission
-                      ? "Waiting for permission..."
-                      : "Running..."}
-                  </span>
+                  <span>{isWaitingPermission ? "Waiting for permission..." : "Running..."}</span>
                 </div>
               </div>
             ))}
@@ -414,21 +377,14 @@ export function ToolCallPart({ part, onFileClick, onChildSessionClick }: ToolCal
                     />
                   </div>
                   <div className="bg-accent p-2 rounded text-xs overflow-x-auto whitespace-pre-wrap break-words">
-                    <span className="text-green-600 dark:text-green-400">
-                      $
-                    </span>{" "}
-                    {typeof part.state.input?.command === "string"
-                      ? part.state.input.command
-                      : ""}
+                    <span className="text-green-600 dark:text-green-400">$</span>{" "}
+                    {typeof part.state.input?.command === "string" ? part.state.input.command : ""}
                   </div>
                 </div>
               ) : (
                 <div className="text-sm">
                   <div className="text-muted-foreground mb-1">Input:</div>
-                  <ClickableJson
-                    json={part.state.input}
-                    onFileClick={onFileClick}
-                  />
+                  <ClickableJson json={part.state.input} onFileClick={onFileClick} />
                 </div>
               )}
               <div className="text-sm">
@@ -449,12 +405,7 @@ export function ToolCallPart({ part, onFileClick, onChildSessionClick }: ToolCal
               </div>
               {part.state.time && (
                 <div className="text-xs text-muted-foreground">
-                  Duration:{" "}
-                  {(
-                    (part.state.time.end - part.state.time.start) /
-                    1000
-                  ).toFixed(2)}
-                  s
+                  Duration: {((part.state.time.end - part.state.time.start) / 1000).toFixed(2)}s
                 </div>
               )}
             </>

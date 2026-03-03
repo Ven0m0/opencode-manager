@@ -99,11 +99,8 @@ export const EditableUserMessage = memo(function EditableUserMessage({
 
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">
-          Press{" "}
-          <kbd className="px-1 py-0.5 rounded bg-muted text-xs">Cmd+Enter</kbd>{" "}
-          to send,{" "}
-          <kbd className="px-1 py-0.5 rounded bg-muted text-xs">Esc</kbd> to
-          cancel
+          Press <kbd className="px-1 py-0.5 rounded bg-muted text-xs">Cmd+Enter</kbd> to send,{" "}
+          <kbd className="px-1 py-0.5 rounded bg-muted text-xs">Esc</kbd> to cancel
         </span>
 
         <div className={`flex items-center ${isMobile ? "gap-3" : "gap-2"}`}>
@@ -148,9 +145,7 @@ export const ClickableUserMessage = memo(function ClickableUserMessage({
   const isMobile = useMobile();
 
   if (!isEditable) {
-    return (
-      <div className="text-sm whitespace-pre-wrap break-words">{content}</div>
-    );
+    return <div className="text-sm whitespace-pre-wrap break-words">{content}</div>;
   }
 
   return (

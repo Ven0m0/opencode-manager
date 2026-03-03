@@ -81,9 +81,7 @@ describe("SSH Routes", () => {
 
       expect(response.status).toBe(200);
       expect(body).toHaveProperty("success", true);
-      expect(
-        mockGitAuthService.sshHostKeyHandler?.respond,
-      ).toHaveBeenCalledWith({
+      expect(mockGitAuthService.sshHostKeyHandler?.respond).toHaveBeenCalledWith({
         requestId: "test-123",
         response: "accept",
       });
@@ -99,9 +97,7 @@ describe("SSH Routes", () => {
 
       expect(response.status).toBe(200);
       expect(body).toHaveProperty("success", true);
-      expect(
-        mockGitAuthService.sshHostKeyHandler?.respond,
-      ).toHaveBeenCalledWith({
+      expect(mockGitAuthService.sshHostKeyHandler?.respond).toHaveBeenCalledWith({
         requestId: "test-456",
         response: "reject",
       });
@@ -171,9 +167,7 @@ describe("SSH Routes", () => {
         body: JSON.stringify({ requestId, response: "accept" }),
       });
 
-      expect(
-        mockGitAuthService.sshHostKeyHandler?.respond,
-      ).toHaveBeenCalledWith({
+      expect(mockGitAuthService.sshHostKeyHandler?.respond).toHaveBeenCalledWith({
         requestId: "unique-request-id-12345",
         response: "accept",
       });

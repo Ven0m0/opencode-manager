@@ -67,18 +67,11 @@ import { createSettingsRoutes } from "../../src/routes/settings";
 import { opencodeServerManager } from "../../src/services/opencode-single-server";
 
 const mockExecSync = execSync as ReturnType<typeof vi.fn>;
-const mockGetVersion = opencodeServerManager.getVersion as ReturnType<
-  typeof vi.fn
->;
-const mockFetchVersion = opencodeServerManager.fetchVersion as ReturnType<
-  typeof vi.fn
->;
-const mockReloadConfig = opencodeServerManager.reloadConfig as ReturnType<
-  typeof vi.fn
->;
+const mockGetVersion = opencodeServerManager.getVersion as ReturnType<typeof vi.fn>;
+const mockFetchVersion = opencodeServerManager.fetchVersion as ReturnType<typeof vi.fn>;
+const mockReloadConfig = opencodeServerManager.reloadConfig as ReturnType<typeof vi.fn>;
 const mockRestart = opencodeServerManager.restart as ReturnType<typeof vi.fn>;
-const mockClearStartupError =
-  opencodeServerManager.clearStartupError as ReturnType<typeof vi.fn>;
+const mockClearStartupError = opencodeServerManager.clearStartupError as ReturnType<typeof vi.fn>;
 
 describe("Settings Routes - OpenCode Upgrade", () => {
   let settingsApp: ReturnType<typeof createSettingsRoutes>;
@@ -104,9 +97,7 @@ describe("Settings Routes - OpenCode Upgrade", () => {
   describe("POST /opencode-upgrade", () => {
     describe("successful upgrade scenarios", () => {
       it("should upgrade OpenCode successfully and respond with success", async () => {
-        mockGetVersion
-          .mockReturnValueOnce("1.0.0")
-          .mockReturnValueOnce("1.0.1");
+        mockGetVersion.mockReturnValueOnce("1.0.0").mockReturnValueOnce("1.0.1");
         mockExecSync.mockReturnValueOnce("Upgrade successful\n");
 
         const req = new Request("http://localhost/opencode-upgrade", {
@@ -123,9 +114,7 @@ describe("Settings Routes - OpenCode Upgrade", () => {
       });
 
       it("should return already up to date when version unchanged", async () => {
-        mockGetVersion
-          .mockReturnValueOnce("1.0.0")
-          .mockReturnValueOnce("1.0.0");
+        mockGetVersion.mockReturnValueOnce("1.0.0").mockReturnValueOnce("1.0.0");
         mockExecSync.mockReturnValueOnce("Already up to date\n");
 
         const req = new Request("http://localhost/opencode-upgrade", {
@@ -141,9 +130,7 @@ describe("Settings Routes - OpenCode Upgrade", () => {
       });
 
       it("should try reloadConfig first then restart on success", async () => {
-        mockGetVersion
-          .mockReturnValueOnce("1.0.0")
-          .mockReturnValueOnce("1.0.1");
+        mockGetVersion.mockReturnValueOnce("1.0.0").mockReturnValueOnce("1.0.1");
         mockExecSync.mockReturnValueOnce("Upgrade successful\n");
         mockReloadConfig.mockResolvedValueOnce(undefined);
 
@@ -157,9 +144,7 @@ describe("Settings Routes - OpenCode Upgrade", () => {
       });
 
       it("should fall back to restart if reloadConfig fails", async () => {
-        mockGetVersion
-          .mockReturnValueOnce("1.0.0")
-          .mockReturnValueOnce("1.0.1");
+        mockGetVersion.mockReturnValueOnce("1.0.0").mockReturnValueOnce("1.0.1");
         mockExecSync.mockReturnValueOnce("Upgrade successful\n");
         mockReloadConfig.mockRejectedValueOnce(new Error("Reload failed"));
 
@@ -175,9 +160,7 @@ describe("Settings Routes - OpenCode Upgrade", () => {
 
     describe("timeout and recovery scenarios", () => {
       it("should timeout after 90 seconds and attempt server recovery", async () => {
-        mockGetVersion
-          .mockReturnValueOnce("1.0.0")
-          .mockReturnValueOnce("1.0.0");
+        mockGetVersion.mockReturnValueOnce("1.0.0").mockReturnValueOnce("1.0.0");
         mockFetchVersion.mockResolvedValueOnce("1.0.0");
 
         const timeoutError = new Error("Command timeout");
@@ -212,9 +195,7 @@ describe("Settings Routes - OpenCode Upgrade", () => {
       });
 
       it("should attempt recovery when upgrade command throws non-timeout error", async () => {
-        mockGetVersion
-          .mockReturnValueOnce("1.0.0")
-          .mockReturnValueOnce("1.0.0");
+        mockGetVersion.mockReturnValueOnce("1.0.0").mockReturnValueOnce("1.0.0");
         mockFetchVersion.mockResolvedValueOnce("1.0.0");
         mockExecSync.mockImplementationOnce(() => {
           throw new Error("Network error");
@@ -233,9 +214,7 @@ describe("Settings Routes - OpenCode Upgrade", () => {
       });
 
       it("should return 500 when recovery fails", async () => {
-        mockGetVersion
-          .mockReturnValueOnce("1.0.0")
-          .mockReturnValueOnce("1.0.0");
+        mockGetVersion.mockReturnValueOnce("1.0.0").mockReturnValueOnce("1.0.0");
         mockFetchVersion.mockResolvedValueOnce("1.0.0");
         mockExecSync.mockImplementationOnce(() => {
           throw new Error("Upgrade failed");
@@ -345,9 +324,7 @@ describe("Settings Routes - OpenCode Upgrade", () => {
 
     describe("timeout and recovery", () => {
       it("should timeout and recover on version install", async () => {
-        mockGetVersion
-          .mockReturnValueOnce("1.0.0")
-          .mockReturnValueOnce("1.0.0");
+        mockGetVersion.mockReturnValueOnce("1.0.0").mockReturnValueOnce("1.0.0");
         mockFetchVersion.mockResolvedValueOnce("1.0.0");
         mockExecSync.mockImplementationOnce(() => {
           throw new Error("timeout");

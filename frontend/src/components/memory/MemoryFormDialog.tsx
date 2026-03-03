@@ -1,9 +1,13 @@
-import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { useCreateMemory, useUpdateMemory } from '@/hooks/useMemories'
-import type { Memory, CreateMemoryRequest, UpdateMemoryRequest } from '@opencode-manager/shared/types'
+import { zodResolver } from "@hookform/resolvers/zod";
+import type {
+  CreateMemoryRequest,
+  Memory,
+  UpdateMemoryRequest,
+} from "@opencode-manager/shared/types";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,29 +15,35 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useCreateMemory, useUpdateMemory } from "@/hooks/useMemories";
 
 const memorySchema = z.object({
-  content: z.string().min(1, 'Content is required').max(10000),
-  scope: z.enum(['convention', 'decision', 'context']),
-})
+  content: z.string().min(1, "Content is required").max(10000),
+  scope: z.enum(["convention", "decision", "context"]),
+});
 
-type MemoryFormData = z.infer<typeof memorySchema>
+type MemoryFormData = z.infer<typeof memorySchema>;
 
 interface MemoryFormDialogProps {
-  memory?: Memory
-  projectId?: string
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  memory?: Memory;
+  projectId?: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function MemoryFormDialog({ memory, projectId, open, onOpenChange }: MemoryFormDialogProps) {
-  const createMutation = useCreateMemory()
-  const updateMutation = useUpdateMemory()
+  const createMutation = useCreateMemory();
+  const updateMutation = useUpdateMemory();
 
   const {
     register,
@@ -45,12 +55,12 @@ export function MemoryFormDialog({ memory, projectId, open, onOpenChange }: Memo
   } = useForm<MemoryFormData>({
     resolver: zodResolver(memorySchema),
     defaultValues: {
-      content: '',
-      scope: 'context',
+      content: "",
+      scope: "context",
     },
-  })
+  });
 
-  const selectedScope = watch('scope')
+  const selectedScope = watch("scope");
 
   useEffect(() => {
     if (open) {
@@ -58,45 +68,45 @@ export function MemoryFormDialog({ memory, projectId, open, onOpenChange }: Memo
         reset({
           content: memory.content,
           scope: memory.scope,
-        })
+        });
       } else {
         reset({
-          content: '',
-          scope: 'context',
-        })
+          content: "",
+          scope: "context",
+        });
       }
     }
-  }, [open, memory, reset])
+  }, [open, memory, reset]);
 
   const onSubmit = async (data: MemoryFormData) => {
     if (memory) {
       const updateData: UpdateMemoryRequest = {
         content: data.content,
         scope: data.scope,
-      }
-      await updateMutation.mutateAsync({ id: memory.id, data: updateData })
+      };
+      await updateMutation.mutateAsync({ id: memory.id, data: updateData });
     } else if (projectId) {
       const createData: CreateMemoryRequest = {
         projectId,
         content: data.content,
         scope: data.scope,
-      }
-      await createMutation.mutateAsync(createData)
+      };
+      await createMutation.mutateAsync(createData);
     }
-    onOpenChange(false)
-  }
+    onOpenChange(false);
+  };
 
-  const isLoading = createMutation.isPending || updateMutation.isPending
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{memory ? 'Edit Memory' : 'Create Memory'}</DialogTitle>
+          <DialogTitle>{memory ? "Edit Memory" : "Create Memory"}</DialogTitle>
           <DialogDescription>
             {memory
-              ? 'Update the memory content and scope.'
-              : 'Add a new memory to store project knowledge.'}
+              ? "Update the memory content and scope."
+              : "Add a new memory to store project knowledge."}
           </DialogDescription>
         </DialogHeader>
 
@@ -105,7 +115,7 @@ export function MemoryFormDialog({ memory, projectId, open, onOpenChange }: Memo
             <Label htmlFor="scope">Scope</Label>
             <Select
               value={selectedScope}
-              onValueChange={(value) => setValue('scope', value as MemoryFormData['scope'])}
+              onValueChange={(value) => setValue("scope", value as MemoryFormData["scope"])}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select scope" />
@@ -122,26 +132,24 @@ export function MemoryFormDialog({ memory, projectId, open, onOpenChange }: Memo
             <Label htmlFor="content">Content</Label>
             <Textarea
               id="content"
-              {...register('content')}
+              {...register("content")}
               placeholder="Enter memory content..."
               rows={5}
               className="resize-none"
             />
-            {errors.content && (
-              <p className="text-sm text-destructive">{errors.content.message}</p>
-            )}
+            {errors.content && <p className="text-sm text-destructive">{errors.content.message}</p>}
           </div>
 
-          <DialogFooter className='flex gap-2 flex-wrap'>
+          <DialogFooter className="flex gap-2 flex-wrap">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Saving...' : memory ? 'Update' : 'Create'}
+              {isLoading ? "Saving..." : memory ? "Update" : "Create"}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -1,8 +1,8 @@
-import { Hono } from 'hono'
-import { z } from 'zod'
-import { logger } from '../utils/logger'
-import { GitAuthService } from '../services/git-auth'
-import { SSHHostKeyResponseSchema } from '@opencode-manager/shared'
+import { SSHHostKeyResponseSchema } from "@opencode-manager/shared";
+import { Hono } from "hono";
+import { z } from "zod";
+import type { GitAuthService } from "../services/git-auth";
+import { logger } from "../utils/logger";
 
 interface SSHHostKeyResponse {
   success: boolean;
@@ -30,15 +30,9 @@ export function createSSHRoutes(gitAuthService: GitAuthService) {
     } catch (error) {
       logger.error("Error responding to SSH host key request:", error);
       if (error instanceof z.ZodError) {
-        return c.json<SSHHostKeyResponse>(
-          { success: false, error: "Invalid request body" },
-          400,
-        );
+        return c.json<SSHHostKeyResponse>({ success: false, error: "Invalid request body" }, 400);
       }
-      return c.json<SSHHostKeyResponse>(
-        { success: false, error: "Internal server error" },
-        500,
-      );
+      return c.json<SSHHostKeyResponse>({ success: false, error: "Internal server error" }, 500);
     }
   });
 
@@ -46,10 +40,7 @@ export function createSSHRoutes(gitAuthService: GitAuthService) {
     try {
       const handler = gitAuthService.sshHostKeyHandler;
       if (!handler) {
-        return c.json(
-          { success: false, error: "SSH host key handler not found" },
-          404,
-        );
+        return c.json({ success: false, error: "SSH host key handler not found" }, 404);
       }
 
       const pendingCount = handler.getPendingCount();

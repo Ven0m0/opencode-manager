@@ -18,10 +18,7 @@ interface VersionSelectDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function VersionSelectDialog({
-  open,
-  onOpenChange,
-}: VersionSelectDialogProps) {
+export function VersionSelectDialog({ open, onOpenChange }: VersionSelectDialogProps) {
   const queryClient = useQueryClient();
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
 
@@ -33,17 +30,13 @@ export function VersionSelectDialog({
   });
 
   const installMutation = useMutation({
-    mutationFn: (version: string) =>
-      settingsApi.installOpenCodeVersion(version),
+    mutationFn: (version: string) => settingsApi.installOpenCodeVersion(version),
     onSuccess: (result) => {
       if (result.newVersion) {
-        queryClient.setQueryData(
-          ["health"],
-          (old: Record<string, unknown> | undefined) => {
-            if (!old) return old;
-            return { ...old, opencodeVersion: result.newVersion };
-          },
-        );
+        queryClient.setQueryData(["health"], (old: Record<string, unknown> | undefined) => {
+          if (!old) return old;
+          return { ...old, opencodeVersion: result.newVersion };
+        });
       }
       queryClient.invalidateQueries({ queryKey: ["opencode-versions"] });
       invalidateConfigCaches(queryClient);
@@ -69,16 +62,11 @@ export function VersionSelectDialog({
         const data = response?.data;
 
         if (data?.recovered) {
-          queryClient.setQueryData(
-            ["health"],
-            (old: Record<string, unknown> | undefined) => {
-              if (!old) return old;
-              return { ...old, opencodeVersion: data.newVersion };
-            },
-          );
-          showToast.success(
-            `Install failed but server recovered at v${data.newVersion}`,
-          );
+          queryClient.setQueryData(["health"], (old: Record<string, unknown> | undefined) => {
+            if (!old) return old;
+            return { ...old, opencodeVersion: data.newVersion };
+          });
+          showToast.success(`Install failed but server recovered at v${data.newVersion}`);
         } else {
           showToast.error(data?.recoveryMessage || "Failed to install version");
         }
@@ -125,11 +113,7 @@ export function VersionSelectDialog({
           </div>
         )}
 
-        {error && (
-          <div className="text-center py-8 text-red-500">
-            Failed to fetch versions
-          </div>
-        )}
+        {error && <div className="text-center py-8 text-red-500">Failed to fetch versions</div>}
 
         {data && (
           <>
@@ -142,9 +126,7 @@ export function VersionSelectDialog({
                   return (
                     <button
                       key={release.version}
-                      onClick={() =>
-                        setSelectedVersion(isCurrent ? null : release.version)
-                      }
+                      onClick={() => setSelectedVersion(isCurrent ? null : release.version)}
                       disabled={isCurrent || installMutation.isPending}
                       className={`w-full text-left p-3 rounded-lg border transition-colors ${
                         isSelected
@@ -168,9 +150,7 @@ export function VersionSelectDialog({
                             {formatDate(release.publishedAt)}
                           </div>
                         </div>
-                        {isSelected && (
-                          <Check className="h-4 w-4 text-primary" />
-                        )}
+                        {isSelected && <Check className="h-4 w-4 text-primary" />}
                       </div>
                     </button>
                   );

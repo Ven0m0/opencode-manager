@@ -38,9 +38,7 @@ export function FilePreviewDialog({
       setError(null);
 
       try {
-        const fullPath = repoBasePath
-          ? `${repoBasePath}/${filePath}`
-          : filePath;
+        const fullPath = repoBasePath ? `${repoBasePath}/${filePath}` : filePath;
         const response = await fetch(`${API_BASE_URL}/api/files/${fullPath}`);
 
         if (!response.ok) {

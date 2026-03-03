@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { fetchWrapper } from '@/api/fetchWrapper'
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { fetchWrapper } from "@/api/fetchWrapper";
 
 export interface FileSearchResult {
   files: string[];
@@ -30,12 +30,10 @@ export function useFileSearch(
       if (directory) {
         params.append("directory", directory);
       }
-      
-      const data = await fetchWrapper<string[]>(
-        `${opcodeUrl}/find/file?${params.toString()}`
-      )
-      
-      return data
+
+      const data = await fetchWrapper<string[]>(`${opcodeUrl}/find/file?${params.toString()}`);
+
+      return data;
     },
     enabled: enabled && !!opcodeUrl && !!debouncedQuery,
     staleTime: 60000,

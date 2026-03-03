@@ -23,10 +23,7 @@ export interface STTErrorResponse {
 }
 
 export const sttApi = {
-  getModels: async (
-    userId = "default",
-    forceRefresh = false,
-  ): Promise<STTModelsResponse> => {
+  getModels: async (userId = "default", forceRefresh = false): Promise<STTModelsResponse> => {
     return fetchWrapper(`${API_BASE_URL}/api/stt/models`, {
       params: { userId, ...(forceRefresh && { refresh: "true" }) },
     });
@@ -54,10 +51,7 @@ export const sttApi = {
           : "webm";
     formData.append("audio", audioBlob, `recording.${extension}`);
 
-    const urlObj = new URL(
-      `${API_BASE_URL}/api/stt/transcribe`,
-      window.location.origin,
-    );
+    const urlObj = new URL(`${API_BASE_URL}/api/stt/transcribe`, window.location.origin);
     urlObj.searchParams.set("userId", userId);
 
     const controller = new AbortController();
@@ -75,13 +69,8 @@ export const sttApi = {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        const data = await response
-          .json()
-          .catch(() => ({ error: "Transcription failed" }));
-        throw new FetchError(
-          data.error || "Transcription failed",
-          response.status,
-        );
+        const data = await response.json().catch(() => ({ error: "Transcription failed" }));
+        throw new FetchError(data.error || "Transcription failed", response.status);
       }
 
       return response.json();

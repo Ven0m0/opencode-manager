@@ -1,31 +1,42 @@
-import { useState, useMemo, useCallback } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { DeleteDialog } from '@/components/ui/delete-dialog'
-import { Loader2, Check, X, Shield, ChevronDown, ChevronRight, Key, Search, Pencil, Trash2 } from 'lucide-react'
-import { providerCredentialsApi, getProviders } from '@/api/providers'
-import type { Provider } from '@/api/providers'
-import { oauthApi, type OAuthAuthorizeResponse } from '@/api/oauth'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { OAuthAuthorizeDialog } from './OAuthAuthorizeDialog'
-import { OAuthCallbackDialog } from './OAuthCallbackDialog'
-import { ApiKeyDialog } from '@/components/model/ApiKeyDialog'
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Key,
+  Loader2,
+  Pencil,
+  Search,
+  Shield,
+  Trash2,
+  X,
+} from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { type OAuthAuthorizeResponse, oauthApi } from "@/api/oauth";
+import type { Provider } from "@/api/providers";
+import { getProviders, providerCredentialsApi } from "@/api/providers";
+import { ApiKeyDialog } from "@/components/model/ApiKeyDialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DeleteDialog } from "@/components/ui/delete-dialog";
+import { Input } from "@/components/ui/input";
+import { OAuthAuthorizeDialog } from "./OAuthAuthorizeDialog";
+import { OAuthCallbackDialog } from "./OAuthCallbackDialog";
 
 export function ProviderSettings() {
-  const [selectedProvider, setSelectedProvider] = useState<string | null>(null)
-  const [oauthDialogOpen, setOauthDialogOpen] = useState(false)
-  const [oauthCallbackDialogOpen, setOauthCallbackDialogOpen] = useState(false)
-  const [oauthResponse, setOauthResponse] = useState<OAuthAuthorizeResponse | null>(null)
-  const [connectedExpanded, setConnectedExpanded] = useState(false)
-  const [availableExpanded, setAvailableExpanded] = useState(false)
-  const [availableSearch, setAvailableSearch] = useState('')
-  const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false)
-  const [apiKeyProvider, setApiKeyProvider] = useState<Provider | null>(null)
-  const [apiKeyMode, setApiKeyMode] = useState<'add' | 'edit'>('add')
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
-  const queryClient = useQueryClient()
+  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
+  const [oauthDialogOpen, setOauthDialogOpen] = useState(false);
+  const [oauthCallbackDialogOpen, setOauthCallbackDialogOpen] = useState(false);
+  const [oauthResponse, setOauthResponse] = useState<OAuthAuthorizeResponse | null>(null);
+  const [connectedExpanded, setConnectedExpanded] = useState(false);
+  const [availableExpanded, setAvailableExpanded] = useState(false);
+  const [availableSearch, setAvailableSearch] = useState("");
+  const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false);
+  const [apiKeyProvider, setApiKeyProvider] = useState<Provider | null>(null);
+  const [apiKeyMode, setApiKeyMode] = useState<"add" | "edit">("add");
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: providersData, isLoading: providersLoading } = useQuery({
     queryKey: ["providers"],
@@ -46,8 +57,7 @@ export function ProviderSettings() {
   });
 
   const deleteCredentialMutation = useMutation({
-    mutationFn: (providerId: string) =>
-      providerCredentialsApi.delete(providerId),
+    mutationFn: (providerId: string) => providerCredentialsApi.delete(providerId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["provider-credentials"] });
       queryClient.invalidateQueries({ queryKey: ["providers"] });
@@ -56,19 +66,19 @@ export function ProviderSettings() {
   });
 
   const handleDeleteCredential = (providerId: string) => {
-    setDeleteTarget(providerId)
-  }
+    setDeleteTarget(providerId);
+  };
 
   const handleDeleteConfirm = () => {
     if (deleteTarget) {
-      deleteCredentialMutation.mutate(deleteTarget)
-      setDeleteTarget(null)
+      deleteCredentialMutation.mutate(deleteTarget);
+      setDeleteTarget(null);
     }
   };
 
   const handleDeleteCancel = () => {
-    setDeleteTarget(null)
-  }
+    setDeleteTarget(null);
+  };
 
   const handleOAuthAuthorize = (response: OAuthAuthorizeResponse) => {
     setOauthResponse(response);
@@ -110,15 +120,9 @@ export function ProviderSettings() {
 
   const apiKeyProviders = useMemo(() => {
     if (!providers || !authMethods) return { connected: [], available: [] };
-    const nonOAuthProviders = providers.filter(
-      (provider) => !supportsOAuth(provider.id),
-    );
-    const connected = nonOAuthProviders.filter((provider) =>
-      hasCredentials(provider.id),
-    );
-    const available = nonOAuthProviders.filter(
-      (provider) => !hasCredentials(provider.id),
-    );
+    const nonOAuthProviders = providers.filter((provider) => !supportsOAuth(provider.id));
+    const connected = nonOAuthProviders.filter((provider) => hasCredentials(provider.id));
+    const available = nonOAuthProviders.filter((provider) => !hasCredentials(provider.id));
     return { connected, available };
   }, [providers, authMethods, supportsOAuth, hasCredentials]);
 
@@ -127,17 +131,13 @@ export function ProviderSettings() {
     const search = availableSearch.toLowerCase();
     return apiKeyProviders.available.filter(
       (provider) =>
-        provider.name.toLowerCase().includes(search) ||
-        provider.id.toLowerCase().includes(search),
+        provider.name.toLowerCase().includes(search) || provider.id.toLowerCase().includes(search),
     );
   }, [apiKeyProviders.available, availableSearch]);
 
   const selectedProviderName = useMemo(() => {
     if (!selectedProvider) return "";
-    return (
-      providers?.find((p) => p.id === selectedProvider)?.name ||
-      selectedProvider
-    );
+    return providers?.find((p) => p.id === selectedProvider)?.name || selectedProvider;
   }, [selectedProvider, providers]);
 
   const handleAddApiKey = useCallback((provider: Provider) => {
@@ -179,9 +179,7 @@ export function ProviderSettings() {
     <div className="space-y-8">
       <div className="space-y-4">
         <div>
-          <h2 className="text-lg font-semibold text-foreground mb-2">
-            OAuth Providers
-          </h2>
+          <h2 className="text-lg font-semibold text-foreground mb-2">OAuth Providers</h2>
           <p className="text-sm text-muted-foreground">
             Connect to AI providers using OAuth authentication.
           </p>
@@ -206,9 +204,7 @@ export function ProviderSettings() {
                   <CardHeader className="p-2">
                     <div className="flex flex-col gap-3">
                       <div className="flex items-start justify-between gap-2">
-                        <CardTitle className="text-base">
-                          {provider.name || provider.id}
-                        </CardTitle>
+                        <CardTitle className="text-base">{provider.name || provider.id}</CardTitle>
                         {hasKey ? (
                           <Badge
                             variant="default"
@@ -286,12 +282,8 @@ export function ProviderSettings() {
 
       <div className="space-y-4">
         <div>
-          <h2 className="text-lg font-semibold text-foreground mb-2">
-            API Keys
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Manage API keys for AI providers.
-          </p>
+          <h2 className="text-lg font-semibold text-foreground mb-2">API Keys</h2>
+          <p className="text-sm text-muted-foreground">Manage API keys for AI providers.</p>
         </div>
 
         <div className="space-y-3">
@@ -352,9 +344,7 @@ export function ProviderSettings() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() =>
-                                handleDeleteCredential(provider.id)
-                              }
+                              onClick={() => handleDeleteCredential(provider.id)}
                               disabled={deleteCredentialMutation.isPending}
                               className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                             >
@@ -409,9 +399,7 @@ export function ProviderSettings() {
                   </p>
                 ) : (
                   filteredAvailableProviders.map((provider, index) => {
-                    const modelCount = Object.keys(
-                      provider.models || {},
-                    ).length;
+                    const modelCount = Object.keys(provider.models || {}).length;
                     return (
                       <div
                         key={provider.id}
@@ -456,12 +444,10 @@ export function ProviderSettings() {
             api: apiKeyProvider.api,
             env: apiKeyProvider.env || [],
             npm: apiKeyProvider.npm,
-            models: Object.entries(apiKeyProvider.models || {}).map(
-              ([id, model]) => ({
-                id,
-                name: model.name || id,
-              }),
-            ),
+            models: Object.entries(apiKeyProvider.models || {}).map(([id, model]) => ({
+              id,
+              name: model.name || id,
+            })),
             source: "builtin",
             isConnected: hasCredentials(apiKeyProvider.id),
           }}
@@ -476,7 +462,7 @@ export function ProviderSettings() {
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
         title="Remove Credentials"
-        description={`Are you sure you want to remove credentials for ${deleteTarget || 'this provider'}?`}
+        description={`Are you sure you want to remove credentials for ${deleteTarget || "this provider"}?`}
         isDeleting={deleteCredentialMutation.isPending}
       />
     </div>

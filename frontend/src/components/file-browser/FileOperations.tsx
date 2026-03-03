@@ -96,11 +96,7 @@ export const FileOperations = memo(function FileOperations({
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => fileInputRef.current?.click()}
-        >
+        <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
           <Upload className="w-4 h-4" />
           <span className="hidden sm:inline ml-1">Upload</span>
         </Button>
@@ -151,10 +147,7 @@ export const FileOperations = memo(function FileOperations({
             />
 
             <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setCreateDialogOpen(false)}
-              >
+              <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
                 Cancel
               </Button>
               <Button onClick={handleCreate} disabled={!createName.trim()}>

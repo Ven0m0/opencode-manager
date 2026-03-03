@@ -41,8 +41,6 @@ export const useSessionTodos = create<SessionTodosStore>((set, get) => ({
 }));
 
 export const useSessionTodosForSession = (sessionID: string | undefined): Todo[] => {
-  const todos = useSessionTodos((state) => 
-    sessionID ? state.todos.get(sessionID) : undefined
-  )
-  return todos || []
-}
+  const todos = useSessionTodos((state) => (sessionID ? state.todos.get(sessionID) : undefined));
+  return todos || [];
+};

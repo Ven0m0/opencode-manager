@@ -15,9 +15,7 @@ export interface ParsedError {
   providerID?: string;
 }
 
-export function parseOpenCodeError(
-  error: OpenCodeError | undefined | null,
-): ParsedError | null {
+export function parseOpenCodeError(error: OpenCodeError | undefined | null): ParsedError | null {
   if (!error) return null;
 
   switch (error.name) {
@@ -25,8 +23,7 @@ export function parseOpenCodeError(
       return {
         title: "Authentication Failed",
         message:
-          error.data.message ||
-          `Authentication failed for provider: ${error.data.providerID}`,
+          error.data.message || `Authentication failed for provider: ${error.data.providerID}`,
         isRetryable: false,
         providerID: error.data.providerID,
       };
@@ -71,10 +68,7 @@ export function parseOpenCodeError(
 
 export function parseNetworkError(error: unknown): ParsedError {
   if (error instanceof Error) {
-    if (
-      error.message.includes("timeout") ||
-      error.message.includes("ETIMEDOUT")
-    ) {
+    if (error.message.includes("timeout") || error.message.includes("ETIMEDOUT")) {
       return {
         title: "Request Timeout",
         message: "The request took too long to complete. Please try again.",
@@ -82,26 +76,18 @@ export function parseNetworkError(error: unknown): ParsedError {
       };
     }
 
-    if (
-      error.message.includes("Network Error") ||
-      error.message.includes("ECONNREFUSED")
-    ) {
+    if (error.message.includes("Network Error") || error.message.includes("ECONNREFUSED")) {
       return {
         title: "Connection Failed",
-        message:
-          "Could not connect to the server. Please check your connection.",
+        message: "Could not connect to the server. Please check your connection.",
         isRetryable: true,
       };
     }
 
-    if (
-      error.message.includes("502") ||
-      error.message.includes("Bad Gateway")
-    ) {
+    if (error.message.includes("502") || error.message.includes("Bad Gateway")) {
       return {
         title: "Server Unavailable",
-        message:
-          "The OpenCode server is not responding. It may need to be restarted.",
+        message: "The OpenCode server is not responding. It may need to be restarted.",
         isRetryable: true,
       };
     }
@@ -120,9 +106,7 @@ export function parseNetworkError(error: unknown): ParsedError {
   };
 }
 
-export function getErrorMessage(
-  error: OpenCodeError | undefined | null,
-): string {
+export function getErrorMessage(error: OpenCodeError | undefined | null): string {
   const parsed = parseOpenCodeError(error);
   return parsed ? `${parsed.title}: ${parsed.message}` : "";
 }

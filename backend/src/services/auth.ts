@@ -10,9 +10,7 @@ type AuthCredentials = z.infer<typeof AuthCredentialsSchema>;
 export class AuthService {
   private authPath = getAuthPath();
 
-  private migrateEntry(
-    entry: Record<string, unknown>,
-  ): Record<string, unknown> {
+  private migrateEntry(entry: Record<string, unknown>): Record<string, unknown> {
     if (entry.type === "apiKey" && typeof entry.apiKey === "string") {
       return {
         type: "api",
@@ -25,10 +23,7 @@ export class AuthService {
   async getAll(): Promise<AuthCredentials> {
     try {
       const data = await fs.readFile(this.authPath, "utf-8");
-      const parsed = JSON.parse(data) as Record<
-        string,
-        Record<string, unknown>
-      >;
+      const parsed = JSON.parse(data) as Record<string, Record<string, unknown>>;
 
       let needsMigration = false;
       const migrated: Record<string, Record<string, unknown>> = {};

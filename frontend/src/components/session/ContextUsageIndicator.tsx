@@ -17,13 +17,11 @@ export function ContextUsageIndicator({
   isConnected,
   isReconnecting,
 }: ContextUsageIndicatorProps) {
-  const {
-    totalTokens,
-    contextLimit,
-    usagePercentage,
-    currentModel,
-    isLoading,
-  } = useContextUsage(opcodeUrl, sessionID, directory);
+  const { totalTokens, contextLimit, usagePercentage, currentModel, isLoading } = useContextUsage(
+    opcodeUrl,
+    sessionID,
+    directory,
+  );
   const [modelName, setModelName] = useState<string>("");
 
   useEffect(() => {
@@ -69,11 +67,7 @@ export function ContextUsageIndicator({
   }
 
   if (!isConnected) {
-    return (
-      <span className="text-xs text-muted-foreground font-medium">
-        Disconnected
-      </span>
-    );
+    return <span className="text-xs text-muted-foreground font-medium">Disconnected</span>;
   }
 
   if (!modelName) {

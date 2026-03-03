@@ -25,10 +25,7 @@ export const RetryPart = memo(function RetryPart({ part }: RetryPartProps) {
     }
 
     const timer = setInterval(() => {
-      const remaining = Math.max(
-        0,
-        Math.ceil((nextTimestamp - Date.now()) / 1000),
-      );
+      const remaining = Math.max(0, Math.ceil((nextTimestamp - Date.now()) / 1000));
       setCountdown(remaining);
       if (remaining <= 0) {
         clearInterval(timer);
@@ -57,16 +54,12 @@ export const RetryPart = memo(function RetryPart({ part }: RetryPartProps) {
             Retry attempt {part.attempt}
           </span>
           {countdown > 0 ? (
-            <span className="text-xs text-amber-500/80">
-              (retrying in {countdown}s)
-            </span>
+            <span className="text-xs text-amber-500/80">(retrying in {countdown}s)</span>
           ) : (
             <span className="text-xs text-amber-500/80">(retrying...)</span>
           )}
         </div>
-        <p className="text-xs text-muted-foreground truncate mt-0.5">
-          {errorMessage}
-        </p>
+        <p className="text-xs text-muted-foreground truncate mt-0.5">{errorMessage}</p>
       </div>
     </div>
   );

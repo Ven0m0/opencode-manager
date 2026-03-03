@@ -1,11 +1,4 @@
-import {
-  AlertCircle,
-  Download,
-  FolderOpen,
-  GitBranch,
-  Loader2,
-  Trash2,
-} from "lucide-react";
+import { AlertCircle, Download, FolderOpen, GitBranch, Loader2, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { downloadRepo } from "@/api/repos";
@@ -50,8 +43,7 @@ export function RepoCard({
   const repoName = repo.repoUrl
     ? repo.repoUrl.split("/").slice(-1)[0].replace(".git", "")
     : repo.localPath || "Local Repo";
-  const branchToDisplay =
-    gitStatus?.branch || repo.currentBranch || repo.branch;
+  const branchToDisplay = gitStatus?.branch || repo.currentBranch || repo.branch;
   const isReady = repo.cloneStatus === "ready";
   const isCloning = repo.cloneStatus === "cloning";
 
@@ -72,17 +64,12 @@ export function RepoCard({
     action();
   };
 
-  const handleDownload = async (options: {
-    includeGit?: boolean;
-    includePaths?: string[];
-  }) => {
+  const handleDownload = async (options: { includeGit?: boolean; includePaths?: string[] }) => {
     try {
       await downloadRepo(repo.id, repoName, options);
       showToast.success("Download complete");
     } catch (error: unknown) {
-      showToast.error(
-        error instanceof Error ? error.message : "Download failed",
-      );
+      showToast.error(error instanceof Error ? error.message : "Download failed");
     }
   };
 
@@ -93,33 +80,23 @@ export function RepoCard({
         isReady
           ? "cursor-pointer active:scale-[0.98] hover:border-blue-500/50 hover:bg-accent/50 hover:shadow-md"
           : "cursor-default"
-      } ${
-        isSelected ? "border-blue-500 bg-blue-500/5" : "border-border bg-card"
-      }`}
+      } ${isSelected ? "border-blue-500 bg-blue-500/5" : "border-border bg-card"}`}
     >
       <div className="p-2">
         <div>
           <div className="flex items-start gap-3 mb-1">
             {onSelect && (
-              <div
-                onClick={(e) =>
-                  handleActionClick(e, () => onSelect(repo.id, !isSelected))
-                }
-              >
+              <div onClick={(e) => handleActionClick(e, () => onSelect(repo.id, !isSelected))}>
                 <Checkbox
                   checked={isSelected}
-                  onCheckedChange={(checked) =>
-                    onSelect(repo.id, checked === true)
-                  }
+                  onCheckedChange={(checked) => onSelect(repo.id, checked === true)}
                   className="w-5 h-5"
                 />
               </div>
             )}
 
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-base text-foreground truncate">
-                {repoName}
-              </h3>
+              <h3 className="font-semibold text-base text-foreground truncate">{repoName}</h3>
               {isReady && (
                 <div
                   className={`w-2 h-2 rounded-full shrink-0 ${isDirty ? "bg-orange-500" : "bg-green-500"}`}
@@ -141,9 +118,7 @@ export function RepoCard({
                     className={`flex items-center gap-1 shrink-0 ${repo.isWorktree ? "text-purple-400" : ""}`}
                   >
                     <GitBranch className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate max-w-[80px]">
-                      {branchToDisplay || "main"}
-                    </span>
+                    <span className="truncate max-w-[80px]">{branchToDisplay || "main"}</span>
                   </span>
                   {isDirty && (
                     <span className="flex items-center gap-1 text-orange-600 dark:text-orange-400 shrink-0">
@@ -172,16 +147,11 @@ export function RepoCard({
               )}
             </div>
 
-            <div
-              className="flex items-center gap-1 shrink-0"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={(e) =>
-                  handleActionClick(e, () => setShowSourceControl(true))
-                }
+                onClick={(e) => handleActionClick(e, () => setShowSourceControl(true))}
                 disabled={!isReady}
                 className="h-8 w-8 p-0"
                 title="Source Control"
@@ -192,9 +162,7 @@ export function RepoCard({
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={(e) =>
-                  handleActionClick(e, () => setShowDownloadDialog(true))
-                }
+                onClick={(e) => handleActionClick(e, () => setShowDownloadDialog(true))}
                 disabled={!isReady}
                 className="h-8 w-8 p-0"
               >

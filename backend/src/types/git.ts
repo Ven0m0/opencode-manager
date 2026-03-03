@@ -31,13 +31,13 @@ export interface GitStatusResponse {
 }
 
 export interface FileDiffResponse {
-  path: string
-  status: GitFileStatusType
-  diff: string
-  additions: number
-  deletions: number
-  isBinary: boolean
-  truncated?: boolean
+  path: string;
+  status: GitFileStatusType;
+  diff: string;
+  additions: number;
+  deletions: number;
+  isBinary: boolean;
+  truncated?: boolean;
 }
 
 export interface GitDiffOptions {
@@ -57,13 +57,13 @@ export interface GitBranch {
 }
 
 export interface CommitFile {
-  path: string
-  status: GitFileStatusType
-  oldPath?: string
-  additions: number
-  deletions: number
+  path: string;
+  status: GitFileStatusType;
+  oldPath?: string;
+  additions: number;
+  deletions: number;
 }
 
 export interface CommitDetails extends GitCommit {
-  files: CommitFile[]
+  files: CommitFile[];
 }

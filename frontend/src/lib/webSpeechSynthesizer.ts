@@ -24,10 +24,7 @@ export class WebSpeechSynthesizer {
   private voicesLoaded = false;
   private onEndCallbacks: (() => void)[] = [];
   private onErrorCallbacks: ((error: string) => void)[] = [];
-  private onBoundaryCallbacks: ((
-    charIndex: number,
-    charLength: number,
-  ) => void)[] = [];
+  private onBoundaryCallbacks: ((charIndex: number, charLength: number) => void)[] = [];
   private pendingResolve: (() => void) | null = null;
   private pendingReject: ((error: Error) => void) | null = null;
 
@@ -123,18 +120,14 @@ export class WebSpeechSynthesizer {
    * Check if a specific voice is available
    */
   hasVoice(nameOrUri: string): boolean {
-    return this.getVoices().some(
-      (v) => v.name === nameOrUri || v.voiceURI === nameOrUri,
-    );
+    return this.getVoices().some((v) => v.name === nameOrUri || v.voiceURI === nameOrUri);
   }
 
   /**
    * Find a voice by name or URI
    */
   findVoice(nameOrUri: string): WebSpeechVoice | undefined {
-    return this.getVoices().find(
-      (v) => v.name === nameOrUri || v.voiceURI === nameOrUri,
-    );
+    return this.getVoices().find((v) => v.name === nameOrUri || v.voiceURI === nameOrUri);
   }
 
   /**
@@ -180,9 +173,7 @@ export class WebSpeechSynthesizer {
         const voice = this.findVoice(options.voice);
         if (voice) {
           utterance.voice =
-            this.synthesis
-              ?.getVoices()
-              .find((v) => v.voiceURI === voice.voiceURI) || null;
+            this.synthesis?.getVoices().find((v) => v.voiceURI === voice.voiceURI) || null;
         }
       }
 
@@ -237,9 +228,7 @@ export class WebSpeechSynthesizer {
 
       utterance.onboundary = (event) => {
         if (event.name === "word" || event.name === "sentence") {
-          this.onBoundaryCallbacks.forEach((cb) =>
-            cb(event.charIndex, event.charLength || 0),
-          );
+          this.onBoundaryCallbacks.forEach((cb) => cb(event.charIndex, event.charLength || 0));
         }
       };
 

@@ -1,8 +1,5 @@
 import { memo, useEffect, useState } from "react";
-import {
-  type SessionStatusType,
-  useSessionStatusForSession,
-} from "@/stores/sessionStatusStore";
+import { type SessionStatusType, useSessionStatusForSession } from "@/stores/sessionStatusStore";
 
 interface MiniScannerProps {
   sessionID: string;
@@ -21,11 +18,7 @@ export const MiniScanner = memo(function MiniScanner({
   const [direction, setDirection] = useState(1);
 
   useEffect(() => {
-    if (
-      status.type !== "busy" &&
-      status.type !== "retry" &&
-      status.type !== "compact"
-    ) {
+    if (status.type !== "busy" && status.type !== "retry" && status.type !== "compact") {
       return;
     }
 
@@ -47,10 +40,7 @@ export const MiniScanner = memo(function MiniScanner({
     return () => clearInterval(interval);
   }, [status.type, direction]);
 
-  const getSegmentColor = (
-    index: number,
-    statusType: SessionStatusType["type"],
-  ) => {
+  const getSegmentColor = (index: number, statusType: SessionStatusType["type"]) => {
     if (statusType === "idle") {
       return "bg-transparent";
     }

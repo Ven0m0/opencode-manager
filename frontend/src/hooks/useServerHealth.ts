@@ -1,31 +1,31 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef } from 'react'
-import { toast } from 'sonner'
-import { settingsApi } from '@/api/settings'
-import { invalidateConfigCaches, invalidateSettingsCaches } from '@/lib/queryInvalidation'
-import { fetchWrapper } from '@/api/fetchWrapper'
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
+import { toast } from "sonner";
+import { fetchWrapper } from "@/api/fetchWrapper";
+import { settingsApi } from "@/api/settings";
+import { invalidateConfigCaches, invalidateSettingsCaches } from "@/lib/queryInvalidation";
 
 interface HealthResponse {
-  status: 'healthy' | 'degraded' | 'unhealthy'
-  timestamp: string
-  database: 'connected' | 'disconnected'
-  opencode: 'healthy' | 'unhealthy'
-  opencodePort: number
-  opencodeVersion: string | null
-  opencodeMinVersion: string
-  opencodeVersionSupported: boolean
-  opencodeManagerVersion: string | null
-  error?: string
+  status: "healthy" | "degraded" | "unhealthy";
+  timestamp: string;
+  database: "connected" | "disconnected";
+  opencode: "healthy" | "unhealthy";
+  opencodePort: number;
+  opencodeVersion: string | null;
+  opencodeMinVersion: string;
+  opencodeVersionSupported: boolean;
+  opencodeManagerVersion: string | null;
+  error?: string;
 }
 
 async function fetchHealth(): Promise<HealthResponse> {
-  return fetchWrapper<HealthResponse>('/api/health')
+  return fetchWrapper<HealthResponse>("/api/health");
 }
 
 export function useServerHealth(enabled = true) {
-  const queryClient = useQueryClient()
-  const lastHealthStatusRef = useRef<'healthy' | 'unhealthy'>('healthy')
-  const prevHealthRef = useRef<string | null>(null)
+  const queryClient = useQueryClient();
+  const lastHealthStatusRef = useRef<"healthy" | "unhealthy">("healthy");
+  const prevHealthRef = useRef<string | null>(null);
 
   const restartMutation = useMutation({
     mutationFn: async () => {
@@ -79,34 +79,34 @@ export function useServerHealth(enabled = true) {
   const { data: health } = query;
 
   useEffect(() => {
-    if (!health) return
+    if (!health) return;
 
-    const isUnhealthy = health.opencode !== 'healthy'
-    const currentStatus = isUnhealthy ? 'unhealthy' : 'healthy'
-    const previousStatus = lastHealthStatusRef.current
-    const prevHealth = prevHealthRef.current
+    const isUnhealthy = health.opencode !== "healthy";
+    const currentStatus = isUnhealthy ? "unhealthy" : "healthy";
+    const previousStatus = lastHealthStatusRef.current;
+    const prevHealth = prevHealthRef.current;
 
     if (prevHealth && currentStatus !== prevHealth) {
-      if (isUnhealthy && previousStatus === 'healthy') {
-        toast.error(health.error || 'OpenCode server is currently unhealthy', {
+      if (isUnhealthy && previousStatus === "healthy") {
+        toast.error(health.error || "OpenCode server is currently unhealthy", {
           duration: Infinity,
           action: {
-            label: 'Reload',
+            label: "Reload",
             onClick: () => restartMutation.mutate(),
           },
-        })
-      } else if (!isUnhealthy && previousStatus === 'unhealthy') {
-        toast.success('Server is back online')
+        });
+      } else if (!isUnhealthy && previousStatus === "unhealthy") {
+        toast.success("Server is back online");
       }
     }
 
-    lastHealthStatusRef.current = currentStatus
-    prevHealthRef.current = currentStatus
-  }, [health, restartMutation])
+    lastHealthStatusRef.current = currentStatus;
+    prevHealthRef.current = currentStatus;
+  }, [health, restartMutation]);
 
   return {
     ...query,
     restartMutation,
     rollbackMutation,
-  }
+  };
 }

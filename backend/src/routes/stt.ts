@@ -59,22 +59,13 @@ async function cacheDiscovery(cacheKey: string, data: string[]): Promise<void> {
   }
 }
 
-function generateDiscoveryCacheKey(
-  endpoint: string,
-  apiKey: string,
-  type: "models",
-): string {
+function generateDiscoveryCacheKey(endpoint: string, apiKey: string, type: "models"): string {
   const hash = createHash("sha256");
-  hash.update(
-    `stt|${endpoint}|${apiKey ? apiKey.substring(0, 8) : "no-key"}|${type}`,
-  );
+  hash.update(`stt|${endpoint}|${apiKey ? apiKey.substring(0, 8) : "no-key"}|${type}`);
   return hash.digest("hex");
 }
 
-async function fetchAvailableModels(
-  endpoint: string,
-  apiKey: string,
-): Promise<string[]> {
+async function fetchAvailableModels(endpoint: string, apiKey: string): Promise<string[]> {
   const baseUrl = normalizeToBaseUrl(endpoint);
   const endpointVariations = [`${baseUrl}/v1/models`, `${baseUrl}/models`];
 
@@ -88,9 +79,7 @@ async function fetchAvailableModels(
       });
 
       if (response.ok) {
-        const data = (await response.json()) as
-          | { data?: { id?: string }[] }
-          | unknown[];
+        const data = (await response.json()) as { data?: { id?: string }[] } | unknown[];
 
         if ("data" in data && Array.isArray(data.data)) {
           const sttModels = data.data
@@ -109,8 +98,7 @@ async function fetchAvailableModels(
           const filtered = data.filter(
             (item): item is string =>
               typeof item === "string" &&
-              (item.toLowerCase().includes("whisper") ||
-                item.toLowerCase().includes("transcri")),
+              (item.toLowerCase().includes("whisper") || item.toLowerCase().includes("transcri")),
           );
           if (filtered.length > 0) {
             return filtered;
@@ -141,9 +129,7 @@ export function createSTTRoutes(db: Database) {
 
       const settingsService = new SettingsService(db);
       const settings = settingsService.getSettings(userId);
-      const sttConfig = settings.preferences.stt as
-        | STTConfigExtended
-        | undefined;
+      const sttConfig = settings.preferences.stt as STTConfigExtended | undefined;
 
       if (!sttConfig?.enabled) {
         return c.json({ error: "STT is not enabled" }, 400);
@@ -204,9 +190,7 @@ export function createSTTRoutes(db: Database) {
         const errorText = await response.text();
         logger.error(`STT API error: ${response.status} - ${errorText}`);
         const status =
-          response.status >= 400 && response.status < 600
-            ? (response.status as 400 | 500)
-            : 500;
+          response.status >= 400 && response.status < 600 ? (response.status as 400 | 500) : 500;
 
         let errorDetails = errorText;
         try {
@@ -231,10 +215,7 @@ export function createSTTRoutes(db: Database) {
         );
       }
 
-      const result = (await response.json()) as { text?: string } & Record<
-        string,
-        unknown
-      >;
+      const result = (await response.json()) as { text?: string } & Record<string, unknown>;
 
       if (!result.text || typeof result.text !== "string") {
         logger.error("STT API response missing text field:", { result });
@@ -247,9 +228,7 @@ export function createSTTRoutes(db: Database) {
         );
       }
 
-      logger.info(
-        `STT transcription successful: ${result.text.substring(0, 50)}...`,
-      );
+      logger.info(`STT transcription successful: ${result.text.substring(0, 50)}...`);
       return c.json({ text: result.text });
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
@@ -267,19 +246,13 @@ export function createSTTRoutes(db: Database) {
 
       const settingsService = new SettingsService(db);
       const settings = settingsService.getSettings(userId);
-      const sttConfig = settings.preferences.stt as
-        | STTConfigExtended
-        | undefined;
+      const sttConfig = settings.preferences.stt as STTConfigExtended | undefined;
 
       if (!sttConfig?.endpoint) {
         return c.json({ error: "STT not configured" }, 400);
       }
 
-      const cacheKey = generateDiscoveryCacheKey(
-        sttConfig.endpoint,
-        sttConfig.apiKey,
-        "models",
-      );
+      const cacheKey = generateDiscoveryCacheKey(sttConfig.endpoint, sttConfig.apiKey, "models");
 
       if (!forceRefresh) {
         const cachedModels = await getCachedDiscovery(cacheKey);
@@ -292,10 +265,7 @@ export function createSTTRoutes(db: Database) {
       await ensureDiscoveryCacheDir();
       logger.info(`Fetching STT models for user ${userId}`);
 
-      const models = await fetchAvailableModels(
-        sttConfig.endpoint,
-        sttConfig.apiKey,
-      );
+      const models = await fetchAvailableModels(sttConfig.endpoint, sttConfig.apiKey);
       await cacheDiscovery(cacheKey, models);
 
       await settingsService.updateSettings(

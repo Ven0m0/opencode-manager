@@ -3189,10 +3189,7 @@
                                       "properties": {
                                         "field": {
                                           "type": "string",
-                                          "enum": [
-                                            "reasoning_content",
-                                            "reasoning_details"
-                                          ]
+                                          "enum": ["reasoning_content", "reasoning_details"]
                                         }
                                       },
                                       "required": ["field"],
@@ -3255,26 +3252,14 @@
                                       "type": "array",
                                       "items": {
                                         "type": "string",
-                                        "enum": [
-                                          "text",
-                                          "audio",
-                                          "image",
-                                          "video",
-                                          "pdf"
-                                        ]
+                                        "enum": ["text", "audio", "image", "video", "pdf"]
                                       }
                                     },
                                     "output": {
                                       "type": "array",
                                       "items": {
                                         "type": "string",
-                                        "enum": [
-                                          "text",
-                                          "audio",
-                                          "image",
-                                          "video",
-                                          "pdf"
-                                        ]
+                                        "enum": ["text", "audio", "image", "video", "pdf"]
                                       }
                                     }
                                   },
@@ -3615,13 +3600,7 @@
                         }
                       }
                     },
-                    "required": [
-                      "path",
-                      "lines",
-                      "line_number",
-                      "absolute_offset",
-                      "submatches"
-                    ]
+                    "required": ["path", "lines", "line_number", "absolute_offset", "submatches"]
                   }
                 }
               }
@@ -5381,14 +5360,7 @@
             "required": ["messageID", "callID"]
           }
         },
-        "required": [
-          "id",
-          "sessionID",
-          "permission",
-          "patterns",
-          "metadata",
-          "always"
-        ]
+        "required": ["id", "sessionID", "permission", "patterns", "metadata", "always"]
       },
       "Event.permission.asked": {
         "type": "object",
@@ -6757,15 +6729,7 @@
             "additionalProperties": {}
           }
         },
-        "required": [
-          "id",
-          "sessionID",
-          "messageID",
-          "type",
-          "callID",
-          "tool",
-          "state"
-        ]
+        "required": ["id", "sessionID", "messageID", "type", "callID", "tool", "state"]
       },
       "StepStartPart": {
         "type": "object",
@@ -6842,15 +6806,7 @@
             "required": ["input", "output", "reasoning", "cache"]
           }
         },
-        "required": [
-          "id",
-          "sessionID",
-          "messageID",
-          "type",
-          "reason",
-          "cost",
-          "tokens"
-        ]
+        "required": ["id", "sessionID", "messageID", "type", "reason", "cost", "tokens"]
       },
       "SnapshotPart": {
         "type": "object",
@@ -6975,15 +6931,7 @@
             "required": ["created"]
           }
         },
-        "required": [
-          "id",
-          "sessionID",
-          "messageID",
-          "type",
-          "attempt",
-          "error",
-          "time"
-        ]
+        "required": ["id", "sessionID", "messageID", "type", "attempt", "error", "time"]
       },
       "CompactionPart": {
         "type": "object",
@@ -7041,15 +6989,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "id",
-              "sessionID",
-              "messageID",
-              "type",
-              "prompt",
-              "description",
-              "agent"
-            ]
+            "required": ["id", "sessionID", "messageID", "type", "prompt", "description", "agent"]
           },
           {
             "$ref": "#/components/schemas/ReasoningPart"
@@ -9719,13 +9659,7 @@
                       }
                     }
                   },
-                  "required": [
-                    "oldStart",
-                    "oldLines",
-                    "newStart",
-                    "newLines",
-                    "lines"
-                  ]
+                  "required": ["oldStart", "oldLines", "newStart", "newLines", "lines"]
                 }
               },
               "index": {

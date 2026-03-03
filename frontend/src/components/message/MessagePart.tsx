@@ -65,8 +65,7 @@ interface TTSButtonProps {
 }
 
 export function TTSButton({ content, className = "" }: TTSButtonProps) {
-  const { speak, stop, isEnabled, isPlaying, isLoading, originalText } =
-    useTTS();
+  const { speak, stop, isEnabled, isPlaying, isLoading, originalText } = useTTS();
 
   if (!isEnabled || !content.trim()) {
     return null;
@@ -145,9 +144,7 @@ export const MessagePart = memo(function MessagePart({
     case "snapshot":
       return (
         <div className="border border-border rounded-lg p-4 my-2 bg-card">
-          <div className="text-xs text-muted-foreground font-mono">
-            Snapshot: {part.snapshot}
-          </div>
+          <div className="text-xs text-muted-foreground font-mono">Snapshot: {part.snapshot}</div>
         </div>
       );
     case "agent":
@@ -160,8 +157,7 @@ export const MessagePart = memo(function MessagePart({
       );
     case "step-finish": {
       const isFree = part.cost === 0;
-      const totalTokens =
-        part.tokens.input + part.tokens.output + (part.tokens.cache?.read || 0);
+      const totalTokens = part.tokens.input + part.tokens.output + (part.tokens.cache?.read || 0);
       const costText =
         isMobile && isFree ? null : (
           <span>

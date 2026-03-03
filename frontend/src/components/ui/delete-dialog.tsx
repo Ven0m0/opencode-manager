@@ -33,7 +33,7 @@ export function DeleteDialog({
 }: DeleteDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-[90%] sm:max-w-sm'>
+      <DialogContent className="max-w-[90%] sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
@@ -43,9 +43,8 @@ export function DeleteDialog({
           <Alert className="overflow-hidden">
             <AlertTriangle className="h-4 w-4 flex-shrink-0" />
             <AlertDescription className="break-all">
-              This will permanently delete "
-              <span className="font-medium">{itemName}</span>". This action
-              cannot be undone.
+              This will permanently delete "<span className="font-medium">{itemName}</span>". This
+              action cannot be undone.
             </AlertDescription>
           </Alert>
         )}
@@ -61,10 +60,7 @@ export function DeleteDialog({
             className="bg-red-600 hover:bg-red-700 text-white font-semibold border-red-600"
           >
             {isDeleting && "Deleting..."}
-            {!isDeleting &&
-              (title.includes("Configuration")
-                ? "Delete Configuration"
-                : "Delete")}
+            {!isDeleting && (title.includes("Configuration") ? "Delete Configuration" : "Delete")}
           </Button>
         </DialogFooter>
       </DialogContent>

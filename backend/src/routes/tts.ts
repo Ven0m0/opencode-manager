@@ -1,13 +1,6 @@
 import type { Database } from "bun:sqlite";
 import { createHash } from "node:crypto";
-import {
-  mkdir,
-  readdir,
-  readFile,
-  stat,
-  unlink,
-  writeFile,
-} from "node:fs/promises";
+import { mkdir, readdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { getWorkspacePath } from "@opencode-manager/shared/config/env";
 import { Hono } from "hono";
@@ -26,12 +19,7 @@ const TTSRequestSchema = z.object({
   text: z.string().min(1).max(4096),
 });
 
-function generateCacheKey(
-  text: string,
-  voice: string,
-  model: string,
-  speed: number,
-): string {
+function generateCacheKey(text: string, voice: string, model: string, speed: number): string {
   const hash = createHash("sha256");
   hash.update(`${text}|${voice}|${model}|${speed}`);
   return hash.digest("hex");
@@ -73,9 +61,7 @@ async function getCacheSize(): Promise<number> {
     const files = await readdir(TTS_CACHE_DIR);
     const mp3Files = files.filter((file) => file.endsWith(".mp3"));
 
-    const stats = await Promise.all(
-      mp3Files.map((file) => stat(join(TTS_CACHE_DIR, file))),
-    );
+    const stats = await Promise.all(mp3Files.map((file) => stat(join(TTS_CACHE_DIR, file))));
 
     return stats.reduce((total, s) => total + s.size, 0);
   } catch {
@@ -165,10 +151,7 @@ function generateDiscoveryCacheKey(
   return hash.digest("hex");
 }
 
-async function fetchAvailableModels(
-  endpoint: string,
-  apiKey: string,
-): Promise<string[]> {
+async function fetchAvailableModels(endpoint: string, apiKey: string): Promise<string[]> {
   const baseUrl = normalizeToBaseUrl(endpoint);
   const endpointVariations = [`${baseUrl}/v1/models`, `${baseUrl}/models`];
 
@@ -182,9 +165,7 @@ async function fetchAvailableModels(
       });
 
       if (response.ok) {
-        const data = (await response.json()) as
-          | { data?: { id?: string }[] }
-          | unknown[];
+        const data = (await response.json()) as { data?: { id?: string }[] } | unknown[];
 
         // Handle different response formats
         if ("data" in data && Array.isArray(data.data)) {
@@ -199,9 +180,7 @@ async function fetchAvailableModels(
             )
             .map((model) => model.id!);
         } else if (Array.isArray(data)) {
-          return data.filter(
-            (item): item is string => typeof item === "string",
-          );
+          return data.filter((item): item is string => typeof item === "string");
         }
       }
     } catch (error) {
@@ -212,10 +191,7 @@ async function fetchAvailableModels(
   return ["tts-1", "tts-1-hd"];
 }
 
-async function fetchAvailableVoices(
-  endpoint: string,
-  apiKey: string,
-): Promise<string[]> {
+async function fetchAvailableVoices(endpoint: string, apiKey: string): Promise<string[]> {
   const baseUrl = normalizeToBaseUrl(endpoint);
   const endpointVariations = [
     `${baseUrl}/v1/audio/voices`,
@@ -310,9 +286,7 @@ export async function getCacheStats(): Promise<{
     const files = await readdir(TTS_CACHE_DIR);
     const mp3Files = files.filter((file) => file.endsWith(".mp3"));
 
-    const stats = await Promise.all(
-      mp3Files.map((file) => stat(join(TTS_CACHE_DIR, file))),
-    );
+    const stats = await Promise.all(mp3Files.map((file) => stat(join(TTS_CACHE_DIR, file))));
 
     const now = Date.now();
     let count = 0;
@@ -392,9 +366,7 @@ export function createTTSRoutes(db: Database) {
         return new Response(null, { status: 499 });
       }
 
-      logger.info(
-        `TTS cache miss, calling API: ${cacheKey.substring(0, 8)}...`,
-      );
+      logger.info(`TTS cache miss, calling API: ${cacheKey.substring(0, 8)}...`);
 
       const baseUrl = normalizeToBaseUrl(endpoint);
       const speechEndpoint = `${baseUrl}/v1/audio/speech`;
@@ -419,9 +391,7 @@ export function createTTSRoutes(db: Database) {
         const errorText = await response.text();
         logger.error(`TTS API error: ${response.status} - ${errorText}`);
         const status =
-          response.status >= 400 && response.status < 600
-            ? (response.status as 400 | 500)
-            : 500;
+          response.status >= 400 && response.status < 600 ? (response.status as 400 | 500) : 500;
 
         // Try to parse error details for better frontend display
         let errorDetails = errorText;
@@ -485,11 +455,7 @@ export function createTTSRoutes(db: Database) {
         return c.json({ error: "TTS not configured" }, 400);
       }
 
-      const cacheKey = generateDiscoveryCacheKey(
-        ttsConfig.endpoint,
-        ttsConfig.apiKey,
-        "models",
-      );
+      const cacheKey = generateDiscoveryCacheKey(ttsConfig.endpoint, ttsConfig.apiKey, "models");
 
       // Check cache first (unless force refresh)
       if (!forceRefresh) {
@@ -504,10 +470,7 @@ export function createTTSRoutes(db: Database) {
       await ensureDiscoveryCacheDir();
       logger.info(`Fetching TTS models for user ${userId}`);
 
-      const models = await fetchAvailableModels(
-        ttsConfig.endpoint,
-        ttsConfig.apiKey,
-      );
+      const models = await fetchAvailableModels(ttsConfig.endpoint, ttsConfig.apiKey);
       await cacheDiscovery(cacheKey, models);
 
       // Update user preferences with available models
@@ -543,11 +506,7 @@ export function createTTSRoutes(db: Database) {
         return c.json({ error: "TTS not configured" }, 400);
       }
 
-      const cacheKey = generateDiscoveryCacheKey(
-        ttsConfig.endpoint,
-        ttsConfig.apiKey,
-        "voices",
-      );
+      const cacheKey = generateDiscoveryCacheKey(ttsConfig.endpoint, ttsConfig.apiKey, "voices");
 
       // Check cache first (unless force refresh)
       if (!forceRefresh) {
@@ -562,10 +521,7 @@ export function createTTSRoutes(db: Database) {
       await ensureDiscoveryCacheDir();
       logger.info(`Fetching TTS voices for user ${userId}`);
 
-      const voices = await fetchAvailableVoices(
-        ttsConfig.endpoint,
-        ttsConfig.apiKey,
-      );
+      const voices = await fetchAvailableVoices(ttsConfig.endpoint, ttsConfig.apiKey);
       await cacheDiscovery(cacheKey, voices);
 
       // Update user preferences with available voices

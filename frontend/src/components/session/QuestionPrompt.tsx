@@ -12,25 +12,15 @@ interface QuestionPromptProps {
   onReject: (requestID: string) => Promise<void>;
 }
 
-export function QuestionPrompt({
-  question,
-  onReply,
-  onReject,
-}: QuestionPromptProps) {
+export function QuestionPrompt({ question, onReply, onReject }: QuestionPromptProps) {
   const questions = question.questions;
   const isSingleSelect = questions.length === 1 && !questions[0]?.multiple;
   const totalSteps = isSingleSelect ? 1 : questions.length + 1;
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<string[][]>(() =>
-    questions.map(() => []),
-  );
-  const [customInputs, setCustomInputs] = useState<string[]>(() =>
-    questions.map(() => ""),
-  );
-  const [confirmedCustoms, setConfirmedCustoms] = useState<string[]>(() =>
-    questions.map(() => ""),
-  );
+  const [answers, setAnswers] = useState<string[][]>(() => questions.map(() => []));
+  const [customInputs, setCustomInputs] = useState<string[]>(() => questions.map(() => ""));
+  const [confirmedCustoms, setConfirmedCustoms] = useState<string[]>(() => questions.map(() => ""));
   const [expandedOther, setExpandedOther] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -96,16 +86,13 @@ export function QuestionPrompt({
     [questions, isSingleSelect, goToNext, handleSubmitSingle],
   );
 
-  const handleCustomInput = useCallback(
-    (questionIndex: number, value: string) => {
-      setCustomInputs((prev) => {
-        const updated = [...prev];
-        updated[questionIndex] = value;
-        return updated;
-      });
-    },
-    [],
-  );
+  const handleCustomInput = useCallback((questionIndex: number, value: string) => {
+    setCustomInputs((prev) => {
+      const updated = [...prev];
+      updated[questionIndex] = value;
+      return updated;
+    });
+  }, []);
 
   const handleExpandOther = useCallback(
     (questionIndex: number) => {
@@ -141,9 +128,7 @@ export function QuestionPrompt({
         const current = updated[questionIndex] ?? [];
 
         if (questions[questionIndex]?.multiple) {
-          const withoutOld = oldCustom
-            ? current.filter((l) => l !== oldCustom)
-            : current;
+          const withoutOld = oldCustom ? current.filter((l) => l !== oldCustom) : current;
           updated[questionIndex] = [...withoutOld, value];
         } else {
           updated[questionIndex] = [value];
@@ -165,14 +150,7 @@ export function QuestionPrompt({
         handleSubmitSingle(value);
       }
     },
-    [
-      customInputs,
-      confirmedCustoms,
-      questions,
-      isSingleSelect,
-      goToNext,
-      handleSubmitSingle,
-    ],
+    [customInputs, confirmedCustoms, questions, isSingleSelect, goToNext, handleSubmitSingle],
   );
 
   const handleNext = useCallback(() => {
@@ -209,14 +187,10 @@ export function QuestionPrompt({
     return (answers[index]?.length ?? 0) > 0;
   };
 
-  const allQuestionsAnswered = questions.every((_, i) =>
-    hasAnswerForQuestion(i),
-  );
+  const allQuestionsAnswered = questions.every((_, i) => hasAnswerForQuestion(i));
 
   return (
-    <div 
-      className="w-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-950 dark:to-blue-900 border-2 border-blue-300 dark:border-blue-700 rounded-xl shadow-lg shadow-blue-500/20 mb-3 overflow-hidden"
-    >
+    <div className="w-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-950 dark:to-blue-900 border-2 border-blue-300 dark:border-blue-700 rounded-xl shadow-lg shadow-blue-500/20 mb-3 overflow-hidden">
       <div className="flex items-center justify-between px-2 py-1.5 sm:px-3 sm:py-2 border-b border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/50">
         <div className="flex items-center gap-2">
           {totalSteps > 1 && (
@@ -229,11 +203,11 @@ export function QuestionPrompt({
             </button>
           )}
           <span className="text-xs sm:text-sm font-semibold text-blue-600 dark:text-white">
-            {isConfirmStep ? 'Review' : (
-              totalSteps > 1 
-                ? `Question ${currentIndex + 1}/${questions.length}` 
-                : (currentQuestion?.header || 'Question')
-            )}
+            {isConfirmStep
+              ? "Review"
+              : totalSteps > 1
+                ? `Question ${currentIndex + 1}/${questions.length}`
+                : currentQuestion?.header || "Question"}
           </span>
           {totalSteps > 1 && (
             <button
@@ -256,11 +230,7 @@ export function QuestionPrompt({
 
       <div className="p-2 sm:p-3 max-h-[50vh] sm:max-h-[70vh] overflow-y-auto overflow-x-hidden bg-background/60 dark:bg-black/30">
         {isConfirmStep ? (
-          <ConfirmStep
-            questions={questions}
-            answers={answers}
-            onEditQuestion={setCurrentIndex}
-          />
+          <ConfirmStep questions={questions} answers={answers} onEditQuestion={setCurrentIndex} />
         ) : (
           currentQuestion && (
             <QuestionStep
@@ -272,9 +242,7 @@ export function QuestionPrompt({
               isMultiSelect={isMultiSelect}
               onSelectOption={(label) => selectOption(currentIndex, label)}
               onExpandOther={() => handleExpandOther(currentIndex)}
-              onCustomInputChange={(value) =>
-                handleCustomInput(currentIndex, value)
-              }
+              onCustomInputChange={(value) => handleCustomInput(currentIndex, value)}
               onConfirmCustomInput={() => confirmCustomInput(currentIndex)}
               onCollapseOther={() => setExpandedOther(null)}
             />
@@ -333,8 +301,7 @@ export function QuestionPrompt({
               onClick={handleNext}
               disabled={
                 currentIndex === totalSteps - 1 ||
-                (expandedOther === currentIndex &&
-                  !customInputs[currentIndex]?.trim())
+                (expandedOther === currentIndex && !customInputs[currentIndex]?.trim())
               }
               className="flex-1 h-8 sm:h-10 text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-700 text-white"
             >
@@ -406,9 +373,7 @@ function QuestionStep({
       <p className="text-xs sm:text-sm font-semibold text-foreground">
         {question.question}
         {isMultiSelect && (
-          <span className="text-foreground/60 font-normal ml-1">
-            (select all that apply)
-          </span>
+          <span className="text-foreground/60 font-normal ml-1">(select all that apply)</span>
         )}
       </p>
 
@@ -423,7 +388,7 @@ function QuestionStep({
                 "w-full text-left p-2 sm:p-3 rounded-lg transition-all duration-200 active:scale-[0.98]",
                 isSelected
                   ? "bg-blue-200 dark:bg-blue-700/50"
-                  : "bg-white/40 dark:bg-white/5 hover:bg-white/60 dark:hover:bg-white/10"
+                  : "bg-white/40 dark:bg-white/5 hover:bg-white/60 dark:hover:bg-white/10",
               )}
             >
               <div className="flex items-start justify-between gap-1.5 sm:gap-2">
@@ -431,19 +396,17 @@ function QuestionStep({
                   <div
                     className={cn(
                       "w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors",
-                      isSelected
-                        ? "border-blue-500 bg-blue-500"
-                        : "border-muted-foreground",
+                      isSelected ? "border-blue-500 bg-blue-500" : "border-muted-foreground",
                     )}
                   >
-                    {isSelected && (
-                      <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
-                    )}
+                    {isSelected && <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />}
                   </div>
-                  <span className={cn(
-                    "text-xs sm:text-sm font-semibold",
-                    isSelected ? "text-blue-600 dark:text-blue-300" : "text-foreground"
-                  )}>
+                  <span
+                    className={cn(
+                      "text-xs sm:text-sm font-semibold",
+                      isSelected ? "text-blue-600 dark:text-blue-300" : "text-foreground",
+                    )}
+                  >
                     {option.label}
                   </span>
                 </div>
@@ -469,26 +432,26 @@ function QuestionStep({
             "w-full text-left p-2 sm:p-3 rounded-lg transition-all duration-200",
             expandedOther || isCustomSelected
               ? "bg-blue-200 dark:bg-blue-700/50"
-              : "bg-white/40 dark:bg-white/5 hover:bg-white/60 dark:hover:bg-white/10"
+              : "bg-white/40 dark:bg-white/5 hover:bg-white/60 dark:hover:bg-white/10",
           )}
         >
           <div className="flex items-center gap-1.5 sm:gap-2">
             <div
               className={cn(
                 "w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors",
-                isCustomSelected
-                  ? "border-blue-500 bg-blue-500"
-                  : "border-muted-foreground",
+                isCustomSelected ? "border-blue-500 bg-blue-500" : "border-muted-foreground",
               )}
             >
-              {isCustomSelected && (
-                <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
-              )}
+              {isCustomSelected && <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />}
             </div>
-            <span className={cn(
-              "text-xs sm:text-sm font-semibold",
-              expandedOther || isCustomSelected ? "text-blue-600 dark:text-blue-300" : "text-foreground"
-            )}>
+            <span
+              className={cn(
+                "text-xs sm:text-sm font-semibold",
+                expandedOther || isCustomSelected
+                  ? "text-blue-600 dark:text-blue-300"
+                  : "text-foreground",
+              )}
+            >
               Other...
             </span>
           </div>
@@ -534,9 +497,7 @@ interface ConfirmStepProps {
 function ConfirmStep({ questions, answers, onEditQuestion }: ConfirmStepProps) {
   return (
     <div className="space-y-2 sm:space-y-3">
-      <p className="text-xs sm:text-sm font-semibold text-foreground">
-        Review your answers
-      </p>
+      <p className="text-xs sm:text-sm font-semibold text-foreground">Review your answers</p>
 
       <div className="space-y-1.5 sm:space-y-2">
         {questions.map((q, i) => {
@@ -548,19 +509,25 @@ function ConfirmStep({ questions, answers, onEditQuestion }: ConfirmStepProps) {
               onClick={() => onEditQuestion(i)}
               className={cn(
                 "w-full text-left p-2 sm:p-3 rounded-lg transition-colors",
-                hasAnswer 
-                  ? "bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-900/50" 
-                  : "bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50"
+                hasAnswer
+                  ? "bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-900/50"
+                  : "bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50",
               )}
             >
               <div className="flex items-start justify-between gap-1.5 sm:gap-2">
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{q.header}</p>
-                  <p className={cn(
-                    "text-xs sm:text-sm font-semibold mt-0.5",
-                    hasAnswer ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"
-                  )}>
-                    {hasAnswer ? answer.join(', ') : '(not answered)'}
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                    {q.header}
+                  </p>
+                  <p
+                    className={cn(
+                      "text-xs sm:text-sm font-semibold mt-0.5",
+                      hasAnswer
+                        ? "text-green-700 dark:text-green-400"
+                        : "text-red-700 dark:text-red-400",
+                    )}
+                  >
+                    {hasAnswer ? answer.join(", ") : "(not answered)"}
                   </p>
                 </div>
                 <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-foreground/50 flex-shrink-0 mt-0.5 sm:mt-1" />

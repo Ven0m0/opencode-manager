@@ -8,22 +8,22 @@ export interface Repo extends BaseRepo {
 }
 
 interface CreateRepoInputBase {
-  localPath: string
-  branch?: string
-  defaultBranch: string
-  cloneStatus: 'cloning' | 'ready' | 'error'
-  clonedAt: number
-  isWorktree?: boolean
+  localPath: string;
+  branch?: string;
+  defaultBranch: string;
+  cloneStatus: "cloning" | "ready" | "error";
+  clonedAt: number;
+  isWorktree?: boolean;
 }
 
 interface CreateLocalRepoInput extends CreateRepoInputBase {
-  isLocal: true
-  repoUrl?: string
+  isLocal: true;
+  repoUrl?: string;
 }
 
 interface CreateRemoteRepoInput extends CreateRepoInputBase {
-  isLocal?: false
-  repoUrl: string
+  isLocal?: false;
+  repoUrl: string;
 }
 
-export type CreateRepoInput = CreateLocalRepoInput | CreateRemoteRepoInput
+export type CreateRepoInput = CreateLocalRepoInput | CreateRemoteRepoInput;

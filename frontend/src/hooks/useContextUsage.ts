@@ -1,8 +1,8 @@
-import { useMemo } from 'react'
-import { useMessages } from './useOpenCode'
-import { useQuery } from '@tanstack/react-query'
-import { useModelSelection } from './useModelSelection'
-import { fetchWrapper } from '@/api/fetchWrapper'
+import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { fetchWrapper } from "@/api/fetchWrapper";
+import { useModelSelection } from "./useModelSelection";
+import { useMessages } from "./useOpenCode";
 
 interface ContextUsage {
   totalTokens: number;
@@ -34,7 +34,7 @@ interface ProvidersResponse {
 }
 
 async function fetchProviders(opcodeUrl: string): Promise<ProvidersResponse> {
-  return fetchWrapper<ProvidersResponse>(`${opcodeUrl}/config/providers`)
+  return fetchWrapper<ProvidersResponse>(`${opcodeUrl}/config/providers`);
 }
 
 export const useContextUsage = (
@@ -47,17 +47,14 @@ export const useContextUsage = (
     sessionID,
     directory,
   );
-  const { modelString: globalModelString } = useModelSelection(
-    opcodeUrl,
-    directory,
-  );
+  const { modelString: globalModelString } = useModelSelection(opcodeUrl, directory);
   const modelString = globalModelString;
 
   const { data: providersData } = useQuery({
-    queryKey: ['providers', opcodeUrl],
+    queryKey: ["providers", opcodeUrl],
     queryFn: () => {
-      if (!opcodeUrl) throw new Error('opcodeUrl is required')
-      return fetchProviders(opcodeUrl)
+      if (!opcodeUrl) throw new Error("opcodeUrl is required");
+      return fetchProviders(opcodeUrl);
     },
     enabled: !!opcodeUrl,
     staleTime: 5 * 60 * 1000,
@@ -66,15 +63,20 @@ export const useContextUsage = (
   return useMemo(() => {
     const currentModel = modelString || null;
 
-    const assistantMessages = messages?.filter(msg => msg.info.role === 'assistant') || []
-    let latestAssistantMessage = assistantMessages[assistantMessages.length - 1]
-    
-    if (latestAssistantMessage?.info.role === 'assistant') {
-      const msgInfo = latestAssistantMessage.info as { tokens?: { input: number; output: number; reasoning: number; cache?: { read: number } } }
-      const tokens = (msgInfo.tokens?.input ?? 0) + (msgInfo.tokens?.output ?? 0) + (msgInfo.tokens?.reasoning ?? 0) + (msgInfo.tokens?.cache?.read ?? 0)
+    const assistantMessages = messages?.filter((msg) => msg.info.role === "assistant") || [];
+    let latestAssistantMessage = assistantMessages[assistantMessages.length - 1];
+
+    if (latestAssistantMessage?.info.role === "assistant") {
+      const msgInfo = latestAssistantMessage.info as {
+        tokens?: { input: number; output: number; reasoning: number; cache?: { read: number } };
+      };
+      const tokens =
+        (msgInfo.tokens?.input ?? 0) +
+        (msgInfo.tokens?.output ?? 0) +
+        (msgInfo.tokens?.reasoning ?? 0) +
+        (msgInfo.tokens?.cache?.read ?? 0);
       if (tokens === 0 && assistantMessages.length > 1) {
-        latestAssistantMessage =
-          assistantMessages[assistantMessages.length - 2];
+        latestAssistantMessage = assistantMessages[assistantMessages.length - 2];
       }
     }
 
@@ -96,14 +98,20 @@ export const useContextUsage = (
         contextLimit,
         usagePercentage: contextLimit ? 0 : null,
         currentModel,
-        isLoading: messagesLoading
-      }
+        isLoading: messagesLoading,
+      };
     }
-    
-    let totalTokens = 0
-    if (latestAssistantMessage?.info.role === 'assistant') {
-      const msgInfo = latestAssistantMessage.info as { tokens?: { input: number; output: number; reasoning: number; cache?: { read: number } } }
-      totalTokens = (msgInfo.tokens?.input ?? 0) + (msgInfo.tokens?.output ?? 0) + (msgInfo.tokens?.reasoning ?? 0) + (msgInfo.tokens?.cache?.read ?? 0)
+
+    let totalTokens = 0;
+    if (latestAssistantMessage?.info.role === "assistant") {
+      const msgInfo = latestAssistantMessage.info as {
+        tokens?: { input: number; output: number; reasoning: number; cache?: { read: number } };
+      };
+      totalTokens =
+        (msgInfo.tokens?.input ?? 0) +
+        (msgInfo.tokens?.output ?? 0) +
+        (msgInfo.tokens?.reasoning ?? 0) +
+        (msgInfo.tokens?.cache?.read ?? 0);
     }
 
     let totalTokens = 0;
@@ -115,9 +123,7 @@ export const useContextUsage = (
         (latestAssistantMessage.info.tokens.cache?.read || 0);
     }
 
-    const usagePercentage = contextLimit
-      ? (totalTokens / contextLimit) * 100
-      : null;
+    const usagePercentage = contextLimit ? (totalTokens / contextLimit) * 100 : null;
 
     return {
       totalTokens,

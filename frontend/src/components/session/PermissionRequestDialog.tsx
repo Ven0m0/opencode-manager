@@ -78,9 +78,7 @@ function getPermissionDetails(permission: PermissionRequest): {
       if (filePath) {
         return {
           primary: filePath,
-          secondary: diff
-            ? diff.slice(0, 500) + (diff.length > 500 ? "\n..." : "")
-            : undefined,
+          secondary: diff ? diff.slice(0, 500) + (diff.length > 500 ? "\n..." : "") : undefined,
         };
       }
       break;
@@ -109,9 +107,7 @@ function getPermissionDetails(permission: PermissionRequest): {
       if (tool) {
         return {
           primary: `Tool: ${tool}`,
-          secondary: input
-            ? JSON.stringify(input, null, 2).slice(0, 300)
-            : undefined,
+          secondary: input ? JSON.stringify(input, null, 2).slice(0, 300) : undefined,
         };
       }
       break;
@@ -138,9 +134,7 @@ export function PermissionRequestDialog({
   onOpenChange,
 }: PermissionRequestDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingAction, setLoadingAction] = useState<PermissionResponse | null>(
-    null,
-  );
+  const [loadingAction, setLoadingAction] = useState<PermissionResponse | null>(null);
 
   if (!permission) return null;
   if (parentOpen === false) return null;
@@ -161,8 +155,7 @@ export function PermissionRequestDialog({
   const typeLabel = getPermissionTypeLabel(permission.permission);
   const details = getPermissionDetails(permission);
   const hasMultiple = pendingCount > 1;
-  const displaySessionName =
-    sessionTitle || `Session ${permission.sessionID.slice(0, 8)}...`;
+  const displaySessionName = sessionTitle || `Session ${permission.sessionID.slice(0, 8)}...`;
 
   return (
     <Dialog open={parentOpen ?? true} onOpenChange={onOpenChange ?? (() => {})}>
@@ -215,13 +208,11 @@ export function PermissionRequestDialog({
             )}
             {isFromDifferentSession ? (
               <div className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 rounded-md px-2 py-1.5 truncate">
-                From another session:{" "}
-                <span className="font-medium">{displaySessionName}</span>
+                From another session: <span className="font-medium">{displaySessionName}</span>
               </div>
             ) : (
               <div className="truncate">
-                Session:{" "}
-                <span className="font-medium">{displaySessionName}</span>
+                Session: <span className="font-medium">{displaySessionName}</span>
               </div>
             )}
           </div>

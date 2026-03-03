@@ -19,16 +19,16 @@ function fatal(err: unknown): never {
 function main(argv: string[]): void {
   const output = process.env.VSCODE_GIT_ASKPASS_PIPE;
   if (!output) {
-    return fatal("Missing pipe");
+    fatal("Missing pipe");
   }
 
   const askpassType = process.env.VSCODE_GIT_ASKPASS_TYPE;
   if (!askpassType) {
-    return fatal("Missing type");
+    fatal("Missing type");
   }
 
   if (askpassType !== "https" && askpassType !== "ssh") {
-    return fatal(`Invalid type: ${askpassType}`);
+    fatal(`Invalid type: ${askpassType}`);
   }
 
   const ipcHandlePath = process.env.VSCODE_GIT_IPC_HANDLE;
@@ -41,7 +41,7 @@ function main(argv: string[]): void {
   if (!ipcHandlePath) {
     console.error("[askpass-main] No IPC handle, returning empty");
     fs.writeFileSync(output, "\n");
-    return process.exit(0);
+    process.exit(0);
   }
 
   const opts: http.RequestOptions = {
@@ -89,10 +89,7 @@ function main(argv: string[]): void {
   });
 
   const requestPayload: AskpassRequest = { askpassType, argv };
-  console.error(
-    "[askpass-main] Sending request:",
-    JSON.stringify(requestPayload),
-  );
+  console.error("[askpass-main] Sending request:", JSON.stringify(requestPayload));
   req.write(JSON.stringify(requestPayload));
   req.end();
 }

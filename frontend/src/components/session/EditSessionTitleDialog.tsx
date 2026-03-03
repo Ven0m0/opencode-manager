@@ -63,9 +63,7 @@ export function EditSessionTitleDialog({
         }
       >
         <form onSubmit={handleSubmit} className="min-w-0">
-          <p className="text-sm text-muted-foreground mb-2">
-            Change session title
-          </p>
+          <p className="text-sm text-muted-foreground mb-2">Change session title</p>
           <div className="relative">
             <input
               ref={inputRef}
@@ -90,12 +88,7 @@ export function EditSessionTitleDialog({
             )}
           </div>
           <div className="flex items-center gap-2 mt-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              className="flex-1 h-10"
-            >
+            <Button type="button" variant="outline" onClick={handleCancel} className="flex-1 h-10">
               Cancel
             </Button>
             <Button type="submit" className="flex-1 h-10">

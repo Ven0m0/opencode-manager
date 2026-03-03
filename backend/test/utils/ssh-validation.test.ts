@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@opencode-manager/shared/config/env", () => ({
   ENV: {
@@ -16,11 +16,11 @@ vi.mock("@opencode-manager/shared/config/env", () => ({
   getWorkspacePath: vi.fn(() => "/tmp/test-workspace"),
 }));
 
-let mockExecuteCommand: any
+let mockExecuteCommand: any;
 
-vi.mock('../../src/utils/process', () => ({
-  executeCommand: vi.fn()
-}))
+vi.mock("../../src/utils/process", () => ({
+  executeCommand: vi.fn(),
+}));
 
 vi.mock("fs", () => ({
   promises: {
@@ -29,12 +29,12 @@ vi.mock("fs", () => ({
   },
 }));
 
-import { validateSSHPrivateKey } from '../../src/utils/ssh-validation'
-import { executeCommand } from '../../src/utils/process'
+import { executeCommand } from "../../src/utils/process";
+import { validateSSHPrivateKey } from "../../src/utils/ssh-validation";
 
 beforeAll(() => {
-  mockExecuteCommand = executeCommand
-})
+  mockExecuteCommand = executeCommand;
+});
 
 describe("validateSSHPrivateKey", () => {
   beforeEach(() => {
@@ -109,9 +109,7 @@ ${"A".repeat(120)}
 
     it("should detect key with passphrase via failed error", async () => {
       mockExecuteCommand.mockRejectedValue(
-        new Error(
-          "failed: incorrect passphrase supplied to decrypt private key",
-        ),
+        new Error("failed: incorrect passphrase supplied to decrypt private key"),
       );
 
       const key = `-----BEGIN OPENSSH PRIVATE KEY-----
@@ -155,9 +153,7 @@ ${"A".repeat(120)}
     });
 
     it("should reject corrupted key", async () => {
-      mockExecuteCommand.mockRejectedValue(
-        new Error("load key: invalid format"),
-      );
+      mockExecuteCommand.mockRejectedValue(new Error("load key: invalid format"));
 
       const key = `-----BEGIN OPENSSH PRIVATE KEY-----
 ${"A".repeat(120)}
@@ -179,9 +175,7 @@ ${"A".repeat(120)}
     });
 
     it("should reject undefined key", async () => {
-      const result = await validateSSHPrivateKey(
-        undefined as unknown as string,
-      );
+      const result = await validateSSHPrivateKey(undefined as unknown as string);
 
       expect(result.valid).toBe(false);
       expect(result.error).toBe("SSH key is required");

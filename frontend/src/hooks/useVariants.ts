@@ -19,8 +19,7 @@ export function useVariants(
   directory?: string,
 ): UseVariantsResult {
   const { model } = useModelSelection(opcodeUrl, directory);
-  const { setVariant: setStoreVariant, clearVariant: clearStoreVariant } =
-    useModelStore();
+  const { setVariant: setStoreVariant, clearVariant: clearStoreVariant } = useModelStore();
   const client = useOpenCodeClient(opcodeUrl, directory);
 
   const { data: providersData, isLoading } = useQuery({
@@ -31,12 +30,7 @@ export function useVariants(
   });
 
   const currentModel = useMemo(() => {
-    if (
-      !model ||
-      isLoading ||
-      !providersData?.providers ||
-      providersData.providers.length === 0
-    )
+    if (!model || isLoading || !providersData?.providers || providersData.providers.length === 0)
       return null;
     for (const provider of providersData.providers) {
       if (provider.id === model.providerID && provider.models) {
@@ -81,13 +75,7 @@ export function useVariants(
         }
       }
     };
-  }, [
-    model,
-    availableVariants,
-    currentVariant,
-    setStoreVariant,
-    clearStoreVariant,
-  ]);
+  }, [model, availableVariants, currentVariant, setStoreVariant, clearStoreVariant]);
 
   const clearVariant = useMemo(
     () => () => {

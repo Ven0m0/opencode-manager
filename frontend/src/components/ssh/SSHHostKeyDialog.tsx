@@ -12,8 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
 import { showToast } from "@/lib/toast";
+import { cn } from "@/lib/utils";
 
 type SSHHostKeyResponse = "accept" | "reject";
 
@@ -69,9 +69,7 @@ export function SSHHostKeyDialog({
         showToast.success("Host key accepted");
       }
     } catch {
-      showToast.error(
-        "Failed to respond to host key request. Please try again.",
-      );
+      showToast.error("Failed to respond to host key request. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -92,16 +90,9 @@ export function SSHHostKeyDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 flex-wrap">
             <WarningIcon
-              className={cn(
-                "h-5 w-5",
-                request.isKeyChanged ? "text-red-500" : "text-amber-500",
-              )}
+              className={cn("h-5 w-5", request.isKeyChanged ? "text-red-500" : "text-amber-500")}
             />
-            <span>
-              {request.isKeyChanged
-                ? "Host Key Changed"
-                : "Verify SSH Host Key"}
-            </span>
+            <span>{request.isKeyChanged ? "Host Key Changed" : "Verify SSH Host Key"}</span>
           </DialogTitle>
           <DialogDescription>
             {request.isKeyChanged
@@ -114,9 +105,8 @@ export function SSHHostKeyDialog({
           {request.isKeyChanged && (
             <Alert variant="destructive">
               <AlertDescription className="text-sm">
-                <strong>Security Warning:</strong> This could indicate a
-                man-in-the-middle attack. Only proceed if you are certain the
-                server is legitimate.
+                <strong>Security Warning:</strong> This could indicate a man-in-the-middle attack.
+                Only proceed if you are certain the server is legitimate.
               </AlertDescription>
             </Alert>
           )}
@@ -137,14 +127,8 @@ export function SSHHostKeyDialog({
             <div className="flex justify-between items-start gap-4">
               <span className="text-muted-foreground">Fingerprint:</span>
               <div className="flex items-center gap-2 flex-1 justify-end">
-                <span className="font-mono text-xs break-all">
-                  {request.fingerprint}
-                </span>
-                <CopyButton
-                  content={request.fingerprint}
-                  variant="ghost"
-                  iconSize="sm"
-                />
+                <span className="font-mono text-xs break-all">{request.fingerprint}</span>
+                <CopyButton content={request.fingerprint} variant="ghost" iconSize="sm" />
               </div>
             </div>
           </div>

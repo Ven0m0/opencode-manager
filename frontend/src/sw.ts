@@ -8,9 +8,10 @@ self.addEventListener("install", () => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((names) =>
-      Promise.all(names.map((name) => caches.delete(name)))
-    ).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((names) => Promise.all(names.map((name) => caches.delete(name))))
+      .then(() => self.clients.claim()),
   );
 });
 
@@ -62,19 +63,17 @@ self.addEventListener("notificationclick", (event) => {
   const url = (event.notification.data?.url as string) ?? "/";
 
   event.waitUntil(
-    self.clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((clientList) => {
-        for (const client of clientList) {
-          if (new URL(client.url).origin === self.location.origin) {
-            const channel = new BroadcastChannel("notification-click");
-            channel.postMessage({ url });
-            channel.close();
-            return (client as WindowClient).focus();
-          }
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (new URL(client.url).origin === self.location.origin) {
+          const channel = new BroadcastChannel("notification-click");
+          channel.postMessage({ url });
+          channel.close();
+          return (client as WindowClient).focus();
         }
-        return self.clients.openWindow(url);
-      }),
+      }
+      return self.clients.openWindow(url);
+    }),
   );
 });
 

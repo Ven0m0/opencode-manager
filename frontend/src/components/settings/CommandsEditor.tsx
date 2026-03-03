@@ -86,11 +86,7 @@ export function CommandsEditor({ commands, onChange }: CommandsEditorProps) {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">/{name}</CardTitle>
                   <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => startEdit(name, command)}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => startEdit(name, command)}>
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
@@ -107,9 +103,7 @@ export function CommandsEditor({ commands, onChange }: CommandsEditorProps) {
               <CardContent className="p-2">
                 <div className="space-y-2">
                   {command.description && (
-                    <p className="text-sm text-muted-foreground">
-                      {command.description}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{command.description}</p>
                   )}
                   <div className="text-xs text-muted-foreground space-y-1">
                     {command.agent && <p>Agent: {command.agent}</p>}

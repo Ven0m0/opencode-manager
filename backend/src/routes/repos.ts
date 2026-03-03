@@ -1,9 +1,6 @@
 import type { Database } from "bun:sqlite";
 import path from "node:path";
-import {
-  getOpenCodeConfigFilePath,
-  getReposPath,
-} from "@opencode-manager/shared/config/env";
+import { getOpenCodeConfigFilePath, getReposPath } from "@opencode-manager/shared/config/env";
 import { Hono } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import * as db from "../db/queries";
@@ -18,38 +15,33 @@ import { getErrorMessage, getStatusCode } from "../utils/error-utils";
 import { logger } from "../utils/logger";
 import { createRepoGitRoutes } from "./repo-git";
 
-export function createRepoRoutes(
-  database: Database,
-  gitAuthService: GitAuthService,
-) {
+export function createRepoRoutes(database: Database, gitAuthService: GitAuthService) {
   const app = new Hono();
 
   app.route("/", createRepoGitRoutes(database, gitAuthService));
 
   app.post("/", async (c) => {
     try {
-      const body = await c.req.json()
-      const { repoUrl, localPath, branch, openCodeConfigName, useWorktree, skipSSHVerification, provider } = body
+      const body = await c.req.json();
+      const {
+        repoUrl,
+        localPath,
+        branch,
+        openCodeConfigName,
+        useWorktree,
+        skipSSHVerification,
+        provider,
+      } = body;
 
       if (!repoUrl && !localPath) {
-        return c.json(
-          { error: "Either repoUrl or localPath is required" },
-          400,
-        );
+        return c.json({ error: "Either repoUrl or localPath is required" }, 400);
       }
 
-      logger.info(
-        `Creating repo - URL: ${repoUrl}, Provider: ${provider || "auto-detect"}`,
-      );
+      logger.info(`Creating repo - URL: ${repoUrl}, Provider: ${provider || "auto-detect"}`);
 
-      let repo;
+      let repo: Awaited<ReturnType<typeof repoService.initLocalRepo>>;
       if (localPath) {
-        repo = await repoService.initLocalRepo(
-          database,
-          gitAuthService,
-          localPath,
-          branch,
-        );
+        repo = await repoService.initLocalRepo(database, gitAuthService, localPath, branch);
       } else {
         repo = await repoService.cloneRepo(
           database,
@@ -57,22 +49,19 @@ export function createRepoRoutes(
           repoUrl!,
           branch,
           useWorktree,
-          skipSSHVerification
-        )
+          skipSSHVerification,
+        );
       }
 
       if (openCodeConfigName) {
         const settingsService = new SettingsService(database);
-        const configContent =
-          settingsService.getOpenCodeConfigContent(openCodeConfigName);
+        const configContent = settingsService.getOpenCodeConfigContent(openCodeConfigName);
 
         if (configContent) {
           const openCodeConfigPath = getOpenCodeConfigFilePath();
           await writeFileContent(openCodeConfigPath, configContent);
           db.updateRepoConfigName(database, repo.id, openCodeConfigName);
-          logger.info(
-            `Applied config '${openCodeConfigName}' to: ${openCodeConfigPath}`,
-          );
+          logger.info(`Applied config '${openCodeConfigName}' to: ${openCodeConfigPath}`);
         }
       }
 
@@ -110,10 +99,7 @@ export function createRepoRoutes(
     try {
       const body = await c.req.json();
 
-      if (
-        !Array.isArray(body.order) ||
-        body.order.some((id: unknown) => typeof id !== "number")
-      ) {
+      if (!Array.isArray(body.order) || body.order.some((id: unknown) => typeof id !== "number")) {
         return c.json({ error: "order must be an array of numbers" }, 400);
       }
 
@@ -198,8 +184,7 @@ export function createRepoRoutes(
       }
 
       const settingsService = new SettingsService(database);
-      const configContent =
-        settingsService.getOpenCodeConfigContent(configName);
+      const configContent = settingsService.getOpenCodeConfigContent(configName);
 
       if (!configContent) {
         return c.json({ error: `Config '${configName}' not found` }, 404);
@@ -312,10 +297,7 @@ export function createRepoRoutes(
       };
 
       logger.info(`Starting archive creation for repo ${id}: ${repoPath}`);
-      const archivePath = await archiveService.createRepoArchive(
-        repoPath,
-        options,
-      );
+      const archivePath = await archiveService.createRepoArchive(repoPath, options);
       const archiveSize = await archiveService.getArchiveSize(archivePath);
       const archiveStream = archiveService.getArchiveStream(archivePath);
 

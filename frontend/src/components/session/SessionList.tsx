@@ -20,13 +20,9 @@ export const SessionList = ({
   const { data: sessions, isLoading } = useSessions(opcodeUrl, directory);
   const deleteSession = useDeleteSession(opcodeUrl, directory);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [sessionToDelete, setSessionToDelete] = useState<
-    string | string[] | null
-  >(null);
+  const [sessionToDelete, setSessionToDelete] = useState<string | string[] | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSessions, setSelectedSessions] = useState<Set<string>>(
-    new Set(),
-  );
+  const [selectedSessions, setSelectedSessions] = useState<Set<string>>(new Set());
   const [manageMode, setManageMode] = useState(false);
 
   const filteredSessions = useMemo(() => {
@@ -34,8 +30,7 @@ export const SessionList = ({
 
     let filtered = sessions.filter((session) => {
       if (session.parentID) return false;
-      if (directory && session.directory && session.directory !== directory)
-        return false;
+      if (directory && session.directory && session.directory !== directory) return false;
       return true;
     });
 
@@ -53,26 +48,18 @@ export const SessionList = ({
     if (!filteredSessions) return [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return filteredSessions.filter(
-      (session) => new Date(session.time.updated) >= today,
-    );
+    return filteredSessions.filter((session) => new Date(session.time.updated) >= today);
   }, [filteredSessions]);
 
   const olderSessions = useMemo(() => {
     if (!filteredSessions) return [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return filteredSessions.filter(
-      (session) => new Date(session.time.updated) < today,
-    );
+    return filteredSessions.filter((session) => new Date(session.time.updated) < today);
   }, [filteredSessions]);
 
   if (isLoading) {
-    return (
-      <div className="p-4 text-sm text-muted-foreground">
-        Loading sessions...
-      </div>
-    );
+    return <div className="p-4 text-sm text-muted-foreground">Loading sessions...</div>;
   }
 
   if (!sessions || sessions.length === 0) {
@@ -83,10 +70,7 @@ export const SessionList = ({
     );
   }
 
-  const handleDelete = (
-    sessionId: string,
-    e: React.MouseEvent<HTMLButtonElement>,
-  ) => {
+  const handleDelete = (sessionId: string, e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     setSessionToDelete(sessionId);
     setDeleteDialogOpen(true);
@@ -166,9 +150,7 @@ export const SessionList = ({
           totalCount={filteredSessions.length}
           allSelected={
             filteredSessions.length > 0 &&
-            filteredSessions.every((session) =>
-              selectedSessions.has(session.id),
-            )
+            filteredSessions.every((session) => selectedSessions.has(session.id))
           }
           onToggleSelectAll={toggleSelectAll}
           onDelete={handleBulkDelete}
@@ -181,16 +163,12 @@ export const SessionList = ({
       <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-4 pb-4 min-h-0 [mask-image:linear-gradient(to_bottom,transparent,black_16px,black)]">
         <div className="flex flex-col gap-4">
           {filteredSessions.length === 0 ? (
-            <div className="text-sm text-muted-foreground text-center py-4">
-              No sessions found
-            </div>
+            <div className="text-sm text-muted-foreground text-center py-4">No sessions found</div>
           ) : (
             <>
               {todaySessions.length > 0 && (
                 <>
-                  <div className="text-xs font-semibold text-muted-foreground px-1 py-2">
-                    Today
-                  </div>
+                  <div className="text-xs font-semibold text-muted-foreground px-1 py-2">Today</div>
                   {todaySessions.map((session) => (
                     <SessionCard
                       key={session.id}
@@ -236,9 +214,7 @@ export const SessionList = ({
         onConfirm={confirmDelete}
         onCancel={cancelDelete}
         isDeleting={deleteSession.isPending}
-        sessionCount={
-          Array.isArray(sessionToDelete) ? sessionToDelete.length : 1
-        }
+        sessionCount={Array.isArray(sessionToDelete) ? sessionToDelete.length : 1}
       />
     </div>
   );

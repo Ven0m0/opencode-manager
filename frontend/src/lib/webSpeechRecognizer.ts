@@ -79,8 +79,7 @@ export class WebSpeechRecognizer {
   constructor() {
     if (typeof window === "undefined") return;
 
-    const RecognitionClass =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const RecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (RecognitionClass) {
       this.recognition = new RecognitionClass();
@@ -135,8 +134,7 @@ export class WebSpeechRecognizer {
             errorMsg = "No microphone found. Please check your audio input.";
             break;
           case "not-allowed":
-            errorMsg =
-              "Microphone access denied. Please allow microphone permissions.";
+            errorMsg = "Microphone access denied. Please allow microphone permissions.";
             break;
           case "network":
             errorMsg = "Network error occurred.";
@@ -197,16 +195,12 @@ export class WebSpeechRecognizer {
       }
 
       const onStartOnce = () => {
-        this.onStartCallbacks = this.onStartCallbacks.filter(
-          (cb) => cb !== onStartOnce,
-        );
+        this.onStartCallbacks = this.onStartCallbacks.filter((cb) => cb !== onStartOnce);
         resolve();
       };
 
       const onErrorOnce = (error: string) => {
-        this.onErrorCallbacks = this.onErrorCallbacks.filter(
-          (cb) => cb !== onErrorOnce,
-        );
+        this.onErrorCallbacks = this.onErrorCallbacks.filter((cb) => cb !== onErrorOnce);
         reject(new Error(error));
       };
 
@@ -217,12 +211,8 @@ export class WebSpeechRecognizer {
         this.recognition.start();
       } catch (error) {
         this.state = "error";
-        this.onStartCallbacks = this.onStartCallbacks.filter(
-          (cb) => cb !== onStartOnce,
-        );
-        this.onErrorCallbacks = this.onErrorCallbacks.filter(
-          (cb) => cb !== onErrorOnce,
-        );
+        this.onStartCallbacks = this.onStartCallbacks.filter((cb) => cb !== onStartOnce);
+        this.onErrorCallbacks = this.onErrorCallbacks.filter((cb) => cb !== onErrorOnce);
         reject(error || new Error("Failed to start recognition"));
       }
     });

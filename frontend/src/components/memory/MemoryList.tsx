@@ -1,49 +1,55 @@
-import { useState } from 'react'
-import { useMemories, useDeleteMemory } from '@/hooks/useMemories'
-import { useDebounce } from '@/hooks/useDebounce'
-import type { Memory } from '@opencode-manager/shared/types'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Loader2, Trash2, Edit, Search } from 'lucide-react'
-import { MemoryFormDialog } from './MemoryFormDialog'
-import { DeleteDialog } from '@/components/ui/delete-dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import type { Memory } from "@opencode-manager/shared/types";
+import { Edit, Loader2, Search, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { DeleteDialog } from "@/components/ui/delete-dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useDeleteMemory, useMemories } from "@/hooks/useMemories";
+import { MemoryFormDialog } from "./MemoryFormDialog";
 
 interface MemoryListProps {
-  projectId?: string
-  scope?: string
-  showFilters?: boolean
+  projectId?: string;
+  scope?: string;
+  showFilters?: boolean;
 }
 
 const scopeColors: Record<string, string> = {
-  convention: 'bg-blue-600/20 text-blue-400 border-blue-600/40',
-  decision: 'bg-green-600/20 text-green-400 border-green-600/40',
-  context: 'bg-purple-600/20 text-purple-400 border-purple-600/40',
-}
+  convention: "bg-blue-600/20 text-blue-400 border-blue-600/40",
+  decision: "bg-green-600/20 text-green-400 border-green-600/40",
+  context: "bg-purple-600/20 text-purple-400 border-purple-600/40",
+};
 
 export function MemoryList({ projectId, scope, showFilters = true }: MemoryListProps) {
-  const [filterScope, setFilterScope] = useState<string>(scope || 'all')
-  const [searchQuery, setSearchQuery] = useState<string>('')
-  const debouncedSearch = useDebounce(searchQuery, 300)
-  const [editMemory, setEditMemory] = useState<Memory | null>(null)
-  const [deleteMemoryId, setDeleteMemoryId] = useState<number | null>(null)
+  const [filterScope, setFilterScope] = useState<string>(scope || "all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const debouncedSearch = useDebounce(searchQuery, 300);
+  const [editMemory, setEditMemory] = useState<Memory | null>(null);
+  const [deleteMemoryId, setDeleteMemoryId] = useState<number | null>(null);
 
   const filters = {
     projectId,
-    scope: filterScope !== 'all' ? filterScope : undefined,
+    scope: filterScope !== "all" ? filterScope : undefined,
     ...(debouncedSearch ? { content: debouncedSearch } : undefined),
-  }
+  };
 
-  const { data: memories, isLoading } = useMemories(filters)
-  const deleteMutation = useDeleteMemory()
+  const { data: memories, isLoading } = useMemories(filters);
+  const deleteMutation = useDeleteMemory();
 
   const handleDelete = () => {
     if (deleteMemoryId !== null) {
-      deleteMutation.mutate(deleteMemoryId)
-      setDeleteMemoryId(null)
+      deleteMutation.mutate(deleteMemoryId);
+      setDeleteMemoryId(null);
     }
-  }
+  };
 
   return (
     <div className="space-y-4">
@@ -87,9 +93,7 @@ export function MemoryList({ projectId, scope, showFilters = true }: MemoryListP
             >
               <div className="flex items-center justify-between gap-2 mb-2">
                 <div className="flex items-center gap-2 flex-wrap min-w-0">
-                  <Badge className={`text-xs ${scopeColors[memory.scope]}`}>
-                    {memory.scope}
-                  </Badge>
+                  <Badge className={`text-xs ${scopeColors[memory.scope]}`}>{memory.scope}</Badge>
                   {memory.filePath && (
                     <span className="text-xs text-muted-foreground truncate max-w-xs">
                       {memory.filePath}
@@ -142,5 +146,5 @@ export function MemoryList({ projectId, scope, showFilters = true }: MemoryListP
         description="Are you sure you want to delete this memory? This action cannot be undone."
       />
     </div>
-  )
+  );
 }

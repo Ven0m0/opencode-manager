@@ -11,12 +11,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useGitStatus } from "@/api/git";
-import {
-  createRepo,
-  GitAuthError,
-  listBranches,
-  switchBranch,
-} from "@/api/repos";
+import { createRepo, GitAuthError, listBranches, switchBranch } from "@/api/repos";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -32,12 +27,7 @@ interface BranchesTabProps {
   isRepoWorktree?: boolean;
 }
 
-export function BranchesTab({
-  repoId,
-  currentBranch,
-  repoUrl,
-  isRepoWorktree,
-}: BranchesTabProps) {
+export function BranchesTab({ repoId, currentBranch, repoUrl, isRepoWorktree }: BranchesTabProps) {
   const queryClient = useQueryClient();
   const [newBranchName, setNewBranchName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -60,18 +50,16 @@ export function BranchesTab({
   const switchBranchMutation = useMutation({
     mutationFn: (branch: string) => switchBranch(repoId, branch),
     onSuccess: (updatedRepo) => {
-      queryClient.setQueryData(['repo', repoId], updatedRepo)
-      queryClient.invalidateQueries({ queryKey: ['repos'] })
-      queryClient.invalidateQueries({ queryKey: ['reposGitStatus'] })
-      queryClient.invalidateQueries({ queryKey: ['gitStatus', repoId] })
-      refetch()
-      showToast.success(`Switched to branch: ${updatedRepo.currentBranch}`)
+      queryClient.setQueryData(["repo", repoId], updatedRepo);
+      queryClient.invalidateQueries({ queryKey: ["repos"] });
+      queryClient.invalidateQueries({ queryKey: ["reposGitStatus"] });
+      queryClient.invalidateQueries({ queryKey: ["gitStatus", repoId] });
+      refetch();
+      showToast.success(`Switched to branch: ${updatedRepo.currentBranch}`);
     },
     onError: (error) => {
       if (error instanceof GitAuthError) {
-        showToast.error(
-          "Authentication failed. Please update your Git token in Settings.",
-        );
+        showToast.error("Authentication failed. Please update your Git token in Settings.");
       } else {
         showToast.error(error.message || "Failed to switch branch");
       }
@@ -82,19 +70,15 @@ export function BranchesTab({
     mutationFn: (branch: string) =>
       createRepo(repoUrl || undefined, undefined, branch, undefined, true),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['repos'] })
-      queryClient.invalidateQueries({ queryKey: ['reposGitStatus'] })
-      setNewBranchName('')
-      setIsCreating(false)
-      setUseWorktree(false)
-      showToast.success('Branch workspace created')
+      queryClient.invalidateQueries({ queryKey: ["repos"] });
+      queryClient.invalidateQueries({ queryKey: ["reposGitStatus"] });
+      setNewBranchName("");
+      setIsCreating(false);
+      setUseWorktree(false);
+      showToast.success("Branch workspace created");
     },
     onError: (error) => {
-      showToast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to create branch workspace",
-      );
+      showToast.error(error instanceof Error ? error.message : "Failed to create branch workspace");
     },
   });
 
@@ -134,8 +118,7 @@ export function BranchesTab({
     );
   }
 
-  const activeBranch =
-    branches?.branches?.find((b) => b.current)?.name || currentBranch;
+  const activeBranch = branches?.branches?.find((b) => b.current)?.name || currentBranch;
 
   return (
     <div className="flex flex-col h-full">
@@ -184,9 +167,7 @@ export function BranchesTab({
                 className="h-8"
                 onClick={handleCreateBranch}
                 disabled={
-                  !newBranchName.trim() ||
-                  git.createBranch.isPending ||
-                  worktreeMutation.isPending
+                  !newBranchName.trim() || git.createBranch.isPending || worktreeMutation.isPending
                 }
               >
                 {git.createBranch.isPending || worktreeMutation.isPending ? (
@@ -212,9 +193,7 @@ export function BranchesTab({
               <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
                 <Checkbox
                   checked={useWorktree}
-                  onCheckedChange={(checked) =>
-                    setUseWorktree(checked === true)
-                  }
+                  onCheckedChange={(checked) => setUseWorktree(checked === true)}
                 />
                 <span>Create as separate workspace</span>
               </label>
@@ -243,8 +222,7 @@ export function BranchesTab({
           <div className="py-1">
             {branches.branches.map((branch) => {
               const isCurrent =
-                branch.name === activeBranch ||
-                branch.name === `remotes/${activeBranch}`;
+                branch.name === activeBranch || branch.name === `remotes/${activeBranch}`;
               const isRemote = branch.type === "remote";
               const checkoutName = isRemote
                 ? branch.name.replace(/^remotes\/[^/]+\//, "")
@@ -263,20 +241,12 @@ export function BranchesTab({
                   className={cn(
                     "flex items-center gap-2 px-3 py-2 w-full text-left transition-colors",
                     isCurrent && "bg-accent",
-                    isCheckedOutElsewhere
-                      ? "opacity-60 cursor-not-allowed"
-                      : "hover:bg-accent/50",
+                    isCheckedOutElsewhere ? "opacity-60 cursor-not-allowed" : "hover:bg-accent/50",
                   )}
                   onClick={handleClick}
-                  disabled={
-                    isCurrent ||
-                    isCheckedOutElsewhere ||
-                    switchBranchMutation.isPending
-                  }
+                  disabled={isCurrent || isCheckedOutElsewhere || switchBranchMutation.isPending}
                   title={
-                    isCheckedOutElsewhere
-                      ? "Branch is checked out in another worktree"
-                      : undefined
+                    isCheckedOutElsewhere ? "Branch is checked out in another worktree" : undefined
                   }
                 >
                   {isRemote ? (
@@ -285,9 +255,7 @@ export function BranchesTab({
                     <GitBranch
                       className={cn(
                         "w-4 h-4",
-                        isCurrent
-                          ? GIT_UI_COLORS.current
-                          : "text-muted-foreground",
+                        isCurrent ? GIT_UI_COLORS.current : "text-muted-foreground",
                       )}
                     />
                   )}
@@ -305,9 +273,7 @@ export function BranchesTab({
                         local
                       </span>
                     )}
-                  {isCurrent && (
-                    <Check className={`w-4 h-4 ${GIT_UI_COLORS.current}`} />
-                  )}
+                  {isCurrent && <Check className={`w-4 h-4 ${GIT_UI_COLORS.current}`} />}
                 </button>
               );
             })}

@@ -1,17 +1,4 @@
-import { useState } from 'react'
-import { FetchError } from '@opencode-manager/shared'
-import { useGitStatus, getApiErrorMessage } from '@/api/git'
-
-import { useGit } from '@/hooks/useGit'
-import { ChangesTab } from './ChangesTab'
-import { CommitsTab } from './CommitsTab'
-import { BranchesTab } from './BranchesTab'
-import { CommitDetailView } from './CommitDetailView'
-import { GitErrorBanner } from './GitErrorBanner'
-import { FileDiffView } from '@/components/file-browser/FileDiffView'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { GIT_UI_COLORS } from '@/lib/git-status-styles'
+import { FetchError } from "@opencode-manager/shared";
 import {
   ArrowDown,
   ArrowDownFromLine,
@@ -23,9 +10,21 @@ import {
   RefreshCw,
   Upload,
   X,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useMobile } from '@/hooks/useMobile'
+} from "lucide-react";
+import { useState } from "react";
+import { getApiErrorMessage, useGitStatus } from "@/api/git";
+import { FileDiffView } from "@/components/file-browser/FileDiffView";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useGit } from "@/hooks/useGit";
+import { useMobile } from "@/hooks/useMobile";
+import { GIT_UI_COLORS } from "@/lib/git-status-styles";
+import { cn } from "@/lib/utils";
+import { BranchesTab } from "./BranchesTab";
+import { ChangesTab } from "./ChangesTab";
+import { CommitDetailView } from "./CommitDetailView";
+import { CommitsTab } from "./CommitsTab";
+import { GitErrorBanner } from "./GitErrorBanner";
 
 interface SourceControlPanelProps {
   repoId: number;
@@ -37,8 +36,8 @@ interface SourceControlPanelProps {
   repoName?: string;
 }
 
-type Tab = 'changes' | 'commits' | 'branches'
-type View = 'default' | 'commit-detail'
+type Tab = "changes" | "commits" | "branches";
+type View = "default" | "commit-detail";
 
 export function SourceControlPanel({
   repoId,
@@ -49,45 +48,45 @@ export function SourceControlPanel({
   isRepoWorktree,
   repoName,
 }: SourceControlPanelProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('changes')
-  const [selectedFile, setSelectedFile] = useState<{path: string, staged: boolean} | undefined>()
-  const [currentView, setCurrentView] = useState<View>('default')
-  const [selectedCommit, setSelectedCommit] = useState<string | undefined>()
-  const [selectedCommitFile, setSelectedCommitFile] = useState<string | undefined>()
-  const [gitError, setGitError] = useState<{ summary: string; detail?: string } | null>(null)
-  const { data: status } = useGitStatus(repoId)
-  const isMobile = useMobile()
+  const [activeTab, setActiveTab] = useState<Tab>("changes");
+  const [selectedFile, setSelectedFile] = useState<{ path: string; staged: boolean } | undefined>();
+  const [currentView, setCurrentView] = useState<View>("default");
+  const [selectedCommit, setSelectedCommit] = useState<string | undefined>();
+  const [selectedCommitFile, setSelectedCommitFile] = useState<string | undefined>();
+  const [gitError, setGitError] = useState<{ summary: string; detail?: string } | null>(null);
+  const { data: status } = useGitStatus(repoId);
+  const isMobile = useMobile();
 
   const handleGitError = (error: unknown) => {
     if (error instanceof FetchError) {
-      setGitError({ summary: getApiErrorMessage(error), detail: error.detail })
+      setGitError({ summary: getApiErrorMessage(error), detail: error.detail });
     } else {
-      setGitError({ summary: getApiErrorMessage(error) })
+      setGitError({ summary: getApiErrorMessage(error) });
     }
-  }
+  };
 
-  const git = useGit(repoId, handleGitError)
+  const git = useGit(repoId, handleGitError);
 
   const handleGitAction = async (action: () => Promise<unknown>) => {
     try {
-      setGitError(null)
-      await action()
+      setGitError(null);
+      await action();
     } catch {
       // error already handled by useGit's onError -> handleGitError
     }
   };
 
   const handleSelectCommit = (hash: string) => {
-    setSelectedCommit(hash)
-    setCurrentView('commit-detail')
-  }
+    setSelectedCommit(hash);
+    setCurrentView("commit-detail");
+  };
 
   const handleBackToCommits = () => {
-    setSelectedCommit(undefined)
-    setSelectedCommitFile(undefined)
-    setCurrentView('default')
-    setActiveTab('commits')
-  }
+    setSelectedCommit(undefined);
+    setSelectedCommitFile(undefined);
+    setCurrentView("default");
+    setActiveTab("commits");
+  };
 
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "changes", label: "Changes", icon: FileCode },
@@ -109,17 +108,13 @@ export function SourceControlPanel({
           {status && (status.ahead > 0 || status.behind > 0) && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               {status.ahead > 0 && (
-                <span
-                  className={`flex items-center gap-0.5 ${GIT_UI_COLORS.ahead}`}
-                >
+                <span className={`flex items-center gap-0.5 ${GIT_UI_COLORS.ahead}`}>
                   <ArrowUp className="w-3 h-3" />
                   {status.ahead}
                 </span>
               )}
               {status.behind > 0 && (
-                <span
-                  className={`flex items-center gap-0.5 ${GIT_UI_COLORS.behind}`}
-                >
+                <span className={`flex items-center gap-0.5 ${GIT_UI_COLORS.behind}`}>
                   <ArrowDown className="w-3 h-3" />
                   {status.behind}
                 </span>
@@ -159,9 +154,7 @@ export function SourceControlPanel({
           <Button
             size="sm"
             variant="ghost"
-            onClick={() =>
-              handleGitAction(() => git.push.mutateAsync(undefined))
-            }
+            onClick={() => handleGitAction(() => git.push.mutateAsync(undefined))}
             disabled={git.push.isPending}
             className="h-7 w-7 p-0"
             title="Push"
@@ -175,50 +168,53 @@ export function SourceControlPanel({
         </div>
       </div>
 
-      {gitError && (
-        <GitErrorBanner error={gitError} onDismiss={() => setGitError(null)} />
-      )}
+      {gitError && <GitErrorBanner error={gitError} onDismiss={() => setGitError(null)} />}
 
-      {!((currentView === 'commit-detail' && selectedCommitFile) || (isMobile && selectedFile && activeTab === 'changes')) && (
+      {!(
+        (currentView === "commit-detail" && selectedCommitFile) ||
+        (isMobile && selectedFile && activeTab === "changes")
+      ) && (
         <div className="flex border-b border-border flex-shrink-0">
           {tabs.map((tab) => {
-            const Icon = tab.icon
+            const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 className={cn(
-                  'flex items-center gap-1.5 px-3 py-2 text-sm transition-colors border-b-2 -mb-px',
+                  "flex items-center gap-1.5 px-3 py-2 text-sm transition-colors border-b-2 -mb-px",
                   activeTab === tab.id
-                    ? 'border-primary text-foreground'
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-accent'
+                    ? "border-primary text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:bg-accent",
                 )}
                 onClick={() => setActiveTab(tab.id)}
               >
                 <Icon className="w-4 h-4" />
                 <span>{tab.label}</span>
-                {tab.id === 'changes' && changesCount > 0 && (
+                {tab.id === "changes" && changesCount > 0 && (
                   <span className="text-xs px-1.5 py-0.5 rounded-full bg-accent">
                     {stagedCount > 0 ? `${stagedCount}/${changesCount}` : changesCount}
                   </span>
                 )}
               </button>
-            )
+            );
           })}
         </div>
       )}
 
-      <div className={cn('flex-1 min-h-0', isMobile ? 'flex flex-col gap-0' : 'flex')}>
-        <div className={cn(
-          'overflow-hidden min-h-0 h-full flex flex-col',
-          isMobile 
-            ? 'flex-1' 
-            : currentView === 'commit-detail' 
-              ? 'flex-1' 
-              : selectedFile 
-                ? 'w-[35%] border-r border-border' 
-                : 'flex-1'
-        )}>
-          {activeTab === 'changes' && (
+      <div className={cn("flex-1 min-h-0", isMobile ? "flex flex-col gap-0" : "flex")}>
+        <div
+          className={cn(
+            "overflow-hidden min-h-0 h-full flex flex-col",
+            isMobile
+              ? "flex-1"
+              : currentView === "commit-detail"
+                ? "flex-1"
+                : selectedFile
+                  ? "w-[35%] border-r border-border"
+                  : "flex-1",
+          )}
+        >
+          {activeTab === "changes" && (
             <ChangesTab
               repoId={repoId}
               onFileSelect={(path, staged) => setSelectedFile({ path, staged })}
@@ -228,14 +224,19 @@ export function SourceControlPanel({
               onError={handleGitError}
             />
           )}
-          {activeTab === 'commits' && currentView === 'default' && (
+          {activeTab === "commits" && currentView === "default" && (
             <CommitsTab repoId={repoId} onSelectCommit={handleSelectCommit} />
           )}
-          {activeTab === 'branches' && currentView === 'default' && (
-            <BranchesTab repoId={repoId} currentBranch={currentBranch} repoUrl={repoUrl} isRepoWorktree={isRepoWorktree} />
+          {activeTab === "branches" && currentView === "default" && (
+            <BranchesTab
+              repoId={repoId}
+              currentBranch={currentBranch}
+              repoUrl={repoUrl}
+              isRepoWorktree={isRepoWorktree}
+            />
           )}
 
-          {currentView === 'commit-detail' && selectedCommit && (
+          {currentView === "commit-detail" && selectedCommit && (
             <div className="flex flex-1 min-h-0 overflow-hidden flex-col">
               <CommitDetailView
                 repoId={repoId}
@@ -248,10 +249,15 @@ export function SourceControlPanel({
           )}
         </div>
 
-        {selectedFile && !isMobile && currentView === 'default' && (
+        {selectedFile && !isMobile && currentView === "default" && (
           <div className="flex-1 overflow-hidden flex flex-col">
             <div className="flex-1 overflow-auto">
-              <FileDiffView repoId={repoId} filePath={selectedFile.path} includeStaged={selectedFile.staged} onClose={() => setSelectedFile(undefined)} />
+              <FileDiffView
+                repoId={repoId}
+                filePath={selectedFile.path}
+                includeStaged={selectedFile.staged}
+                onClose={() => setSelectedFile(undefined)}
+              />
             </div>
           </div>
         )}
@@ -265,14 +271,13 @@ export function SourceControlPanel({
         mobileFullscreen
         hideCloseButton={isMobile}
         className={cn(
-          'p-0 flex flex-col bg-card border-border gap-0',
-          isMobile ? 'h-full' : 'w-[90vw] sm:max-w-6xl h-[90vh] sm:pb-0'
+          "p-0 flex flex-col bg-card border-border gap-0",
+          isMobile ? "h-full" : "w-[90vw] sm:max-w-6xl h-[90vh] sm:pb-0",
         )}
       >
-        <DialogHeader className={cn(
-          'px-4 py-2 border-b border-border flex-shrink-0',
-          isMobile && 'relative'
-        )}>
+        <DialogHeader
+          className={cn("px-4 py-2 border-b border-border flex-shrink-0", isMobile && "relative")}
+        >
           <DialogTitle className="flex items-center gap-2">
             <GitBranch className="w-5 h-5" />
             {isMobile && repoName ? repoName : "Source Control"}
@@ -288,9 +293,7 @@ export function SourceControlPanel({
             </Button>
           )}
         </DialogHeader>
-        <div className="flex-1 overflow-hidden pb-0">
-          {content}
-        </div>
+        <div className="flex-1 overflow-hidden pb-0">{content}</div>
       </DialogContent>
     </Dialog>
   );

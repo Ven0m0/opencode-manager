@@ -33,17 +33,8 @@ interface SwipeState {
   isEdgeSwipe: boolean;
 }
 
-export function useSwipeBack(
-  onBack: () => void,
-  options: SwipeBackOptions = {},
-) {
-  const {
-    threshold = 80,
-    edgeWidth = 30,
-    enabled = true,
-    onSwipeStart,
-    onSwipeEnd,
-  } = options;
+export function useSwipeBack(onBack: () => void, options: SwipeBackOptions = {}) {
+  const { threshold = 80, edgeWidth = 30, enabled = true, onSwipeStart, onSwipeEnd } = options;
 
   const isMobile = useMobile();
   const swipeRef = useRef<SwipeState>({
@@ -150,8 +141,7 @@ export function useSwipeBack(
   );
 
   const swipeStyles = {
-    transform:
-      swipeProgress > 0 ? `translateX(${swipeProgress * 50}px)` : undefined,
+    transform: swipeProgress > 0 ? `translateX(${swipeProgress * 50}px)` : undefined,
     transition: swipeProgress === 0 ? "transform 0.2s ease-out" : undefined,
   };
 

@@ -19,9 +19,7 @@ const getErrorIcon = (errorName: string) => {
   }
 };
 
-export const MessageError = memo(function MessageError({
-  error,
-}: MessageErrorProps) {
+export const MessageError = memo(function MessageError({ error }: MessageErrorProps) {
   const parsed = parseOpenCodeError(error);
   if (!parsed) return null;
 
@@ -32,9 +30,7 @@ export const MessageError = memo(function MessageError({
       <Icon className="h-4 w-4 mt-0.5 flex-shrink-0" />
       <div className="flex-1 min-w-0">
         <div className="font-medium text-sm">{parsed.title}</div>
-        <div className="text-xs text-destructive/80 mt-0.5">
-          {parsed.message}
-        </div>
+        <div className="text-xs text-destructive/80 mt-0.5">{parsed.message}</div>
       </div>
     </div>
   );

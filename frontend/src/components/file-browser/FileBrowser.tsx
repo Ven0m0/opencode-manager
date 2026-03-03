@@ -3,12 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useFile } from "@/api/files";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { API_BASE_URL } from "@/config";
@@ -37,10 +32,7 @@ interface FileBrowserProps {
   onFileSelect?: (file: FileInfo) => void;
   embedded?: boolean;
   initialSelectedFile?: string;
-  onDirectoryLoad?: (info: {
-    workspaceRoot?: string;
-    currentPath: string;
-  }) => void;
+  onDirectoryLoad?: (info: { workspaceRoot?: string; currentPath: string }) => void;
 }
 
 async function readFileEntry(entry: FileSystemFileEntry): Promise<File> {
@@ -80,10 +72,7 @@ async function traverseFileSystemEntry(
     } while (batch.length > 0);
 
     for (const childEntry of entries) {
-      const childItems = await traverseFileSystemEntry(
-        childEntry,
-        relativePath,
-      );
+      const childItems = await traverseFileSystemEntry(childEntry, relativePath);
       items.push(...childItems);
     }
   }
@@ -91,9 +80,7 @@ async function traverseFileSystemEntry(
   return items;
 }
 
-async function getUploadItemsFromDataTransfer(
-  dataTransfer: DataTransfer,
-): Promise<UploadItem[]> {
+async function getUploadItemsFromDataTransfer(dataTransfer: DataTransfer): Promise<UploadItem[]> {
   const items: UploadItem[] = [];
   const entries: FileSystemEntry[] = [];
 
@@ -125,8 +112,7 @@ function getUploadItemsFromFileList(fileList: FileList): UploadItem[] {
   for (let i = 0; i < fileList.length; i++) {
     const file = fileList[i];
     const relativePath =
-      (file as File & { webkitRelativePath?: string }).webkitRelativePath ||
-      file.name;
+      (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name;
     items.push({ file, relativePath });
   }
   return items;
@@ -147,16 +133,13 @@ export function FileBrowser({
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(
-    null,
-  );
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
 
   const dropZoneRef = useRef<HTMLDivElement>(null);
   const uploadCancelledRef = useRef(false);
   const isMobile = useMobile();
 
-  const { data: initialFileData, error: initialFileError } =
-    useFile(initialSelectedFile);
+  const { data: initialFileData, error: initialFileError } = useFile(initialSelectedFile);
 
   useEffect(() => {
     if (initialFileData) {
@@ -253,13 +236,10 @@ export function FileBrowser({
       formData.append("relativePath", item.relativePath);
 
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/files/${currentPath}`,
-          {
-            method: "POST",
-            body: formData,
-          },
-        );
+        const response = await fetch(`${API_BASE_URL}/api/files/${currentPath}`, {
+          method: "POST",
+          body: formData,
+        });
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
@@ -291,9 +271,7 @@ export function FileBrowser({
 
       for (let i = 0; i < items.length; i++) {
         if (uploadCancelledRef.current) {
-          setUploadProgress((prev) =>
-            prev ? { ...prev, cancelled: true } : null,
-          );
+          setUploadProgress((prev) => (prev ? { ...prev, cancelled: true } : null));
           break;
         }
 
@@ -345,17 +323,14 @@ export function FileBrowser({
   const handleCreateFile = useCallback(
     async (name: string, type: "file" | "folder") => {
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/files/${currentPath}/${name}`,
-          {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              type,
-              content: type === "file" ? "" : undefined,
-            }),
-          },
-        );
+        const response = await fetch(`${API_BASE_URL}/api/files/${currentPath}/${name}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type,
+            content: type === "file" ? "" : undefined,
+          }),
+        });
 
         if (!response.ok) {
           throw new Error(`Create failed: ${response.statusText}`);
@@ -445,17 +420,14 @@ export function FileBrowser({
   }, [basePath, loadFiles]);
 
   useEffect(() => {
-    const handleFileSaved = (
-      event: CustomEvent<{ path: string; content: string }>,
-    ) => {
+    const handleFileSaved = (event: CustomEvent<{ path: string; content: string }>) => {
       if (selectedFile && selectedFile.path === event.detail.path) {
         handleFileSelect(selectedFile);
       }
     };
 
     window.addEventListener("fileSaved", handleFileSaved as EventListener);
-    return () =>
-      window.removeEventListener("fileSaved", handleFileSaved as EventListener);
+    return () => window.removeEventListener("fileSaved", handleFileSaved as EventListener);
   }, [selectedFile, handleFileSelect]);
 
   useEffect(() => {
@@ -475,8 +447,7 @@ export function FileBrowser({
     file.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const isUploadComplete =
-    uploadProgress && uploadProgress.current >= uploadProgress.total;
+  const isUploadComplete = uploadProgress && uploadProgress.current >= uploadProgress.total;
   const canDismissDialog = isUploadComplete || uploadProgress?.cancelled;
 
   const uploadDialog = (
@@ -486,10 +457,7 @@ export function FileBrowser({
         if (!open && canDismissDialog) setUploadProgress(null);
       }}
     >
-      <DialogContent
-        className="sm:max-w-md"
-        hideCloseButton={!canDismissDialog}
-      >
+      <DialogContent className="sm:max-w-md" hideCloseButton={!canDismissDialog}>
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>
@@ -510,17 +478,12 @@ export function FileBrowser({
         </DialogHeader>
         {uploadProgress && (
           <div className="space-y-3">
-            <Progress
-              value={uploadProgress.current}
-              max={uploadProgress.total}
-            />
+            <Progress value={uploadProgress.current} max={uploadProgress.total} />
             <p className="text-sm text-muted-foreground">
               {uploadProgress.current} / {uploadProgress.total} files
             </p>
             {!isUploadComplete && (
-              <p className="text-xs text-muted-foreground truncate">
-                {uploadProgress.currentFile}
-              </p>
+              <p className="text-xs text-muted-foreground truncate">{uploadProgress.currentFile}</p>
             )}
             {uploadProgress.errors.length > 0 && (
               <div className="space-y-2">
@@ -529,10 +492,7 @@ export function FileBrowser({
                 </p>
                 <div className="max-h-32 overflow-y-auto rounded border border-destructive/20 bg-destructive/5 p-2">
                   {uploadProgress.errors.map((error, index) => (
-                    <p
-                      key={index}
-                      className="text-xs text-destructive break-all"
-                    >
+                    <p key={index} className="text-xs text-destructive break-all">
                       {error}
                     </p>
                   ))}
@@ -593,10 +553,7 @@ export function FileBrowser({
               <Button variant="outline" size="sm" onClick={handleRefresh}>
                 <RefreshCw className="w-4 h-4" />
               </Button>
-              <FileOperations
-                onUpload={handleUpload}
-                onCreate={handleCreateFile}
-              />
+              <FileOperations onUpload={handleUpload} onCreate={handleCreateFile} />
             </div>
 
             {error && (
@@ -683,17 +640,13 @@ export function FileBrowser({
           </div>
 
           {error && (
-            <div className="text-sm text-destructive bg-destructive/10 p-2 rounded">
-              {error}
-            </div>
+            <div className="text-sm text-destructive bg-destructive/10 p-2 rounded">{error}</div>
           )}
         </CardHeader>
 
         <CardContent className="flex-1 flex overflow-hidden min-h-0">
           {/* Mobile: Full width file listing, Desktop: Split view */}
-          <div
-            className={`${isMobile ? "w-full" : "w-1/3"} border-r pr-4 flex flex-col min-h-0`}
-          >
+          <div className={`${isMobile ? "w-full" : "w-1/3"} border-r pr-4 flex flex-col min-h-0`}>
             <div className="flex items-center gap-2 mb-4 flex-shrink-0">
               <Input
                 placeholder="Search"
@@ -701,10 +654,7 @@ export function FileBrowser({
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1"
               />
-              <FileOperations
-                onUpload={handleUpload}
-                onCreate={handleCreateFile}
-              />
+              <FileOperations onUpload={handleUpload} onCreate={handleCreateFile} />
             </div>
 
             {loading ? (

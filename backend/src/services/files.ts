@@ -3,10 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { createInterface } from "node:readline";
 import type { ChunkedFileInfo, PatchOperation } from "@opencode-manager/shared";
-import {
-  ALLOWED_MIME_TYPES,
-  type AllowedMimeType,
-} from "@opencode-manager/shared";
+import { ALLOWED_MIME_TYPES, type AllowedMimeType } from "@opencode-manager/shared";
 import { FILE_LIMITS, getReposPath } from "@opencode-manager/shared/config/env";
 import { logger } from "../utils/logger";
 import {
@@ -42,9 +39,7 @@ interface FileUploadResult {
 
 export async function getRawFileContent(userPath: string): Promise<Buffer> {
   const validatedPath = validatePath(userPath);
-  logger.info(
-    `Getting raw file content for path: ${userPath} -> ${validatedPath}`,
-  );
+  logger.info(`Getting raw file content for path: ${userPath} -> ${validatedPath}`);
 
   try {
     const exists = await fileExists(validatedPath);
@@ -158,13 +153,10 @@ export async function uploadFile(
   }
 
   const validatedBasePath = validatePath(userPath);
-  const targetRelativePath =
-    relativePath || file.name || path.basename(userPath);
+  const targetRelativePath = relativePath || file.name || path.basename(userPath);
   const fullPath = path.join(validatedBasePath, targetRelativePath);
 
-  const finalValidatedPath = validatePath(
-    path.join(userPath, targetRelativePath),
-  );
+  const finalValidatedPath = validatePath(path.join(userPath, targetRelativePath));
   if (finalValidatedPath !== fullPath) {
     throw { message: "Invalid relative path", statusCode: 400 };
   }
@@ -319,9 +311,7 @@ export async function getFileRange(
   endLine: number,
 ): Promise<ChunkedFileInfo> {
   const validatedPath = validatePath(userPath);
-  logger.info(
-    `Getting file range for path: ${userPath} lines ${startLine}-${endLine}`,
-  );
+  logger.info(`Getting file range for path: ${userPath} lines ${startLine}-${endLine}`);
 
   const exists = await fileExists(validatedPath);
   if (!exists) {
@@ -333,11 +323,7 @@ export async function getFileRange(
     throw { message: "Path is a directory", statusCode: 400 };
   }
 
-  const { lines, totalLines } = await readFileLinesAndCount(
-    validatedPath,
-    startLine,
-    endLine,
-  );
+  const { lines, totalLines } = await readFileLinesAndCount(validatedPath, startLine, endLine);
   const clampedEnd = Math.min(endLine, totalLines);
   const mimeType = getMimeType(validatedPath);
 

@@ -1,10 +1,10 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface SessionAgentStore {
-  agents: Record<string, string>
-  setAgent: (sessionID: string, agent: string) => void
-  getAgent: (sessionID: string) => string | null
+  agents: Record<string, string>;
+  setAgent: (sessionID: string, agent: string) => void;
+  getAgent: (sessionID: string) => string | null;
 }
 
 export const useSessionAgentStore = create<SessionAgentStore>()(
@@ -18,8 +18,8 @@ export const useSessionAgentStore = create<SessionAgentStore>()(
       getAgent: (sessionID: string) => get().agents[sessionID] ?? null,
     }),
     {
-      name: 'opencode-session-agents',
+      name: "opencode-session-agents",
       partialize: (state) => ({ agents: state.agents }),
-    }
-  )
-)
+    },
+  ),
+);

@@ -76,8 +76,7 @@ MIIEpAIBAAKCAQEAzR8u8I5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5
     });
 
     it("should accept RSA public key", async () => {
-      const rsaPublicKey =
-        "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDRHw== test@host";
+      const rsaPublicKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDRHw== test@host";
       const keyPath = await writeTemporarySSHKey(rsaPublicKey, "test-rsa-pub");
       expect(keyPath).toBeTruthy();
       await cleanupSSHKey(keyPath);
@@ -96,12 +95,8 @@ b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
     });
 
     it("should accept ED25519 public key", async () => {
-      const ed25519PublicKey =
-        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIQQ/test@test.com";
-      const keyPath = await writeTemporarySSHKey(
-        ed25519PublicKey,
-        "test-ed25519-pub",
-      );
+      const ed25519PublicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIQQ/test@test.com";
+      const keyPath = await writeTemporarySSHKey(ed25519PublicKey, "test-ed25519-pub");
       expect(keyPath).toBeTruthy();
       await cleanupSSHKey(keyPath);
     });
@@ -121,10 +116,7 @@ MHcCAQEEIP5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5
     it("should accept ECDSA public key", async () => {
       const ecdsaPublicKey =
         "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEM/test@test.com";
-      const keyPath = await writeTemporarySSHKey(
-        ecdsaPublicKey,
-        "test-ecdsa-pub",
-      );
+      const keyPath = await writeTemporarySSHKey(ecdsaPublicKey, "test-ecdsa-pub");
       expect(keyPath).toBeTruthy();
       await cleanupSSHKey(keyPath);
     });
@@ -132,9 +124,9 @@ MHcCAQEEIP5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5
 
   it("should reject invalid key format", async () => {
     const invalidKey = "not a valid ssh key";
-    await expect(
-      writeTemporarySSHKey(invalidKey, "test-invalid"),
-    ).rejects.toThrow("Invalid SSH key format");
+    await expect(writeTemporarySSHKey(invalidKey, "test-invalid")).rejects.toThrow(
+      "Invalid SSH key format",
+    );
   });
 
   it("should reject empty key", async () => {

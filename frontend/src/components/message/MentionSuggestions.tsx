@@ -65,8 +65,8 @@ export function MentionSuggestions({
           key={`${item.type}-${item.value}`}
           onMouseDown={(e) => e.preventDefault()}
           onTouchEnd={(e) => {
-            e.preventDefault()
-            onSelect(item)
+            e.preventDefault();
+            onSelect(item);
           }}
           onClick={() => onSelect(item)}
           className={`w-full px-3 py-2 text-left transition-colors flex items-start gap-2 ${
@@ -85,9 +85,7 @@ export function MentionSuggestions({
               {item.type === "file" ? getFilename(item.value) : item.label}
             </div>
             <div className="text-xs opacity-70 mt-0.5 truncate">
-              {item.type === "file"
-                ? getDirectory(item.value)
-                : item.description || "Agent"}
+              {item.type === "file" ? getDirectory(item.value) : item.description || "Agent"}
             </div>
           </div>
         </button>

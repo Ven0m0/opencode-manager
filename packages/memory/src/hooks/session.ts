@@ -1,65 +1,72 @@
-import type { Logger, PlanningState, PreCompactionSnapshot, CompactionConfig } from '../types'
-import type { MemoryService } from '../services/memory'
-import type { SessionStateService } from '../services/session-state'
-import type { PluginInput } from '@opencode-ai/plugin'
+import type { PluginInput } from "@opencode-ai/plugin";
+import type { MemoryService } from "../services/memory";
+import type { SessionStateService } from "../services/session-state";
+import type { CompactionConfig, Logger, PlanningState, PreCompactionSnapshot } from "../types";
 import {
   buildCustomCompactionPrompt,
-  formatPlanningState,
-  formatCompactionDiagnostics,
   estimateTokens,
-  trimToTokenBudget,
   extractCompactionSummary,
-} from './compaction-utils'
+  formatCompactionDiagnostics,
+  formatPlanningState,
+  trimToTokenBudget,
+} from "./compaction-utils";
 
 export interface SessionHooks {
-  onMessage: (input: unknown, output: unknown) => Promise<void>
-  onEvent: (input: { event: { type: string; properties?: Record<string, unknown> } }) => Promise<void>
+  onMessage: (input: unknown, output: unknown) => Promise<void>;
+  onEvent: (input: {
+    event: { type: string; properties?: Record<string, unknown> };
+  }) => Promise<void>;
   onCompacting: (
     input: { sessionID: string },
-    output: { context: string[]; prompt?: string }
-  ) => Promise<void>
+    output: { context: string[]; prompt?: string },
+  ) => Promise<void>;
 }
 
 interface ChatMessageInput {
-  sessionID?: string
+  sessionID?: string;
 }
 
 interface EventInput {
   event: {
-    type: string
-    properties?: Record<string, unknown>
-  }
+    type: string;
+    properties?: Record<string, unknown>;
+  };
 }
 
 interface CompactingInput {
-  sessionID: string
-  branch?: string
+  sessionID: string;
+  branch?: string;
 }
 
 interface CompactingOutput {
-  context: string[]
-  prompt?: string
+  context: string[];
+  prompt?: string;
 }
 
-const LOGGED_EVENTS = new Set(['session.compacted', 'session.status', 'session.updated', 'session.created'])
+const LOGGED_EVENTS = new Set([
+  "session.compacted",
+  "session.status",
+  "session.updated",
+  "session.created",
+]);
 
 function formatEventProperties(props?: Record<string, unknown>): string {
-  if (!props) return ''
+  if (!props) return "";
   try {
-    return ' ' + JSON.stringify(props)
+    return " " + JSON.stringify(props);
   } catch {
-    return ''
+    return "";
   }
 }
 
 function buildSubtaskPrompt(
   sessionId: string,
   compactionSummary: string,
-  planningState: PlanningState | null
+  planningState: PlanningState | null,
 ): string {
   const planningSection = planningState
-    ? `## Current Planning State\n\n${formatPlanningState(planningState) ?? '(no details)'}\n\n---\n`
-    : ''
+    ? `## Current Planning State\n\n${formatPlanningState(planningState) ?? "(no details)"}\n\n---\n`
+    : "";
 
   return `Review the following and extract any project knowledge worth preserving across sessions.
 
@@ -80,7 +87,7 @@ Be selective — only store knowledge useful in future sessions. Check for dupli
 
 End your response with:
 1. A brief summary of what was stored
-2. Whether there was active work in progress (in-progress todos, pending tasks, or incomplete planning phases). If so, tell the main agent to review the planning state and todo list and continue where it left off.`
+2. Whether there was active work in progress (in-progress todos, pending tasks, or incomplete planning phases). If so, tell the main agent to review the planning state and todo list and continue where it left off.`;
 }
 
 const DEFAULT_COMPACTION_CONFIG: CompactionConfig = {
@@ -88,7 +95,7 @@ const DEFAULT_COMPACTION_CONFIG: CompactionConfig = {
   inlinePlanning: true,
   maxContextTokens: 4000,
   snapshotToKV: true,
-}
+};
 
 export function createSessionHooks(
   projectId: string,
@@ -96,32 +103,32 @@ export function createSessionHooks(
   sessionStateService: SessionStateService,
   logger: Logger,
   ctx: PluginInput,
-  config?: CompactionConfig
+  config?: CompactionConfig,
 ): SessionHooks {
-  const initializedSessions = new Set<string>()
-  const compactionConfig = { ...DEFAULT_COMPACTION_CONFIG, ...config }
+  const initializedSessions = new Set<string>();
+  const compactionConfig = { ...DEFAULT_COMPACTION_CONFIG, ...config };
 
   async function runPostCompactionFlow(sessionId: string): Promise<void> {
     const messagesResult = await ctx.client.session.messages({
       path: { id: sessionId },
       query: { limit: 4 },
-    })
+    });
 
     const messages = messagesResult.data as unknown as Array<{
-      info: { role: string }
-      parts: Array<{ type: string; text?: string }>
-    }>
-    const compactionSummary = extractCompactionSummary(messages ?? [])
+      info: { role: string };
+      parts: Array<{ type: string; text?: string }>;
+    }>;
+    const compactionSummary = extractCompactionSummary(messages ?? []);
     if (!compactionSummary) {
-      logger.log(`Post-compaction: no summary found in session ${sessionId}, skipping extraction`)
-      return
+      logger.log(`Post-compaction: no summary found in session ${sessionId}, skipping extraction`);
+      return;
     }
 
-    logger.log(`Post-compaction: fetched compaction summary (${compactionSummary.length} chars)`)
+    logger.log(`Post-compaction: fetched compaction summary (${compactionSummary.length} chars)`);
 
-    const planningState = sessionStateService.getPlanningState(sessionId, projectId)
+    const planningState = sessionStateService.getPlanningState(sessionId, projectId);
     if (planningState) {
-      logger.log(`Post-compaction: fetched planning state for session ${sessionId}`)
+      logger.log(`Post-compaction: fetched planning state for session ${sessionId}`);
     }
 
     await ctx.client.session.prompt({
@@ -129,132 +136,143 @@ export function createSessionHooks(
       body: {
         parts: [
           {
-            type: 'subtask',
-            agent: 'Memory',
-            description: 'Memory extraction after compaction',
+            type: "subtask",
+            agent: "Memory",
+            description: "Memory extraction after compaction",
             prompt: buildSubtaskPrompt(sessionId, compactionSummary, planningState),
           },
         ],
       },
-    })
+    });
 
-    logger.log(`Post-compaction: extraction and resumption complete for session ${sessionId}`)
+    logger.log(`Post-compaction: extraction and resumption complete for session ${sessionId}`);
   }
 
   return {
     async onMessage(input, _output) {
-      const chatInput = input as ChatMessageInput
-      const sessionId = chatInput.sessionID
-      if (!sessionId) return
+      const chatInput = input as ChatMessageInput;
+      const sessionId = chatInput.sessionID;
+      if (!sessionId) return;
       if (!initializedSessions.has(sessionId)) {
-        logger.log(`Session initialized: ${sessionId} (project ${projectId})`)
-        initializedSessions.add(sessionId)
+        logger.log(`Session initialized: ${sessionId} (project ${projectId})`);
+        initializedSessions.add(sessionId);
       }
     },
     async onEvent(input: EventInput) {
-      const { event } = input
+      const { event } = input;
       if (event && LOGGED_EVENTS.has(event.type)) {
-        logger.log(`Event received: ${event.type}${formatEventProperties(event.properties)}`)
+        logger.log(`Event received: ${event.type}${formatEventProperties(event.properties)}`);
       }
-      if (event?.type !== 'session.compacted') return
+      if (event?.type !== "session.compacted") return;
 
-      const sessionId = (event.properties?.sessionId as string) ??
-                        (event.properties?.sessionID as string)
+      const sessionId =
+        (event.properties?.sessionId as string) ?? (event.properties?.sessionID as string);
       if (!sessionId) {
-        logger.log(`session.compacted event missing sessionId`)
-        return
+        logger.log(`session.compacted event missing sessionId`);
+        return;
       }
 
-      logger.log(`Session compacted for project ${projectId} - starting isolated extraction`)
+      logger.log(`Session compacted for project ${projectId} - starting isolated extraction`);
 
       runPostCompactionFlow(sessionId).catch((err) => {
-        logger.error(`Post-compaction flow failed: ${err}`)
-      })
+        logger.error(`Post-compaction flow failed: ${err}`);
+      });
     },
     async onCompacting(input: CompactingInput, output: CompactingOutput) {
-      const { sessionID: sessionId, branch } = input
-      logger.log(`Compacting hook fired for project ${projectId}, session ${sessionId}`)
+      const { sessionID: sessionId, branch } = input;
+      logger.log(`Compacting hook fired for project ${projectId}, session ${sessionId}`);
 
       try {
-        const sections: string[] = []
-        let totalTokens = 0
+        const sections: string[] = [];
+        let totalTokens = 0;
 
-        let planningState: PlanningState | null = null
+        let planningState: PlanningState | null = null;
         if (compactionConfig.inlinePlanning) {
-          planningState = sessionStateService.getPlanningState(sessionId, projectId)
+          planningState = sessionStateService.getPlanningState(sessionId, projectId);
           if (planningState) {
-            const planningText = formatPlanningState(planningState)
+            const planningText = formatPlanningState(planningState);
             if (planningText) {
-              sections.push(`## Planning State\n${planningText}`)
-              totalTokens += estimateTokens(planningText)
+              sections.push(`## Planning State\n${planningText}`);
+              totalTokens += estimateTokens(planningText);
             }
-            logger.log(`Compacting: fetched planning state for session ${sessionId}`)
+            logger.log(`Compacting: fetched planning state for session ${sessionId}`);
           }
         }
 
         if (compactionConfig.snapshotToKV) {
-          const priorSnapshot = sessionStateService.getCompactionSnapshot(sessionId, projectId)
+          const priorSnapshot = sessionStateService.getCompactionSnapshot(sessionId, projectId);
           if (priorSnapshot) {
-            const snapshotParts: string[] = []
-            snapshotParts.push(`Last compaction: ${new Date(priorSnapshot.timestamp).toLocaleString()}`)
+            const snapshotParts: string[] = [];
+            snapshotParts.push(
+              `Last compaction: ${new Date(priorSnapshot.timestamp).toLocaleString()}`,
+            );
             if (priorSnapshot.branch) {
-              snapshotParts.push(`branch: ${priorSnapshot.branch}`)
+              snapshotParts.push(`branch: ${priorSnapshot.branch}`);
             }
             if (priorSnapshot.planningState) {
-              const priorPlanningText = formatPlanningState(priorSnapshot.planningState)
+              const priorPlanningText = formatPlanningState(priorSnapshot.planningState);
               if (priorPlanningText) {
-                snapshotParts.push(`\n### Prior Planning State:\n${priorPlanningText}`)
+                snapshotParts.push(`\n### Prior Planning State:\n${priorPlanningText}`);
               }
             }
-            sections.push(`## Prior Session Context\n${snapshotParts.join('\n')}`)
-            totalTokens += estimateTokens(snapshotParts.join('\n'))
-            logger.log(`Compacting: fetched prior snapshot for session ${sessionId}`)
+            sections.push(`## Prior Session Context\n${snapshotParts.join("\n")}`);
+            totalTokens += estimateTokens(snapshotParts.join("\n"));
+            logger.log(`Compacting: fetched prior snapshot for session ${sessionId}`);
           }
         }
 
         const [convMemories, decMemories] = await Promise.all([
-          memoryService.listByProject(projectId, { scope: 'convention', limit: 10 }),
-          memoryService.listByProject(projectId, { scope: 'decision', limit: 10 }),
-        ])
+          memoryService.listByProject(projectId, { scope: "convention", limit: 10 }),
+          memoryService.listByProject(projectId, { scope: "decision", limit: 10 }),
+        ]);
 
-        const allMemories = [...convMemories, ...decMemories]
-        logger.log(`Compacting: fetched ${allMemories.length} memories (conv=${convMemories.length}, dec=${decMemories.length})`)
+        const allMemories = [...convMemories, ...decMemories];
+        logger.log(
+          `Compacting: fetched ${allMemories.length} memories (conv=${convMemories.length}, dec=${decMemories.length})`,
+        );
 
         if (allMemories.length > 0) {
           const formatScope = (items: typeof allMemories, scope: string) =>
-            items.filter(m => m.scope === scope).map(m => `- ${m.content}`).join('\n')
+            items
+              .filter((m) => m.scope === scope)
+              .map((m) => `- ${m.content}`)
+              .join("\n");
 
-          const conv = formatScope(allMemories, 'convention')
-          if (conv) sections.push(`### Conventions\n${conv}`)
+          const conv = formatScope(allMemories, "convention");
+          if (conv) sections.push(`### Conventions\n${conv}`);
 
-          const dec = formatScope(allMemories, 'decision')
-          if (dec) sections.push(`### Decisions\n${dec}`)
+          const dec = formatScope(allMemories, "decision");
+          if (dec) sections.push(`### Decisions\n${dec}`);
         }
 
-        const maxTokens = compactionConfig.maxContextTokens ?? 4000
+        const maxTokens = compactionConfig.maxContextTokens ?? 4000;
 
-        let trimmedSections = [...sections]
-        let currentTokens = totalTokens
+        let trimmedSections = [...sections];
+        let currentTokens = totalTokens;
 
         for (let i = trimmedSections.length - 1; i >= 0; i--) {
-          const sectionTokens = estimateTokens(trimmedSections[i]!)
+          const sectionTokens = estimateTokens(trimmedSections[i]!);
           if (currentTokens + sectionTokens > maxTokens) {
-            const priority = i === 0 ? 'high' : i <= 1 ? 'medium' : 'low'
-            trimmedSections[i] = trimToTokenBudget(trimmedSections[i]!, maxTokens - currentTokens, priority)
+            const priority = i === 0 ? "high" : i <= 1 ? "medium" : "low";
+            trimmedSections[i] = trimToTokenBudget(
+              trimmedSections[i]!,
+              maxTokens - currentTokens,
+              priority,
+            );
           }
-          currentTokens += estimateTokens(trimmedSections[i]!)
+          currentTokens += estimateTokens(trimmedSections[i]!);
         }
 
-        trimmedSections = trimmedSections.filter(s => s.length > 0)
+        trimmedSections = trimmedSections.filter((s) => s.length > 0);
 
-        if (trimmedSections.length === 0) return
+        if (trimmedSections.length === 0) return;
 
-        const contextText = `## Project Memory\n\nPreserve these established facts during compaction:\n\n${trimmedSections.join('\n\n')}`
-        output.context.push(contextText)
+        const contextText = `## Project Memory\n\nPreserve these established facts during compaction:\n\n${trimmedSections.join("\n\n")}`;
+        output.context.push(contextText);
 
         if (compactionConfig.customPrompt) {
-          output.prompt = buildCustomCompactionPrompt()
-          logger.log(`Compacting: set custom compaction prompt`)
+          output.prompt = buildCustomCompactionPrompt();
+          logger.log(`Compacting: set custom compaction prompt`);
         }
 
         if (compactionConfig.snapshotToKV) {
@@ -264,11 +282,11 @@ export function createSessionHooks(
               sessionId,
               planningState: planningState ?? undefined,
               branch,
-            }
-            sessionStateService.setCompactionSnapshot(sessionId, projectId, snapshot)
-            logger.log(`Compacting: stored pre-compaction snapshot`)
+            };
+            sessionStateService.setCompactionSnapshot(sessionId, projectId, snapshot);
+            logger.log(`Compacting: stored pre-compaction snapshot`);
           } catch (error) {
-            logger.error(`Failed to store pre-compaction snapshot: ${error}`)
+            logger.error(`Failed to store pre-compaction snapshot: ${error}`);
           }
         }
 
@@ -276,16 +294,16 @@ export function createSessionHooks(
           planningPhases: planningState?.phases?.length ?? 0,
           conventions: convMemories.length,
           decisions: decMemories.length,
-          tokensInjected: estimateTokens(trimmedSections.join('\n\n')),
-        })
+          tokensInjected: estimateTokens(trimmedSections.join("\n\n")),
+        });
         if (diagnostics) {
-          output.context.push(diagnostics)
+          output.context.push(diagnostics);
         }
 
-        logger.log(`Compacting: injected ${trimmedSections.length} context sections`)
+        logger.log(`Compacting: injected ${trimmedSections.length} context sections`);
       } catch (error) {
-        logger.error(`Compacting hook failed: ${error}`)
+        logger.error(`Compacting hook failed: ${error}`);
       }
     },
-  }
+  };
 }

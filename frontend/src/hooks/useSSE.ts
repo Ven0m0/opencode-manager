@@ -3,12 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { settingsApi } from "@/api/settings";
 import type { MessageListResponse, SSEEvent } from "@/api/types";
 import { parseOpenCodeError } from "@/lib/opencode-errors";
-import {
-  addSSEDirectory,
-  reconnectSSE,
-  sseManager,
-  subscribeToSSE,
-} from "@/lib/sseManager";
+import { addSSEDirectory, reconnectSSE, sseManager, subscribeToSSE } from "@/lib/sseManager";
 import { showToast } from "@/lib/toast";
 import { useSessionStatus } from "@/stores/sessionStatusStore";
 import { useSessionTodos } from "@/stores/sessionTodosStore";
@@ -22,30 +17,22 @@ const handleRestartServer = async () => {
   try {
     const result = await settingsApi.reloadOpenCodeConfig();
     if (result.success) {
-      showToast.success(
-        result.message || "OpenCode configuration reloaded successfully",
-        {
-          id: "restart-server",
-          duration: 3000,
-        },
-      );
+      showToast.success(result.message || "OpenCode configuration reloaded successfully", {
+        id: "restart-server",
+        duration: 3000,
+      });
       setTimeout(() => {
         window.location.reload();
       }, 2000);
     } else {
-      showToast.error(
-        result.message || "Failed to reload OpenCode configuration",
-        {
-          id: "restart-server",
-          duration: 5000,
-        },
-      );
+      showToast.error(result.message || "Failed to reload OpenCode configuration", {
+        id: "restart-server",
+        duration: 5000,
+      });
     }
   } catch (error) {
     showToast.error(
-      error instanceof Error
-        ? error.message
-        : "Failed to reload OpenCode configuration",
+      error instanceof Error ? error.message : "Failed to reload OpenCode configuration",
       {
         id: "restart-server",
         duration: 5000,
@@ -77,13 +64,7 @@ export const useSSE = (
           });
           if ("info" in event.properties) {
             queryClient.invalidateQueries({
-              queryKey: [
-                "opencode",
-                "session",
-                opcodeUrl,
-                event.properties.info.id,
-                directory,
-              ],
+              queryKey: ["opencode", "session", opcodeUrl, event.properties.info.id, directory],
             });
           }
           break;
@@ -94,22 +75,13 @@ export const useSSE = (
           });
           if ("sessionID" in event.properties) {
             queryClient.invalidateQueries({
-              queryKey: [
-                "opencode",
-                "session",
-                opcodeUrl,
-                event.properties.sessionID,
-                directory,
-              ],
+              queryKey: ["opencode", "session", opcodeUrl, event.properties.sessionID, directory],
             });
           }
           break;
 
         case "session.status": {
-          if (
-            !("sessionID" in event.properties && "status" in event.properties)
-          )
-            break;
+          if (!("sessionID" in event.properties && "status" in event.properties)) break;
           const { sessionID, status } = event.properties;
           setSessionStatus(sessionID, status);
           break;
@@ -132,17 +104,13 @@ export const useSSE = (
           ]);
           if (!currentData) return;
 
-          const messageExists = currentData.some(
-            (msg) => msg.info.id === messageID,
-          );
+          const messageExists = currentData.some((msg) => msg.info.id === messageID);
           if (!messageExists) return;
 
           const updated = currentData.map((msg) => {
             if (msg.info.id !== messageID) return msg;
 
-            const existingPartIndex = msg.parts.findIndex(
-              (p) => p.id === part.id,
-            );
+            const existingPartIndex = msg.parts.findIndex((p) => p.id === part.id);
 
             if (existingPartIndex >= 0) {
               const newParts = [...msg.parts];
@@ -175,41 +143,24 @@ export const useSSE = (
 
           if (info.role === "assistant") {
             const isComplete = "completed" in info.time && info.time.completed;
-            setSessionStatus(
-              sessionID,
-              isComplete ? { type: "idle" } : { type: "busy" },
-            );
+            setSessionStatus(sessionID, isComplete ? { type: "idle" } : { type: "busy" });
           }
 
-          const messagesQueryKey = [
-            "opencode",
-            "messages",
-            opcodeUrl,
-            sessionID,
-            directory,
-          ];
-          const currentData =
-            queryClient.getQueryData<MessageListResponse>(messagesQueryKey);
+          const messagesQueryKey = ["opencode", "messages", opcodeUrl, sessionID, directory];
+          const currentData = queryClient.getQueryData<MessageListResponse>(messagesQueryKey);
           if (!currentData) {
             queryClient.invalidateQueries({ queryKey: messagesQueryKey });
             return;
           }
 
-          const messageExists = currentData.some(
-            (msg) => msg.info.id === info.id,
-          );
+          const messageExists = currentData.some((msg) => msg.info.id === info.id);
 
           if (!messageExists) {
             const filteredData =
               info.role === "user"
-                ? currentData.filter(
-                    (msg) => !msg.info.id.startsWith("optimistic_"),
-                  )
+                ? currentData.filter((msg) => !msg.info.id.startsWith("optimistic_"))
                 : currentData;
-            queryClient.setQueryData(messagesQueryKey, [
-              ...filteredData,
-              { info, parts: [] },
-            ]);
+            queryClient.setQueryData(messagesQueryKey, [...filteredData, { info, parts: [] }]);
             return;
           }
 
@@ -227,12 +178,7 @@ export const useSSE = (
 
         case "message.removed":
         case "messagev2.removed": {
-          if (
-            !(
-              "sessionID" in event.properties && "messageID" in event.properties
-            )
-          )
-            break;
+          if (!("sessionID" in event.properties && "messageID" in event.properties)) break;
 
           const { sessionID, messageID } = event.properties;
 
@@ -296,15 +242,8 @@ export const useSSE = (
 
           setSessionStatus(sessionID, { type: "idle" });
 
-          const messagesQueryKey = [
-            "opencode",
-            "messages",
-            opcodeUrl,
-            sessionID,
-            directory,
-          ];
-          const currentData =
-            queryClient.getQueryData<MessageListResponse>(messagesQueryKey);
+          const messagesQueryKey = ["opencode", "messages", opcodeUrl, sessionID, directory];
+          const currentData = queryClient.getQueryData<MessageListResponse>(messagesQueryKey);
           if (!currentData) break;
 
           const now = Date.now();
@@ -313,11 +252,7 @@ export const useSSE = (
 
             const updatedParts = msg.parts.map((part) => {
               if (part.type !== "tool") return part;
-              if (
-                part.state.status !== "running" &&
-                part.state.status !== "pending"
-              )
-                return part;
+              if (part.state.status !== "running" && part.state.status !== "pending") return part;
               return {
                 ...part,
                 state: {
@@ -331,13 +266,9 @@ export const useSSE = (
                     part.state.status === "running"
                       ? (part.state as { title?: string }).title || ""
                       : "",
-                  metadata:
-                    (part.state as { metadata?: Record<string, unknown> })
-                      .metadata || {},
+                  metadata: (part.state as { metadata?: Record<string, unknown> }).metadata || {},
                   time: {
-                    start:
-                      (part.state as { time?: { start: number } }).time
-                        ?.start || now,
+                    start: (part.state as { time?: { start: number } }).time?.start || now,
                     end: now,
                   },
                 },
@@ -345,12 +276,7 @@ export const useSSE = (
             });
 
             const msgUpdated = updatedParts !== msg.parts;
-            if (
-              "completed" in msg.info.time &&
-              msg.info.time.completed &&
-              !msgUpdated
-            )
-              return msg;
+            if ("completed" in msg.info.time && msg.info.time.completed && !msgUpdated) return msg;
 
             return {
               ...msg,
@@ -380,38 +306,29 @@ export const useSSE = (
 
         case "installation.updated":
           if ("version" in event.properties) {
-            showToast.success(
-              `OpenCode updated to v${event.properties.version}`,
-              {
-                description: "The server has been successfully upgraded.",
-                duration: 5000,
-              },
-            );
+            showToast.success(`OpenCode updated to v${event.properties.version}`, {
+              description: "The server has been successfully upgraded.",
+              duration: 5000,
+            });
           }
           break;
 
         case "installation.update-available":
           if ("version" in event.properties) {
-            showToast.info(
-              `OpenCode v${event.properties.version} is available`,
-              {
-                description: "A new version is ready to install.",
-                action: {
-                  label: "Reload to Update",
-                  onClick: handleRestartServer,
-                },
-                duration: 10000,
+            showToast.info(`OpenCode v${event.properties.version} is available`, {
+              description: "A new version is ready to install.",
+              action: {
+                label: "Reload to Update",
+                onClick: handleRestartServer,
               },
-            );
+              duration: 10000,
+            });
           }
           break;
 
         case "session.error": {
           if (!("error" in event.properties)) break;
-          if (
-            "sessionID" in event.properties &&
-            event.properties.sessionID === currentSessionId
-          )
+          if ("sessionID" in event.properties && event.properties.sessionID === currentSessionId)
             break;
 
           const error = event.properties.error;
@@ -441,14 +358,7 @@ export const useSSE = (
           break;
       }
     },
-    [
-      queryClient,
-      opcodeUrl,
-      directory,
-      setSessionStatus,
-      setSessionTodos,
-      currentSessionId,
-    ],
+    [queryClient, opcodeUrl, directory, setSessionStatus, setSessionTodos, currentSessionId],
   );
 
   const fetchInitialData = useCallback(async () => {

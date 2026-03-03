@@ -37,8 +37,7 @@ export class SettingsService {
   initializeLastKnownGoodConfig(userId: string = "default"): void {
     const settings = this.getSettings(userId);
     if (settings.preferences.lastKnownGoodConfig) {
-      SettingsService.lastKnownGoodConfigContent =
-        settings.preferences.lastKnownGoodConfig;
+      SettingsService.lastKnownGoodConfigContent = settings.preferences.lastKnownGoodConfig;
       logger.info("Initialized last known good config from database");
     }
   }
@@ -55,9 +54,7 @@ export class SettingsService {
 
   getSettings(userId: string = "default"): SettingsResponse {
     const row = this.db
-      .query(
-        "SELECT preferences, updated_at FROM user_preferences WHERE user_id = ?",
-      )
+      .query("SELECT preferences, updated_at FROM user_preferences WHERE user_id = ?")
       .get(userId) as { preferences: string; updated_at: number } | undefined;
 
     if (!row) {
@@ -80,10 +77,7 @@ export class SettingsService {
         updatedAt: row.updated_at,
       };
     } catch (error) {
-      logger.error(
-        "Failed to parse user preferences, returning defaults",
-        error,
-      );
+      logger.error("Failed to parse user preferences, returning defaults", error);
       return {
         preferences: DEFAULT_USER_PREFERENCES,
         updatedAt: row.updated_at,
@@ -91,10 +85,7 @@ export class SettingsService {
     }
   }
 
-  updateSettings(
-    updates: Partial<UserPreferences>,
-    userId: string = "default",
-  ): SettingsResponse {
+  updateSettings(updates: Partial<UserPreferences>, userId: string = "default"): SettingsResponse {
     const current = this.getSettings(userId);
     const merged: UserPreferences = {
       ...current.preferences,
@@ -133,13 +124,9 @@ export class SettingsService {
     };
   }
 
-  getOpenCodeConfigs(
-    userId: string = "default",
-  ): OpenCodeConfigResponseWithRaw {
+  getOpenCodeConfigs(userId: string = "default"): OpenCodeConfigResponseWithRaw {
     const rows = this.db
-      .query(
-        "SELECT * FROM opencode_configs WHERE user_id = ? ORDER BY created_at DESC",
-      )
+      .query("SELECT * FROM opencode_configs WHERE user_id = ? ORDER BY created_at DESC")
       .all(userId) as Array<{
       id: number;
       user_id: string;
@@ -201,9 +188,7 @@ export class SettingsService {
         : JSON.stringify(request.content, null, 2);
 
     const parsedContent =
-      typeof request.content === "string"
-        ? parseJsonc(request.content)
-        : request.content;
+      typeof request.content === "string" ? parseJsonc(request.content) : request.content;
 
     const contentValidated = OpenCodeConfigSchema.parse(parsedContent);
     const now = Date.now();
@@ -215,11 +200,7 @@ export class SettingsService {
     const shouldBeDefault = request.isDefault || existingCount.count === 0;
 
     if (shouldBeDefault) {
-      this.db
-        .query(
-          "UPDATE opencode_configs SET is_default = FALSE WHERE user_id = ?",
-        )
-        .run(userId);
+      this.db.query("UPDATE opencode_configs SET is_default = FALSE WHERE user_id = ?").run(userId);
     }
 
     const result = this.db
@@ -249,9 +230,7 @@ export class SettingsService {
     userId: string = "default",
   ): OpenCodeConfigWithRaw | null {
     const existing = this.db
-      .query(
-        "SELECT * FROM opencode_configs WHERE user_id = ? AND config_name = ?",
-      )
+      .query("SELECT * FROM opencode_configs WHERE user_id = ? AND config_name = ?")
       .get(userId, configName) as
       | {
           id: number;
@@ -271,19 +250,13 @@ export class SettingsService {
         : JSON.stringify(request.content, null, 2);
 
     const parsedContent =
-      typeof request.content === "string"
-        ? parseJsonc(request.content)
-        : request.content;
+      typeof request.content === "string" ? parseJsonc(request.content) : request.content;
 
     const contentValidated = OpenCodeConfigSchema.parse(parsedContent);
     const now = Date.now();
 
     if (request.isDefault) {
-      this.db
-        .query(
-          "UPDATE opencode_configs SET is_default = FALSE WHERE user_id = ?",
-        )
-        .run(userId);
+      this.db.query("UPDATE opencode_configs SET is_default = FALSE WHERE user_id = ?").run(userId);
     }
 
     this.db
@@ -294,9 +267,7 @@ export class SettingsService {
       )
       .run(
         rawContent,
-        request.isDefault !== undefined
-          ? request.isDefault
-          : existing.is_default,
+        request.isDefault !== undefined ? request.isDefault : existing.is_default,
         now,
         userId,
         configName,
@@ -307,10 +278,7 @@ export class SettingsService {
       name: configName,
       content: contentValidated,
       rawContent: rawContent,
-      isDefault:
-        request.isDefault !== undefined
-          ? request.isDefault
-          : existing.is_default,
+      isDefault: request.isDefault !== undefined ? request.isDefault : existing.is_default,
       createdAt: existing.created_at,
       updatedAt: now,
     };
@@ -319,21 +287,14 @@ export class SettingsService {
     return config;
   }
 
-  deleteOpenCodeConfig(
-    configName: string,
-    userId: string = "default",
-  ): boolean {
+  deleteOpenCodeConfig(configName: string, userId: string = "default"): boolean {
     const result = this.db
-      .query(
-        "DELETE FROM opencode_configs WHERE user_id = ? AND config_name = ?",
-      )
+      .query("DELETE FROM opencode_configs WHERE user_id = ? AND config_name = ?")
       .run(userId, configName);
 
     const deleted = result.changes > 0;
     if (deleted) {
-      logger.info(
-        `Deleted OpenCode config '${configName}' for user: ${userId}`,
-      );
+      logger.info(`Deleted OpenCode config '${configName}' for user: ${userId}`);
       this.ensureSingleConfigIsDefault(userId);
     }
 
@@ -345,9 +306,7 @@ export class SettingsService {
     userId: string = "default",
   ): OpenCodeConfigWithRaw | null {
     const existing = this.db
-      .query(
-        "SELECT * FROM opencode_configs WHERE user_id = ? AND config_name = ?",
-      )
+      .query("SELECT * FROM opencode_configs WHERE user_id = ? AND config_name = ?")
       .get(userId, configName) as
       | {
           id: number;
@@ -360,9 +319,7 @@ export class SettingsService {
       return null;
     }
 
-    this.db
-      .query("UPDATE opencode_configs SET is_default = FALSE WHERE user_id = ?")
-      .run(userId);
+    this.db.query("UPDATE opencode_configs SET is_default = FALSE WHERE user_id = ?").run(userId);
 
     const now = Date.now();
     this.db
@@ -388,9 +345,7 @@ export class SettingsService {
         updatedAt: now,
       };
 
-      logger.info(
-        `Set '${configName}' as default OpenCode config for user: ${userId}`,
-      );
+      logger.info(`Set '${configName}' as default OpenCode config for user: ${userId}`);
       return config;
     } catch (error) {
       logger.error(`Failed to parse config ${configName}:`, error);
@@ -398,13 +353,9 @@ export class SettingsService {
     }
   }
 
-  getDefaultOpenCodeConfig(
-    userId: string = "default",
-  ): OpenCodeConfigWithRaw | null {
+  getDefaultOpenCodeConfig(userId: string = "default"): OpenCodeConfigWithRaw | null {
     const row = this.db
-      .query(
-        "SELECT * FROM opencode_configs WHERE user_id = ? AND is_default = TRUE",
-      )
+      .query("SELECT * FROM opencode_configs WHERE user_id = ? AND is_default = TRUE")
       .get(userId) as
       | {
           id: number;
@@ -444,9 +395,7 @@ export class SettingsService {
     userId: string = "default",
   ): OpenCodeConfigWithRaw | null {
     const row = this.db
-      .query(
-        "SELECT * FROM opencode_configs WHERE user_id = ? AND config_name = ?",
-      )
+      .query("SELECT * FROM opencode_configs WHERE user_id = ? AND config_name = ?")
       .get(userId, configName) as
       | {
           id: number;
@@ -482,14 +431,9 @@ export class SettingsService {
     }
   }
 
-  getOpenCodeConfigContent(
-    configName: string,
-    userId: string = "default",
-  ): string | null {
+  getOpenCodeConfigContent(configName: string, userId: string = "default"): string | null {
     const row = this.db
-      .query(
-        "SELECT config_content FROM opencode_configs WHERE user_id = ? AND config_name = ?",
-      )
+      .query("SELECT config_content FROM opencode_configs WHERE user_id = ? AND config_name = ?")
       .get(userId, configName) as { config_content: string } | undefined;
 
     if (!row) {
@@ -520,9 +464,7 @@ export class SettingsService {
             "UPDATE opencode_configs SET is_default = TRUE WHERE user_id = ? AND config_name = ?",
           )
           .run(userId, firstConfig.config_name);
-        logger.info(
-          `Auto-set '${firstConfig.config_name}' as default (only config)`,
-        );
+        logger.info(`Auto-set '${firstConfig.config_name}' as default (only config)`);
       }
     }
   }
@@ -552,9 +494,7 @@ export class SettingsService {
       return null;
     }
 
-    logger.info(
-      `Restoring to last known good config for: ${defaultConfig.name}`,
-    );
+    logger.info(`Restoring to last known good config for: ${defaultConfig.name}`);
     return {
       configName: defaultConfig.name,
       content: SettingsService.lastKnownGoodConfigContent,
@@ -567,11 +507,7 @@ export class SettingsService {
       return null;
     }
 
-    this.updateOpenCodeConfig(
-      lastGood.configName,
-      { content: lastGood.content },
-      userId,
-    );
+    this.updateOpenCodeConfig(lastGood.configName, { content: lastGood.content }, userId);
     return lastGood.configName;
   }
 
@@ -585,10 +521,7 @@ export class SettingsService {
 
     try {
       unlinkSync(configPath);
-      logger.info(
-        "Deleted filesystem config to allow server startup:",
-        configPath,
-      );
+      logger.info("Deleted filesystem config to allow server startup:", configPath);
       return true;
     } catch (error) {
       logger.error("Failed to delete config file:", error);

@@ -7,7 +7,17 @@ export const FileInfoSchema: z.ZodType<{
   size: number;
   mimeType?: string;
   content?: string;
-  children?: Array<any>;
+  children?: Array<{
+    name: string;
+    path: string;
+    isDirectory: boolean;
+    size: number;
+    mimeType?: string;
+    content?: string;
+    children?: Array<unknown>;
+    lastModified: Date;
+    totalLines?: number;
+  }>;
   lastModified: Date;
   totalLines?: number;
 }> = z.object({

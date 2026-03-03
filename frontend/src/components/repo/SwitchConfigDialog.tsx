@@ -98,23 +98,17 @@ export function SwitchConfigDialog({
           {currentConfigName && (
             <div className="text-sm text-muted-foreground">
               Current config:{" "}
-              <span className="text-foreground font-semibold">
-                {currentConfigName}
-              </span>
+              <span className="text-foreground font-semibold">{currentConfigName}</span>
             </div>
           )}
 
           {loading ? (
             <div className="flex items-center justify-center py-6">
               <Loader2 className="w-4 h-4 animate-spin text-blue-600 dark:text-blue-400" />
-              <span className="ml-2 text-sm text-muted-foreground">
-                Loading configs...
-              </span>
+              <span className="ml-2 text-sm text-muted-foreground">Loading configs...</span>
             </div>
           ) : configs.length === 0 ? (
-            <div className="text-sm text-muted-foreground">
-              No configs available
-            </div>
+            <div className="text-sm text-muted-foreground">No configs available</div>
           ) : (
             <Select value={selectedConfig} onValueChange={setSelectedConfig}>
               <SelectTrigger className="bg-background border-border text-foreground">
@@ -154,11 +148,7 @@ export function SwitchConfigDialog({
             </Button>
             <Button
               onClick={handleSwitch}
-              disabled={
-                !selectedConfig ||
-                switching ||
-                selectedConfig === currentConfigName
-              }
+              disabled={!selectedConfig || switching || selectedConfig === currentConfigName}
               className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
             >
               {switching ? (

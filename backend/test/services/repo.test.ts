@@ -65,13 +65,8 @@ describe("initLocalRepo", () => {
 
     const result = await initLocalRepo(database, mockGitAuthService, localPath);
 
-    expect(executeCommand).toHaveBeenCalledWith(
-      ["git", "init"],
-      expect.any(Object),
-    );
-    expect(ensureDirectoryExists).toHaveBeenCalledWith(
-      expect.stringContaining("my-new-repo"),
-    );
+    expect(executeCommand).toHaveBeenCalledWith(["git", "init"], expect.any(Object));
+    expect(ensureDirectoryExists).toHaveBeenCalledWith(expect.stringContaining("my-new-repo"));
     expect(updateRepoStatus).toHaveBeenCalledWith(database, 1, "ready");
     expect(result.cloneStatus).toBe("ready");
   });
@@ -101,16 +96,11 @@ describe("initLocalRepo", () => {
       return "";
     });
 
-    const result = await initLocalRepo(
-      database,
-      mockGitAuthService,
-      absolutePath,
-    );
+    const result = await initLocalRepo(database, mockGitAuthService, absolutePath);
 
-    expect(executeCommand).toHaveBeenCalledWith(
-      ["test", "-d", "/Users/test/existing-repo"],
-      { silent: true },
-    );
+    expect(executeCommand).toHaveBeenCalledWith(["test", "-d", "/Users/test/existing-repo"], {
+      silent: true,
+    });
     expect(executeCommand).toHaveBeenCalledWith(
       ["git", "-C", "/Users/test/existing-repo", "rev-parse", "--git-dir"],
       expect.objectContaining({ silent: true }),
@@ -150,9 +140,9 @@ describe("initLocalRepo", () => {
 
     executeCommand.mockRejectedValueOnce(new Error("Command failed"));
 
-    await expect(
-      initLocalRepo(database, mockGitAuthService, nonExistentPath),
-    ).rejects.toThrow("No such file or directory");
+    await expect(initLocalRepo(database, mockGitAuthService, nonExistentPath)).rejects.toThrow(
+      "No such file or directory",
+    );
   });
 
   it("throws error when repo name already exists in workspace", async () => {
@@ -168,9 +158,7 @@ describe("initLocalRepo", () => {
       return "";
     });
 
-    await expect(
-      initLocalRepo(database, mockGitAuthService, absolutePath),
-    ).rejects.toThrow(
+    await expect(initLocalRepo(database, mockGitAuthService, absolutePath)).rejects.toThrow(
       "A repository named 'existing-repo' already exists in the workspace",
     );
   });
@@ -187,9 +175,9 @@ describe("initLocalRepo", () => {
       return "";
     });
 
-    await expect(
-      initLocalRepo(database, mockGitAuthService, nonGitPath),
-    ).rejects.toThrow("Directory exists but is not a valid Git repository");
+    await expect(initLocalRepo(database, mockGitAuthService, nonGitPath)).rejects.toThrow(
+      "Directory exists but is not a valid Git repository",
+    );
   });
 
   it("creates new empty repo with custom branch", async () => {
@@ -210,17 +198,9 @@ describe("initLocalRepo", () => {
       isLocal: true,
     });
 
-    const result = await initLocalRepo(
-      database,
-      mockGitAuthService,
-      localPath,
-      branch,
-    );
+    const result = await initLocalRepo(database, mockGitAuthService, localPath, branch);
 
-    expect(executeCommand).toHaveBeenCalledWith(
-      ["git", "init"],
-      expect.any(Object),
-    );
+    expect(executeCommand).toHaveBeenCalledWith(["git", "init"], expect.any(Object));
     expect(executeCommand).toHaveBeenCalledWith([
       "git",
       "-C",

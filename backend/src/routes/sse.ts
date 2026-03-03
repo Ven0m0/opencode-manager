@@ -1,8 +1,5 @@
 import { DEFAULTS } from "@opencode-manager/shared/config";
-import {
-  SSESubscribeSchema,
-  SSEVisibilitySchema,
-} from "@opencode-manager/shared/schemas";
+import { SSESubscribeSchema, SSEVisibilitySchema } from "@opencode-manager/shared/schemas";
 import { Hono } from "hono";
 import { stream } from "hono/streaming";
 import { sseAggregator } from "../services/sse-aggregator";
@@ -15,9 +12,7 @@ export function createSSERoutes() {
 
   app.get("/stream", async (c) => {
     const directoriesParam = c.req.query("directories");
-    const directories = directoriesParam
-      ? directoriesParam.split(",").filter(Boolean)
-      : [];
+    const directories = directoriesParam ? directoriesParam.split(",").filter(Boolean) : [];
     const clientId = `client_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
     c.header("Content-Type", "text/event-stream");
@@ -67,10 +62,7 @@ export function createSSERoutes() {
           }),
         );
       } catch (err) {
-        logger.error(
-          `Failed to send SSE connected event for ${clientId}:`,
-          err,
-        );
+        logger.error(`Failed to send SSE connected event for ${clientId}:`, err);
       }
 
       await new Promise(() => {});
@@ -90,10 +82,7 @@ export function createSSERoutes() {
         400,
       );
     }
-    const success = sseAggregator.addDirectories(
-      result.data.clientId,
-      result.data.directories,
-    );
+    const success = sseAggregator.addDirectories(result.data.clientId, result.data.directories);
     if (!success) {
       return c.json({ success: false, error: "Client not found" }, 404);
     }
@@ -113,10 +102,7 @@ export function createSSERoutes() {
         400,
       );
     }
-    const success = sseAggregator.removeDirectories(
-      result.data.clientId,
-      result.data.directories,
-    );
+    const success = sseAggregator.removeDirectories(result.data.clientId, result.data.directories);
     if (!success) {
       return c.json({ success: false, error: "Client not found" }, 404);
     }
@@ -136,7 +122,11 @@ export function createSSERoutes() {
         400,
       );
     }
-    const success = sseAggregator.setClientVisibility(result.data.clientId, result.data.visible, result.data.activeSessionId ?? null)
+    const success = sseAggregator.setClientVisibility(
+      result.data.clientId,
+      result.data.visible,
+      result.data.activeSessionId ?? null,
+    );
     if (!success) {
       return c.json({ success: false, error: "Client not found" }, 404);
     }

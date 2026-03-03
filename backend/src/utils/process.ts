@@ -22,9 +22,7 @@ export async function executeCommand(
   cwdOrOptions?: string | ExecuteCommandOptions,
 ): Promise<string | { exitCode: number; stdout: string; stderr: string }> {
   const options: ExecuteCommandOptions =
-    typeof cwdOrOptions === "string"
-      ? { cwd: cwdOrOptions }
-      : cwdOrOptions || {};
+    typeof cwdOrOptions === "string" ? { cwd: cwdOrOptions } : cwdOrOptions || {};
 
   return new Promise((resolve, reject) => {
     const [command, ...cmdArgs] = args;
@@ -35,15 +33,9 @@ export async function executeCommand(
     if (command === "git") {
       logger.info(`executeCommand: ${args.join(" ")}`);
       logger.info(`  GIT_ASKPASS: ${effectiveEnv.GIT_ASKPASS || "(not set)"}`);
-      logger.info(
-        `  VSCODE_GIT_IPC_HANDLE: ${effectiveEnv.VSCODE_GIT_IPC_HANDLE || "(not set)"}`,
-      );
-      logger.info(
-        `  GIT_TERMINAL_PROMPT: ${effectiveEnv.GIT_TERMINAL_PROMPT || "(not set)"}`,
-      );
-      logger.info(
-        `  GIT_SSH_COMMAND: ${effectiveEnv.GIT_SSH_COMMAND || "(not set)"}`,
-      );
+      logger.info(`  VSCODE_GIT_IPC_HANDLE: ${effectiveEnv.VSCODE_GIT_IPC_HANDLE || "(not set)"}`);
+      logger.info(`  GIT_TERMINAL_PROMPT: ${effectiveEnv.GIT_TERMINAL_PROMPT || "(not set)"}`);
+      logger.info(`  GIT_SSH_COMMAND: ${effectiveEnv.GIT_SSH_COMMAND || "(not set)"}`);
       logger.info(
         `  VSCODE_GIT_SSH_HOST_KEY: ${effectiveEnv.VSCODE_GIT_SSH_HOST_KEY || "(not set)"}`,
       );
@@ -64,11 +56,7 @@ export async function executeCommand(
           if (!isResolved) {
             isResolved = true;
             proc.kill("SIGKILL");
-            reject(
-              new Error(
-                `Command timed out after ${options.timeout}ms: ${args.join(" ")}`,
-              ),
-            );
+            reject(new Error(`Command timed out after ${options.timeout}ms: ${args.join(" ")}`));
           }
         }, options.timeout)
       : undefined;
@@ -103,9 +91,7 @@ export async function executeCommand(
       } else if (code === 0) {
         resolve(stdout);
       } else {
-        const error = new Error(
-          `Command failed with code ${code}: ${stderr || stdout}`,
-        );
+        const error = new Error(`Command failed with code ${code}: ${stderr || stdout}`);
         if (!options.silent) {
           logger.error(`Command failed: ${args.join(" ")}`, error);
         }

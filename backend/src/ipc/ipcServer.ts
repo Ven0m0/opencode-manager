@@ -81,8 +81,8 @@ export class IPCServer {
 
   dispose(): Promise<void> {
     return new Promise((resolve) => {
-      this.server.close(() => resolve())
-    })
+      this.server.close(() => resolve());
+    });
   }
 }
 

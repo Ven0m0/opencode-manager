@@ -7,6 +7,5 @@ interface UIStateStore {
 
 export const useUIState = create<UIStateStore>((set) => ({
   isEditingMessage: false,
-  setIsEditingMessage: (isEditing: boolean) =>
-    set({ isEditingMessage: isEditing }),
+  setIsEditingMessage: (isEditing: boolean) => set({ isEditingMessage: isEditing }),
 }));

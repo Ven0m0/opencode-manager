@@ -64,8 +64,7 @@ export function PassphraseModal({
             SSH Key Passphrase Required
           </DialogTitle>
           <DialogDescription>
-            Enter the passphrase for your{" "}
-            <span className="font-medium">{credentialName}</span>
+            Enter the passphrase for your <span className="font-medium">{credentialName}</span>
           </DialogDescription>
         </DialogHeader>
 
@@ -97,8 +96,7 @@ export function PassphraseModal({
           </div>
 
           <p className="text-xs text-muted-foreground">
-            This passphrase is NOT stored and will be required each time you
-            access this SSH key.
+            This passphrase is NOT stored and will be required each time you access this SSH key.
           </p>
         </div>
 

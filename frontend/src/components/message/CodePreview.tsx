@@ -69,16 +69,12 @@ export function CodePreview({ fileName, content }: CodePreviewProps) {
   const isLargeFile = totalLines > INITIAL_CODE_LINES;
 
   const displayedContent =
-    isLargeFile && !showMore
-      ? lines.slice(0, INITIAL_CODE_LINES).join("\n")
-      : content;
+    isLargeFile && !showMore ? lines.slice(0, INITIAL_CODE_LINES).join("\n") : content;
 
   return (
     <div className="flex flex-col bg-background">
       <div className="px-3 py-2 bg-muted/30 border-b border-border/50 flex items-center justify-between text-xs">
-        <span className="font-medium truncate flex-1">
-          {extractFileFromPath(fileName)}
-        </span>
+        <span className="font-medium truncate flex-1">{extractFileFromPath(fileName)}</span>
         <CopyButton
           content={content}
           title="Copy"
@@ -88,19 +84,10 @@ export function CodePreview({ fileName, content }: CodePreviewProps) {
         />
       </div>
 
-      <div
-        className={cn("overflow-y-auto", isMobile ? "max-h-64" : "max-h-96")}
-      >
+      <div className={cn("overflow-y-auto", isMobile ? "max-h-64" : "max-h-96")}>
         <div className="p-4">
-          <pre
-            className={cn(
-              "text-xs",
-              isMobile && "whitespace-pre-wrap break-all",
-            )}
-          >
-            <code className={`language-${fileExtension}`}>
-              {displayedContent}
-            </code>
+          <pre className={cn("text-xs", isMobile && "whitespace-pre-wrap break-all")}>
+            <code className={`language-${fileExtension}`}>{displayedContent}</code>
           </pre>
         </div>
       </div>

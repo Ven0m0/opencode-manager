@@ -6,11 +6,7 @@ interface PathDisplayProps {
   className?: string;
 }
 
-export function PathDisplay({
-  path,
-  maxSegments = 3,
-  className = "",
-}: PathDisplayProps) {
+export function PathDisplay({ path, maxSegments = 3, className = "" }: PathDisplayProps) {
   const displayPath = useMemo(() => {
     if (!path || path === "/") return "/";
 

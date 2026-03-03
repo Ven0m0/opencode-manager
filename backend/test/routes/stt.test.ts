@@ -279,8 +279,7 @@ describe("STT Routes", () => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 401,
-        text: async () =>
-          JSON.stringify({ error: { message: "Invalid API key" } }),
+        text: async () => JSON.stringify({ error: { message: "Invalid API key" } }),
       });
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
@@ -418,9 +417,7 @@ describe("STT Routes", () => {
       mockStat.mockResolvedValue({
         mtimeMs: Date.now() - 1000,
       });
-      mockReadFile.mockResolvedValue(
-        JSON.stringify(["whisper-1", "whisper-large"]),
-      );
+      mockReadFile.mockResolvedValue(JSON.stringify(["whisper-1", "whisper-large"]));
 
       const req = new Request("http://localhost/models?userId=test");
       const res = await sttApp.fetch(req);
@@ -443,11 +440,7 @@ describe("STT Routes", () => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
-          data: [
-            { id: "whisper-1" },
-            { id: "gpt-4" },
-            { id: "whisper-large-v3" },
-          ],
+          data: [{ id: "whisper-1" }, { id: "gpt-4" }, { id: "whisper-large-v3" }],
         }),
       });
       globalThis.fetch = mockFetch as unknown as typeof fetch;
@@ -495,9 +488,7 @@ describe("STT Routes", () => {
       });
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
-      const req = new Request(
-        "http://localhost/models?userId=test&refresh=true",
-      );
+      const req = new Request("http://localhost/models?userId=test&refresh=true");
       const res = await sttApp.fetch(req);
       const json = (await res.json()) as Record<string, unknown>;
 

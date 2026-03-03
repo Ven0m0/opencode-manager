@@ -2,19 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Check, Loader2, Search, Star } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import type { Model, ProviderWithModels } from "@/api/providers";
-import {
-  formatModelName,
-  formatProviderName,
-  getProvidersWithModels,
-} from "@/api/providers";
+import { formatModelName, formatProviderName, getProvidersWithModels } from "@/api/providers";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -93,10 +84,8 @@ const ModelCard = memo(function ModelCard({
   }, [model.reasoning, model.tool_call, model.attachment]);
 
   const statusBadge = useMemo(() => {
-    if (model.experimental)
-      return <Badge variant="secondary">Experimental</Badge>;
-    if (model.status === "alpha")
-      return <Badge variant="destructive">Alpha</Badge>;
+    if (model.experimental) return <Badge variant="secondary">Experimental</Badge>;
+    if (model.status === "alpha") return <Badge variant="destructive">Alpha</Badge>;
     if (model.status === "beta") return <Badge variant="secondary">Beta</Badge>;
     return null;
   }, [model.experimental, model.status]);
@@ -104,26 +93,18 @@ const ModelCard = memo(function ModelCard({
   return (
     <div
       className={`p-3 sm:p-4 rounded-lg border cursor-pointer transition-colors ${
-        isSelected
-          ? "bg-blue-600/20 border-blue-500"
-          : "bg-card border-border hover:bg-accent"
+        isSelected ? "bg-blue-600/20 border-blue-500" : "bg-card border-border hover:bg-accent"
       }`}
       onClick={() => onSelect(provider.id, model.id)}
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-1">
-            <h4 className="font-semibold text-sm truncate">
-              {formatModelName(model)}
-            </h4>
+            <h4 className="font-semibold text-sm truncate">{formatModelName(model)}</h4>
           </div>
-          <p className="text-xs text-muted-foreground truncate">
-            {formatProviderName(provider)}
-          </p>
+          <p className="text-xs text-muted-foreground truncate">{formatProviderName(provider)}</p>
         </div>
-        {isSelected && (
-          <Check className="h-4 w-4 text-blue-500 flex-shrink-0 ml-2" />
-        )}
+        {isSelected && <Check className="h-4 w-4 text-blue-500 flex-shrink-0 ml-2" />}
       </div>
 
       <div className="text-xs text-muted-foreground mb-2 sm:mb-3 font-mono truncate">
@@ -133,11 +114,7 @@ const ModelCard = memo(function ModelCard({
       {capabilities.length > 0 && (
         <div className="flex gap-1 flex-wrap mb-2 sm:mb-3">
           {capabilities.slice(0, 2).map((cap) => (
-            <Badge
-              key={cap}
-              variant="secondary"
-              className="text-xs px-1.5 py-0.5"
-            >
+            <Badge key={cap} variant="secondary" className="text-xs px-1.5 py-0.5">
               {cap}
             </Badge>
           ))}
@@ -200,9 +177,7 @@ const ModelGrid = memo(function ModelGrid({
   }
 
   if (models.length === 0 && recentModels.length === 0) {
-    return (
-      <div className="text-center py-12 text-zinc-500">No models found</div>
-    );
+    return <div className="text-center py-12 text-zinc-500">No models found</div>;
   }
 
   return (
@@ -231,9 +206,7 @@ const ModelGrid = memo(function ModelGrid({
       {models.length > 0 && (
         <div>
           {showRecent && recentModels.length > 0 && (
-            <h3 className="text-sm font-semibold text-muted-foreground mb-3">
-              All Models
-            </h3>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-3">All Models</h3>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {models.map(({ model, provider, modelKey }) => (
@@ -281,9 +254,7 @@ const ProviderSidebar = memo(function ProviderSidebar({
             {providers.map((provider) => (
               <Button
                 key={provider.id}
-                variant={
-                  selectedProvider === provider.id ? "secondary" : "ghost"
-                }
+                variant={selectedProvider === provider.id ? "secondary" : "ghost"}
                 size="sm"
                 onClick={() => onSelect(provider.id)}
                 className="w-full justify-start text-sm"
@@ -307,10 +278,7 @@ export function ModelSelectDialog({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProvider, setSelectedProvider] = useState<string>("");
 
-  const { modelString, setModel, recentModels } = useModelSelection(
-    opcodeUrl,
-    directory,
-  );
+  const { modelString, setModel, recentModels } = useModelSelection(opcodeUrl, directory);
   const currentModel = modelString || "";
 
   const { data: allProviders = [], isLoading: loading } = useQuery({
@@ -356,9 +324,7 @@ export function ModelSelectDialog({
     let filtered = flatModels;
 
     if (selectedProvider) {
-      filtered = filtered.filter(
-        (item) => item.provider.id === selectedProvider,
-      );
+      filtered = filtered.filter((item) => item.provider.id === selectedProvider);
     }
 
     if (search) {
@@ -420,10 +386,7 @@ export function ModelSelectDialog({
 
           <div className="flex-1 flex flex-col overflow-hidden min-w-0">
             <div className="sm:hidden p-3 border-b border-border flex-shrink-0">
-              <Select
-                onValueChange={handleProviderSelect}
-                value={selectedProvider || undefined}
-              >
+              <Select onValueChange={handleProviderSelect} value={selectedProvider || undefined}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a provider..." />
                 </SelectTrigger>
@@ -455,9 +418,7 @@ export function ModelSelectDialog({
               <div className="p-3 sm:p-4 border-t border-border bg-muted/20 flex-shrink-0">
                 <p className="text-xs sm:text-sm text-muted-foreground">
                   Current:{" "}
-                  <span className="font-medium text-foreground break-all">
-                    {currentModel}
-                  </span>
+                  <span className="font-medium text-foreground break-all">{currentModel}</span>
                 </p>
               </div>
             )}

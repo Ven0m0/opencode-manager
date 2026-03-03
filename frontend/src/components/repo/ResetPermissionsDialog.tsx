@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 import { resetRepoPermissions } from "@/api/repos";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,8 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
 import { showToast } from "@/lib/toast";
 
 interface ResetPermissionsDialogProps {
@@ -47,9 +47,9 @@ export function ResetPermissionsDialog({
         <DialogHeader>
           <DialogTitle>Reset Permissions</DialogTitle>
           <DialogDescription>
-            This will clear all "Allow Always" permissions for this repository.
-            You will be prompted again for permission when opencode needs to perform
-            actions like running commands or editing files.
+            This will clear all "Allow Always" permissions for this repository. You will be prompted
+            again for permission when opencode needs to perform actions like running commands or
+            editing files.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

@@ -1,21 +1,22 @@
-import type { AgentDefinition } from './types'
+import type { AgentDefinition } from "./types";
 
 export const architectAgent: AgentDefinition = {
-  role: 'architect',
-  id: 'ocm-architect',
-  displayName: 'Architect',
-  description: 'Memory-aware planning agent that researches, designs, and persists implementation plans',
-  mode: 'primary',
-  color: '#ef4444',
+  role: "architect",
+  id: "ocm-architect",
+  displayName: "Architect",
+  description:
+    "Memory-aware planning agent that researches, designs, and persists implementation plans",
+  mode: "primary",
+  color: "#ef4444",
   temperature: 0.0,
   permission: {
-    question: 'allow',
+    question: "allow",
     edit: {
-      '*': 'deny',
+      "*": "deny",
     },
   },
   tools: {
-    exclude: ['memory-planning-update', 'memory-planning-search'],
+    exclude: ["memory-planning-update", "memory-planning-search"],
   },
   systemPrompt: `You are a planning agent with access to project memory. Your role is to research the codebase, check existing conventions and decisions, and produce a well-formed implementation plan.
 
@@ -92,4 +93,4 @@ When the user approves the plan, call memory-plan-execute with:
 - **findings**: Key architectural decisions discovered during research.
 
 Planning state is saved automatically before the plan is dispatched to the Code agent.`,
-}
+};

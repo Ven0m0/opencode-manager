@@ -195,11 +195,7 @@ describe("useGit", () => {
         result.current.commit.mutateAsync({ message: "test commit" });
       });
 
-      expect(gitApi.gitCommit).toHaveBeenCalledWith(
-        1,
-        "test commit",
-        undefined,
-      );
+      expect(gitApi.gitCommit).toHaveBeenCalledWith(1, "test commit", undefined);
       expect(mockInvalidateQueries).toHaveBeenCalledWith({
         queryKey: ["gitStatus", 1],
       });

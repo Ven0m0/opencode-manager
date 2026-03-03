@@ -7,8 +7,7 @@ export const markdownComponents: Components = {
       return (
         <code
           className={
-            className ||
-            "bg-accent px-1.5 py-0.5 rounded text-sm text-foreground break-all"
+            className || "bg-accent px-1.5 py-0.5 rounded text-sm text-foreground break-all"
           }
           {...props}
         >
@@ -33,21 +32,13 @@ export const markdownComponents: Components = {
     return <p className="text-foreground my-0.5 md:my-1">{children}</p>;
   },
   strong({ children }) {
-    return (
-      <strong className="font-semibold text-foreground">{children}</strong>
-    );
+    return <strong className="font-semibold text-foreground">{children}</strong>;
   },
   ul({ children }) {
-    return (
-      <ul className="list-disc text-foreground my-0.5 md:my-1">{children}</ul>
-    );
+    return <ul className="list-disc text-foreground my-0.5 md:my-1">{children}</ul>;
   },
   ol({ children }) {
-    return (
-      <ol className="list-decimal text-foreground my-0.5 md:my-1">
-        {children}
-      </ol>
-    );
+    return <ol className="list-decimal text-foreground my-0.5 md:my-1">{children}</ol>;
   },
   li({ children }) {
     return <li className="text-foreground my-0.5 md:my-1">{children}</li>;

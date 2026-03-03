@@ -7,9 +7,14 @@ import archiver from "archiver";
 import { logger } from "../utils/logger";
 
 function resolvePath(userPath: string): string {
-  return path.isAbsolute(userPath)
-    ? userPath
-    : path.join(getReposPath(), userPath);
+  const base = path.resolve(getReposPath());
+  const resolved = path.isAbsolute(userPath)
+    ? path.resolve(userPath)
+    : path.resolve(path.join(base, userPath));
+  if (!resolved.startsWith(base + path.sep) && resolved !== base) {
+    throw Object.assign(new Error("Path traversal detected"), { statusCode: 403 });
+  }
+  return resolved;
 }
 
 export interface ArchiveOptions {
@@ -86,10 +91,7 @@ async function getIgnoredPaths(
         : relativeToTarget;
     });
 
-    logger.debug(
-      "[getIgnoredPaths] First 5 relativePaths:",
-      relativePaths.slice(0, 5),
-    );
+    logger.debug("[getIgnoredPaths] First 5 relativePaths:", relativePaths.slice(0, 5));
 
     return new Promise((resolve) => {
       const ignored = new Set<string>();
@@ -108,10 +110,7 @@ async function getIgnoredPaths(
       proc.stdin?.end();
 
       proc.on("close", (code) => {
-        logger.debug(
-          "[getIgnoredPaths] git check-ignore exited with code:",
-          code,
-        );
+        logger.debug("[getIgnoredPaths] git check-ignore exited with code:", code);
         const ignoredFullPaths = stdout.split("\n").filter((p) => p.trim());
         logger.debug(
           "[getIgnoredPaths] Raw ignored count:",
@@ -123,15 +122,9 @@ async function getIgnoredPaths(
 
         for (const fullPath of ignoredFullPaths) {
           let relativePath = fullPath;
-          if (
-            targetRelativeToRoot &&
-            fullPath.startsWith(`${targetRelativeToRoot}/`)
-          ) {
+          if (targetRelativeToRoot && fullPath.startsWith(`${targetRelativeToRoot}/`)) {
             relativePath = fullPath.slice(targetRelativeToRoot.length + 1);
-          } else if (
-            targetRelativeToRoot &&
-            fullPath === targetRelativeToRoot
-          ) {
+          } else if (targetRelativeToRoot && fullPath === targetRelativeToRoot) {
             relativePath = "";
           }
           if (relativePath) {
@@ -163,9 +156,7 @@ async function collectFiles(
   const files: string[] = [];
 
   for (const entry of entries) {
-    const entryRelPath = relativePath
-      ? path.join(relativePath, entry.name)
-      : entry.name;
+    const entryRelPath = relativePath ? path.join(relativePath, entry.name) : entry.name;
 
     if (entry.name === ".git" && !options?.includeGit) continue;
 
@@ -298,11 +289,7 @@ export async function createDirectoryArchive(
 
   const allPaths = await collectFiles(directoryPath, "", options);
 
-  const filteredPaths = await filterIgnoredPaths(
-    directoryPath,
-    allPaths,
-    options,
-  );
+  const filteredPaths = await filterIgnoredPaths(directoryPath, allPaths, options);
 
   const output = createWriteStream(tempFile);
   const archive = archiver("zip", { zlib: { level: 5 } });
@@ -350,9 +337,7 @@ export async function getArchiveSize(filePath: string): Promise<number> {
   return stats.size;
 }
 
-export async function getIgnoredPathsList(
-  directoryPath: string,
-): Promise<string[]> {
+export async function getIgnoredPathsList(directoryPath: string): Promise<string[]> {
   directoryPath = resolvePath(directoryPath);
   logger.debug("[getIgnoredPathsList] Starting for:", directoryPath);
   const gitRoot = await findGitRoot(directoryPath);
@@ -379,12 +364,7 @@ export async function getIgnoredPathsList(
 
   for (let i = 0; i < allPaths.length; i += batchSize) {
     const batch = allPaths.slice(i, i + batchSize);
-    logger.debug(
-      "[getIgnoredPathsList] Checking batch",
-      i,
-      "to",
-      i + batch.length,
-    );
+    logger.debug("[getIgnoredPathsList] Checking batch", i, "to", i + batch.length);
     const ignored = await getIgnoredPaths(gitRoot, directoryPath, batch);
     logger.debug("[getIgnoredPathsList] Batch ignored count:", ignored.size);
     for (const p of ignored) {
@@ -397,10 +377,7 @@ export async function getIgnoredPathsList(
     }
   }
 
-  logger.debug(
-    "[getIgnoredPathsList] Total ignored set size:",
-    ignoredSet.size,
-  );
+  logger.debug("[getIgnoredPathsList] Total ignored set size:", ignoredSet.size);
 
   const ignoredDirs: string[] = [];
   const processedDirs = new Set<string>();

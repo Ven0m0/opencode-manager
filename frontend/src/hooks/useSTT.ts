@@ -146,8 +146,7 @@ export function useSTT(userId = "default") {
         }
 
         setIsError(true);
-        const errorMessage =
-          err instanceof Error ? err.message : "Transcription failed";
+        const errorMessage = err instanceof Error ? err.message : "Transcription failed";
         setError(errorMessage);
 
         setTimeout(() => {
@@ -214,9 +213,7 @@ export function useSTT(userId = "default") {
       } catch (err) {
         setIsProcessing(false);
         setIsError(true);
-        setError(
-          err instanceof Error ? err.message : "Failed to start recording",
-        );
+        setError(err instanceof Error ? err.message : "Failed to start recording");
       }
     } else {
       const options: SpeechRecognitionOptions = {
@@ -231,18 +228,10 @@ export function useSTT(userId = "default") {
       } catch (err) {
         setIsProcessing(false);
         setIsError(true);
-        setError(
-          err instanceof Error ? err.message : "Failed to start recording",
-        );
+        setError(err instanceof Error ? err.message : "Failed to start recording");
       }
     }
-  }, [
-    isSupported,
-    isEnabled,
-    isExternalProvider,
-    config.language,
-    setupAudioRecorder,
-  ]);
+  }, [isSupported, isEnabled, isExternalProvider, config.language, setupAudioRecorder]);
 
   const stopRecording = useCallback(() => {
     if (isExternalProvider && audioRecorder.current) {

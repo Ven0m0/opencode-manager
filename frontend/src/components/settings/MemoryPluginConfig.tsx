@@ -1,58 +1,73 @@
-import { useState, useEffect } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { ChevronDown, ChevronRight, Save, Loader2, Database, Brain, AlertCircle, RefreshCw, Play } from 'lucide-react'
-import { getPluginConfig, updatePluginConfig, reindexMemories, testEmbeddingConfig } from '@/api/memory'
-import { FetchError } from '@/api/fetchWrapper'
-import { settingsApi } from '@/api/settings'
-import type { PluginConfig, EmbeddingProviderType } from '@opencode-manager/shared/types'
-import { showToast } from '@/lib/toast'
+import type { EmbeddingProviderType, PluginConfig } from "@opencode-manager/shared/types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  AlertCircle,
+  Brain,
+  ChevronDown,
+  ChevronRight,
+  Database,
+  Loader2,
+  Play,
+  RefreshCw,
+  Save,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { FetchError } from "@/api/fetchWrapper";
+import {
+  getPluginConfig,
+  reindexMemories,
+  testEmbeddingConfig,
+  updatePluginConfig,
+} from "@/api/memory";
+import { settingsApi } from "@/api/settings";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { showToast } from "@/lib/toast";
 
 const EMBEDDING_PROVIDERS: { value: EmbeddingProviderType; label: string }[] = [
-  { value: 'local', label: 'Local (all-MiniLM-L6-v2)' },
-  { value: 'openai', label: 'OpenAI' },
-  { value: 'voyage', label: 'Voyage AI' },
-]
+  { value: "local", label: "Local (all-MiniLM-L6-v2)" },
+  { value: "openai", label: "OpenAI" },
+  { value: "voyage", label: "Voyage AI" },
+];
 
 const DEFAULT_CONFIGS: Record<EmbeddingProviderType, { model: string; dimensions: number }> = {
-  local: { model: 'all-MiniLM-L6-v2', dimensions: 384 },
-  openai: { model: 'text-embedding-3-small', dimensions: 1536 },
-  voyage: { model: 'voyage-3', dimensions: 1024 },
-}
+  local: { model: "all-MiniLM-L6-v2", dimensions: 384 },
+  openai: { model: "text-embedding-3-small", dimensions: 1536 },
+  voyage: { model: "voyage-3", dimensions: 1024 },
+};
 
 interface MemoryPluginConfigProps {
-  memoryPluginEnabled: boolean
-  onToggle: (enabled: boolean) => void
+  memoryPluginEnabled: boolean;
+  onToggle: (enabled: boolean) => void;
 }
 
 export function MemoryPluginConfig({ memoryPluginEnabled, onToggle }: MemoryPluginConfigProps) {
-  const queryClient = useQueryClient()
-  const [expanded, setExpanded] = useState(false)
-  const [showApiKey, setShowApiKey] = useState(false)
+  const queryClient = useQueryClient();
+  const [expanded, setExpanded] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['memory-plugin-config'],
+    queryKey: ["memory-plugin-config"],
     queryFn: getPluginConfig,
     staleTime: 60000,
     enabled: memoryPluginEnabled && expanded,
-  })
+  });
 
-  const config = data?.config
-  const [localConfig, setLocalConfig] = useState<PluginConfig | null>(null)
+  const config = data?.config;
+  const [localConfig, setLocalConfig] = useState<PluginConfig | null>(null);
 
   useEffect(() => {
     if (config && !localConfig) {
-      setLocalConfig(config)
+      setLocalConfig(config);
     }
-  }, [config, localConfig])
+  }, [config, localConfig]);
 
   const handleProviderChange = (provider: EmbeddingProviderType) => {
-    if (!localConfig && !config) return
-    const defaults = DEFAULT_CONFIGS[provider]
+    if (!localConfig && !config) return;
+    const defaults = DEFAULT_CONFIGS[provider];
     setLocalConfig({
       embedding: {
         provider,
@@ -60,85 +75,88 @@ export function MemoryPluginConfig({ memoryPluginEnabled, onToggle }: MemoryPlug
         dimensions: defaults.dimensions,
       },
       dedupThreshold: config?.dedupThreshold ?? 0.25,
-    })
-  }
+    });
+  };
 
   const updateMutation = useMutation({
     mutationFn: updatePluginConfig,
     onSuccess: (data) => {
-      showToast.success('Memory plugin configuration saved')
-      queryClient.setQueryData(['memory-plugin-config'], { config: data.config })
+      showToast.success("Memory plugin configuration saved");
+      queryClient.setQueryData(["memory-plugin-config"], { config: data.config });
     },
     onError: () => {
-      showToast.error('Failed to save configuration')
+      showToast.error("Failed to save configuration");
     },
-  })
+  });
 
   const reindexMutation = useMutation({
     mutationFn: reindexMemories,
     onSuccess: (data) => {
       if (data.requiresRestart) {
-        showToast.success(data.message)
+        showToast.success(data.message);
       } else {
-        showToast.success(`Reindex complete: ${data.embedded}/${data.total} memories embedded`)
+        showToast.success(`Reindex complete: ${data.embedded}/${data.total} memories embedded`);
       }
     },
     onError: () => {
-      showToast.error('Failed to reindex memories')
+      showToast.error("Failed to reindex memories");
     },
-  })
+  });
 
   const testMutation = useMutation({
     mutationFn: testEmbeddingConfig,
     onSuccess: (data) => {
-      showToast.success(data.message || 'Configuration test passed')
+      showToast.success(data.message || "Configuration test passed");
     },
     onError: (error) => {
-      const message = error instanceof FetchError ? error.message : 'Failed to test configuration'
-      showToast.error(message)
+      const message = error instanceof FetchError ? error.message : "Failed to test configuration";
+      showToast.error(message);
     },
-  })
+  });
 
   const handleReindex = () => {
-    reindexMutation.mutate()
-  }
+    reindexMutation.mutate();
+  };
 
   const handleTest = async () => {
     if (isDirty && localConfig) {
-      await updateMutation.mutateAsync(localConfig)
+      await updateMutation.mutateAsync(localConfig);
     }
-    testMutation.mutate()
-  }
+    testMutation.mutate();
+  };
 
   const handleSave = async () => {
-    if (!localConfig) return
+    if (!localConfig) return;
     updateMutation.mutate(localConfig, {
       onSuccess: async () => {
-        showToast.loading('Restarting OpenCode server...', { id: 'memory-restart' })
+        showToast.loading("Restarting OpenCode server...", { id: "memory-restart" });
         try {
-          await settingsApi.restartOpenCodeServer()
-          showToast.success('Configuration saved and server restarted', { id: 'memory-restart' })
+          await settingsApi.restartOpenCodeServer();
+          showToast.success("Configuration saved and server restarted", { id: "memory-restart" });
         } catch {
-          showToast.error('Failed to restart server', { id: 'memory-restart' })
+          showToast.error("Failed to restart server", { id: "memory-restart" });
         }
       },
-    })
-  }
+    });
+  };
 
-  const handleFieldChange = (field: keyof PluginConfig['embedding'], value: string | number | undefined) => {
-    if (!localConfig && !config) return
+  const handleFieldChange = (
+    field: keyof PluginConfig["embedding"],
+    value: string | number | undefined,
+  ) => {
+    if (!localConfig && !config) return;
     setLocalConfig({
       ...(localConfig ?? config!),
       embedding: {
         ...(localConfig?.embedding ?? config!.embedding),
-        [field]: value === '' ? undefined : value,
+        [field]: value === "" ? undefined : value,
       },
-    })
-  }
+    });
+  };
 
-  const displayConfig = localConfig ?? config
-  const isApiProvider = displayConfig?.embedding.provider !== 'local'
-  const isDirty = localConfig !== null && JSON.stringify(localConfig) !== JSON.stringify(config)
+  const displayConfig = localConfig ?? config;
+  const isApiProvider = displayConfig?.embedding.provider !== "local";
+  const isDirty = localConfig !== null && JSON.stringify(localConfig) !== JSON.stringify(config);
 
   return (
     <Card className="mt-4 border-transparent">
@@ -149,14 +167,15 @@ export function MemoryPluginConfig({ memoryPluginEnabled, onToggle }: MemoryPlug
               onClick={() => setExpanded(!expanded)}
               className="flex items-center gap-2 p-1 hover:opacity-80 transition-opacity"
             >
-              {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              {expanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
               <Brain className="h-4 w-4 text-blue-500" />
               <CardTitle className="text-sm">Memory Plugin</CardTitle>
             </button>
-            <Switch
-              checked={memoryPluginEnabled}
-              onCheckedChange={onToggle}
-            />
+            <Switch checked={memoryPluginEnabled} onCheckedChange={onToggle} />
           </div>
         </div>
         <CardDescription className="text-xs">
@@ -194,7 +213,9 @@ export function MemoryPluginConfig({ memoryPluginEnabled, onToggle }: MemoryPlug
                       id="provider"
                       className="flex h-10 w-full rounded-md bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       value={displayConfig.embedding.provider}
-                      onChange={(e) => handleProviderChange(e.target.value as EmbeddingProviderType)}
+                      onChange={(e) =>
+                        handleProviderChange(e.target.value as EmbeddingProviderType)
+                      }
                     >
                       {EMBEDDING_PROVIDERS.map((p) => (
                         <option key={p.value} value={p.value}>
@@ -209,7 +230,7 @@ export function MemoryPluginConfig({ memoryPluginEnabled, onToggle }: MemoryPlug
                     <Input
                       id="model"
                       value={displayConfig.embedding.model}
-                      onChange={(e) => handleFieldChange('model', e.target.value)}
+                      onChange={(e) => handleFieldChange("model", e.target.value)}
                       placeholder="Model name"
                     />
                   </div>
@@ -219,8 +240,13 @@ export function MemoryPluginConfig({ memoryPluginEnabled, onToggle }: MemoryPlug
                     <Input
                       id="dimensions"
                       type="number"
-                      value={displayConfig.embedding.dimensions ?? ''}
-                      onChange={(e) => handleFieldChange('dimensions', e.target.value ? parseInt(e.target.value, 10) : undefined)}
+                      value={displayConfig.embedding.dimensions ?? ""}
+                      onChange={(e) =>
+                        handleFieldChange(
+                          "dimensions",
+                          e.target.value ? parseInt(e.target.value, 10) : undefined,
+                        )
+                      }
                       placeholder="384"
                     />
                   </div>
@@ -232,9 +258,9 @@ export function MemoryPluginConfig({ memoryPluginEnabled, onToggle }: MemoryPlug
                         <div className="relative">
                           <Input
                             id="apiKey"
-                            type={showApiKey ? 'text' : 'password'}
-                            value={displayConfig.embedding.apiKey ?? ''}
-                            onChange={(e) => handleFieldChange('apiKey', e.target.value)}
+                            type={showApiKey ? "text" : "password"}
+                            value={displayConfig.embedding.apiKey ?? ""}
+                            onChange={(e) => handleFieldChange("apiKey", e.target.value)}
                             placeholder="Enter API key"
                             className="pr-10"
                           />
@@ -243,7 +269,11 @@ export function MemoryPluginConfig({ memoryPluginEnabled, onToggle }: MemoryPlug
                             onClick={() => setShowApiKey(!showApiKey)}
                             className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                           >
-                            {showApiKey ? <span className="text-xs">Hide</span> : <span className="text-xs">Show</span>}
+                            {showApiKey ? (
+                              <span className="text-xs">Hide</span>
+                            ) : (
+                              <span className="text-xs">Show</span>
+                            )}
                           </button>
                         </div>
                       </div>
@@ -252,8 +282,8 @@ export function MemoryPluginConfig({ memoryPluginEnabled, onToggle }: MemoryPlug
                         <Label htmlFor="baseUrl">Base URL (optional)</Label>
                         <Input
                           id="baseUrl"
-                          value={displayConfig.embedding.baseUrl ?? ''}
-                          onChange={(e) => handleFieldChange('baseUrl', e.target.value)}
+                          value={displayConfig.embedding.baseUrl ?? ""}
+                          onChange={(e) => handleFieldChange("baseUrl", e.target.value)}
                           placeholder="https://api.openai.com"
                         />
                         <p className="text-xs text-muted-foreground">
@@ -285,7 +315,7 @@ export function MemoryPluginConfig({ memoryPluginEnabled, onToggle }: MemoryPlug
                         setLocalConfig({
                           ...displayConfig,
                           dedupThreshold: parseFloat(e.target.value),
-                        })
+                        });
                       }}
                       className="flex-1"
                     />
@@ -302,7 +332,11 @@ export function MemoryPluginConfig({ memoryPluginEnabled, onToggle }: MemoryPlug
               {displayConfig.dataDir && (
                 <div className="space-y-2">
                   <Label>Data Directory</Label>
-                  <Input value={displayConfig.dataDir} disabled className="text-muted-foreground text-xs" />
+                  <Input
+                    value={displayConfig.dataDir}
+                    disabled
+                    className="text-muted-foreground text-xs"
+                  />
                 </div>
               )}
 
@@ -327,7 +361,8 @@ export function MemoryPluginConfig({ memoryPluginEnabled, onToggle }: MemoryPlug
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Regenerate embeddings for all memories. Use when changing embedding model or if embeddings are missing.
+                  Regenerate embeddings for all memories. Use when changing embedding model or if
+                  embeddings are missing.
                 </p>
               </div>
 
@@ -369,5 +404,5 @@ export function MemoryPluginConfig({ memoryPluginEnabled, onToggle }: MemoryPlug
         </CardContent>
       )}
     </Card>
-  )
+  );
 }

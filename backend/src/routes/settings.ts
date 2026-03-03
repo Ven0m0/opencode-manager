@@ -2,23 +2,29 @@ import type { Database } from "bun:sqlite";
 import { execSync, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import type { GitCredential } from "@opencode-manager/shared";
 import {
-  UserPreferencesSchema,
-  OpenCodeConfigSchema,
-} from '../types/settings'
-import type { GitCredential } from '@opencode-manager/shared'
-import { logger } from '../utils/logger'
-import { opencodeServerManager } from '../services/opencode-single-server'
-import { DEFAULT_AGENTS_MD } from '../constants'
-import { validateSSHPrivateKey } from '../utils/ssh-validation'
-import { encryptSecret } from '../utils/crypto'
-import { compareVersions } from '../utils/version-utils'
+  ENV,
+  getAgentsMdPath,
+  getOpenCodeConfigFilePath,
+} from "@opencode-manager/shared/config/env";
+import { Hono } from "hono";
+import { z } from "zod";
+import { DEFAULT_AGENTS_MD } from "../constants";
+import { fileExists, readFileContent, writeFileContent } from "../services/file-operations";
+import { opencodeServerManager } from "../services/opencode-single-server";
+import { patchOpenCodeConfig, proxyToOpenCodeWithDirectory } from "../services/proxy";
+import { SettingsService } from "../services/settings";
+import { OpenCodeConfigSchema, UserPreferencesSchema } from "../types/settings";
+import { encryptSecret } from "../utils/crypto";
+import { logger } from "../utils/logger";
+import { validateSSHPrivateKey } from "../utils/ssh-validation";
+import { compareVersions } from "../utils/version-utils";
 
 function getOpenCodeInstallMethod(): string {
   const homePath = process.env.HOME || "";
   const opencodePath =
-    process.env.OPENCOD_PATH ||
-    resolve(homePath, ".opencode", "bin", "opencode");
+    process.env.OPENCOD_PATH || resolve(homePath, ".opencode", "bin", "opencode");
 
   if (!existsSync(opencodePath)) return "curl";
 
@@ -26,16 +32,8 @@ function getOpenCodeInstallMethod(): string {
     const opencodeDir = dirname(opencodePath);
     if (opencodeDir.includes(".opencode")) return "curl";
 
-    if (
-      opencodePath.includes("/homebrew/") ||
-      opencodePath.includes("/HOMEBREW/")
-    )
-      return "brew";
-    if (
-      opencodePath.includes("/.npm/") ||
-      opencodePath.includes("/node_modules/")
-    )
-      return "npm";
+    if (opencodePath.includes("/homebrew/") || opencodePath.includes("/HOMEBREW/")) return "brew";
+    if (opencodePath.includes("/.npm/") || opencodePath.includes("/node_modules/")) return "npm";
     if (opencodePath.includes("/.pnpm/")) return "pnpm";
     if (opencodePath.includes("/.bun/")) return "bun";
   } catch {
@@ -67,11 +65,7 @@ function execWithTimeout(
     ) {
       return { output: "", timedOut: true };
     }
-    if (
-      error &&
-      typeof error === "object" &&
-      ("stdout" in error || "stderr" in error)
-    ) {
+    if (error && typeof error === "object" && ("stdout" in error || "stderr" in error)) {
       const stdout = (error as { stdout?: string }).stdout || "";
       const stderr = (error as { stderr?: string }).stderr || "";
       return { output: stdout + stderr, timedOut: false };
@@ -92,10 +86,7 @@ function spawnWithTimeout(
     env: env ? { ...process.env, ...env } : undefined,
   });
 
-  if (
-    result.signal === "SIGKILL" ||
-    result.error?.message?.includes("TIMEOUT")
-  ) {
+  if (result.signal === "SIGKILL" || result.error?.message?.includes("TIMEOUT")) {
     return { output: "", timedOut: true };
   }
 
@@ -133,7 +124,7 @@ const ConnectMcpDirectorySchema = z.object({
   directory: z.string().min(1),
 });
 
-const McpAuthDirectorySchema = ConnectMcpDirectorySchema
+const McpAuthDirectorySchema = ConnectMcpDirectorySchema;
 
 const TestSSHConnectionSchema = z.object({
   host: z.string().min(1),
@@ -141,10 +132,7 @@ const TestSSHConnectionSchema = z.object({
   passphrase: z.string().optional(),
 });
 
-async function extractOpenCodeError(
-  response: Response,
-  defaultError: string,
-): Promise<string> {
+async function extractOpenCodeError(response: Response, defaultError: string): Promise<string> {
   const errorObj = await response.json().catch(() => null);
   return errorObj && typeof errorObj === "object" && "error" in errorObj
     ? String(errorObj.error)
@@ -166,20 +154,21 @@ export function createSettingsRoutes(db: Database) {
     }
   });
 
-  app.get('/memory-plugin-status', async (c) => {
+  app.get("/memory-plugin-status", async (c) => {
     try {
-      const userId = c.req.query('userId') || 'default'
-      const configs = settingsService.getOpenCodeConfigs(userId)
-      const defaultConfig = configs.configs.find((cfg: { isDefault: boolean }) => cfg.isDefault)
-      const isEnabled = defaultConfig?.content?.plugin?.includes('@opencode-manager/memory') ?? false
-      return c.json({ memoryPluginEnabled: isEnabled })
+      const userId = c.req.query("userId") || "default";
+      const configs = settingsService.getOpenCodeConfigs(userId);
+      const defaultConfig = configs.configs.find((cfg: { isDefault: boolean }) => cfg.isDefault);
+      const isEnabled =
+        defaultConfig?.content?.plugin?.includes("@opencode-manager/memory") ?? false;
+      return c.json({ memoryPluginEnabled: isEnabled });
     } catch (error) {
-      logger.error('Failed to get memory plugin status:', error)
-      return c.json({ error: 'Failed to get memory plugin status' }, 500)
+      logger.error("Failed to get memory plugin status:", error);
+      return c.json({ error: "Failed to get memory plugin status" }, 500);
     }
-  })
+  });
 
-  app.patch('/', async (c) => {
+  app.patch("/", async (c) => {
     try {
       const userId = c.req.query("userId") || "default";
       const body = await c.req.json();
@@ -188,10 +177,12 @@ export function createSettingsRoutes(db: Database) {
       if (validated.preferences.gitCredentials) {
         const validations = await Promise.all(
           validated.preferences.gitCredentials.map(async (cred: GitCredential) => {
-            if (cred.type === 'ssh' && cred.sshPrivateKey) {
-              const validation = await validateSSHPrivateKey(cred.sshPrivateKey)
+            if (cred.type === "ssh" && cred.sshPrivateKey) {
+              const validation = await validateSSHPrivateKey(cred.sshPrivateKey);
               if (!validation.valid) {
-                throw new Error(`Invalid SSH key for credential '${cred.name}': ${validation.error}`)
+                throw new Error(
+                  `Invalid SSH key for credential '${cred.name}': ${validation.error}`,
+                );
               }
 
               const result: GitCredential = {
@@ -199,21 +190,18 @@ export function createSettingsRoutes(db: Database) {
                 sshPrivateKeyEncrypted: encryptSecret(cred.sshPrivateKey),
                 hasPassphrase: validation.hasPassphrase,
                 passphrase: cred.passphrase ? encryptSecret(cred.passphrase) : undefined,
-              }
-              delete result.sshPrivateKey
-              return result
+              };
+              delete result.sshPrivateKey;
+              return result;
             }
-            return cred
-          })
-        )
-        validated.preferences.gitCredentials = validations
+            return cred;
+          }),
+        );
+        validated.preferences.gitCredentials = validations;
       }
 
       const currentSettings = settingsService.getSettings(userId);
-      const settings = settingsService.updateSettings(
-        validated.preferences,
-        userId,
-      );
+      const settings = settingsService.updateSettings(validated.preferences, userId);
 
       let serverRestarted = false;
 
@@ -229,42 +217,27 @@ export function createSettingsRoutes(db: Database) {
 
       let reloadError: string | undefined;
       if (credentialsChanged || identityChanged) {
-        const changeType = [
-          credentialsChanged && "credentials",
-          identityChanged && "identity",
-        ]
+        const changeType = [credentialsChanged && "credentials", identityChanged && "identity"]
           .filter(Boolean)
           .join(" and ");
-        logger.info(
-          `Git ${changeType} changed, reloading OpenCode configuration`,
-        );
+        logger.info(`Git ${changeType} changed, reloading OpenCode configuration`);
         try {
           await opencodeServerManager.reloadConfig();
           serverRestarted = true;
         } catch (error) {
-          logger.warn(
-            "Failed to reload OpenCode config after git settings change:",
-            error,
-          );
-          reloadError =
-            error instanceof Error ? error.message : "Unknown error";
+          logger.warn("Failed to reload OpenCode config after git settings change:", error);
+          reloadError = error instanceof Error ? error.message : "Unknown error";
         }
       }
 
       return c.json({ ...settings, serverRestarted, reloadError });
     } catch (error) {
       logger.error("Failed to update settings:", error);
-      if (
-        error instanceof Error &&
-        error.message.startsWith("Invalid SSH key")
-      ) {
+      if (error instanceof Error && error.message.startsWith("Invalid SSH key")) {
         return c.json({ error: error.message }, 400);
       }
       if (error instanceof z.ZodError) {
-        return c.json(
-          { error: "Invalid settings data", details: error.issues },
-          400,
-        );
+        return c.json({ error: "Invalid settings data", details: error.issues }, 400);
       }
       return c.json({ error: "Failed to update settings" }, 500);
     }
@@ -322,10 +295,7 @@ export function createSettingsRoutes(db: Database) {
     } catch (error) {
       logger.error("Failed to create OpenCode config:", error);
       if (error instanceof z.ZodError) {
-        return c.json(
-          { error: "Invalid config data", details: error.issues },
-          400,
-        );
+        return c.json({ error: "Invalid config data", details: error.issues }, 400);
       }
       if (error instanceof Error && error.message.includes("already exists")) {
         return c.json({ error: error.message }, 409);
@@ -341,17 +311,10 @@ export function createSettingsRoutes(db: Database) {
       const body = await c.req.json();
       const validated = UpdateOpenCodeConfigSchema.parse(body);
 
-      const existingConfig = settingsService.getOpenCodeConfigByName(
-        configName,
-        userId,
-      );
+      const existingConfig = settingsService.getOpenCodeConfigByName(configName, userId);
       const existingAgents = existingConfig?.content?.agent;
 
-      const config = settingsService.updateOpenCodeConfig(
-        configName,
-        validated,
-        userId,
-      );
+      const config = settingsService.updateOpenCodeConfig(configName, validated, userId);
       if (!config) {
         return c.json({ error: "Config not found" }, 404);
       }
@@ -362,13 +325,10 @@ export function createSettingsRoutes(db: Database) {
         logger.info(`Wrote default config to: ${configPath}`);
 
         const newAgents = config.content?.agent;
-        const agentsChanged =
-          JSON.stringify(existingAgents) !== JSON.stringify(newAgents);
+        const agentsChanged = JSON.stringify(existingAgents) !== JSON.stringify(newAgents);
 
         if (agentsChanged) {
-          logger.info(
-            "Agent configuration changed, restarting OpenCode server",
-          );
+          logger.info("Agent configuration changed, restarting OpenCode server");
           await opencodeServerManager.restart();
         } else {
           const patchResult = await patchOpenCodeConfig(config.content);
@@ -388,10 +348,7 @@ export function createSettingsRoutes(db: Database) {
     } catch (error) {
       logger.error("Failed to update OpenCode config:", error);
       if (error instanceof z.ZodError) {
-        return c.json(
-          { error: "Invalid config data", details: error.issues },
-          400,
-        );
+        return c.json({ error: "Invalid config data", details: error.issues }, 400);
       }
       return c.json({ error: "Failed to update OpenCode config" }, 500);
     }
@@ -421,10 +378,7 @@ export function createSettingsRoutes(db: Database) {
 
       settingsService.saveLastKnownGoodConfig(userId);
 
-      const config = settingsService.setDefaultOpenCodeConfig(
-        configName,
-        userId,
-      );
+      const config = settingsService.setDefaultOpenCodeConfig(configName, userId);
       if (!config) {
         return c.json({ error: "Config not found" }, 404);
       }
@@ -482,9 +436,7 @@ export function createSettingsRoutes(db: Database) {
       return c.json(
         {
           error: "Failed to restart OpenCode server",
-          details:
-            startupError ||
-            (error instanceof Error ? error.message : "Unknown error"),
+          details: startupError || (error instanceof Error ? error.message : "Unknown error"),
         },
         500,
       );
@@ -519,22 +471,15 @@ export function createSettingsRoutes(db: Database) {
       const userId = c.req.query("userId") || "default";
       logger.info("OpenCode config rollback requested");
 
-      const rollbackConfig =
-        settingsService.rollbackToLastKnownGoodHealth(userId);
+      const rollbackConfig = settingsService.rollbackToLastKnownGoodHealth(userId);
       if (!rollbackConfig) {
-        return c.json(
-          { error: "No previous working config available for rollback" },
-          404,
-        );
+        return c.json({ error: "No previous working config available for rollback" }, 404);
       }
 
       const configPath = getOpenCodeConfigFilePath();
       const config = settingsService.getDefaultOpenCodeConfig(userId);
       if (!config) {
-        return c.json(
-          { error: "Failed to get default config after rollback" },
-          500,
-        );
+        return c.json({ error: "Failed to get default config after rollback" }, 500);
       }
 
       await writeFileContent(configPath, config.rawContent);
@@ -544,16 +489,11 @@ export function createSettingsRoutes(db: Database) {
       try {
         await opencodeServerManager.reloadConfig();
       } catch (reloadError) {
-        logger.error(
-          "Rollback config reload failed, attempting restart:",
-          reloadError,
-        );
+        logger.error("Rollback config reload failed, attempting restart:", reloadError);
 
         const deleted = settingsService.deleteFilesystemConfig();
         if (deleted) {
-          logger.info(
-            "Deleted filesystem config, attempting restart with fallback",
-          );
+          logger.info("Deleted filesystem config, attempting restart with fallback");
           await new Promise((r) => setTimeout(r, 1000));
 
           opencodeServerManager.clearStartupError();
@@ -570,10 +510,7 @@ export function createSettingsRoutes(db: Database) {
         return c.json(
           {
             error: "Failed to rollback and could not delete filesystem config",
-            details:
-              reloadError instanceof Error
-                ? reloadError.message
-                : "Unknown error",
+            details: reloadError instanceof Error ? reloadError.message : "Unknown error",
           },
           500,
         );
@@ -596,9 +533,7 @@ export function createSettingsRoutes(db: Database) {
 
     try {
       const installMethod = getOpenCodeInstallMethod();
-      logger.info(
-        `Running opencode upgrade --method ${installMethod} with 90s timeout...`,
-      );
+      logger.info(`Running opencode upgrade --method ${installMethod} with 90s timeout...`);
       const { output: upgradeOutput, timedOut } = execWithTimeout(
         `opencode upgrade --method ${installMethod} 2>&1`,
         90000,
@@ -611,12 +546,10 @@ export function createSettingsRoutes(db: Database) {
       }
 
       const newVersion =
-        opencodeServerManager.getVersion() ||
-        (await opencodeServerManager.fetchVersion());
+        opencodeServerManager.getVersion() || (await opencodeServerManager.fetchVersion());
       logger.info(`New OpenCode version: ${newVersion}`);
 
-      const upgraded =
-        oldVersion && newVersion && compareVersions(newVersion, oldVersion) > 0;
+      const upgraded = oldVersion && newVersion && compareVersions(newVersion, oldVersion) > 0;
 
       if (upgraded) {
         logger.info(`OpenCode upgraded from v${oldVersion} to v${newVersion}`);
@@ -625,10 +558,7 @@ export function createSettingsRoutes(db: Database) {
           await opencodeServerManager.reloadConfig();
           logger.info("OpenCode server reloaded after upgrade");
         } catch (reloadError) {
-          logger.warn(
-            "Config reload after upgrade failed, attempting full restart:",
-            reloadError,
-          );
+          logger.warn("Config reload after upgrade failed, attempting full restart:", reloadError);
           await opencodeServerManager.restart();
           logger.info("OpenCode server restarted after upgrade");
         }
@@ -666,10 +596,7 @@ export function createSettingsRoutes(db: Database) {
       } catch (recoveryError) {
         logger.error("Failed to recover OpenCode server:", recoveryError);
         recovered = false;
-        recoveryMessage =
-          recoveryError instanceof Error
-            ? recoveryError.message
-            : "Unknown error";
+        recoveryMessage = recoveryError instanceof Error ? recoveryError.message : "Unknown error";
       }
 
       let currentVersion: string | null | undefined = oldVersion;
@@ -813,10 +740,7 @@ export function createSettingsRoutes(db: Database) {
       } catch (recoveryError) {
         logger.error("Failed to recover OpenCode server:", recoveryError);
         recovered = false;
-        recoveryMessage =
-          recoveryError instanceof Error
-            ? recoveryError.message
-            : "Unknown error";
+        recoveryMessage = recoveryError instanceof Error ? recoveryError.message : "Unknown error";
       }
 
       const currentVersion = opencodeServerManager.getVersion() || oldVersion;
@@ -882,10 +806,7 @@ export function createSettingsRoutes(db: Database) {
     } catch (error) {
       logger.error("Failed to create custom command:", error);
       if (error instanceof z.ZodError) {
-        return c.json(
-          { error: "Invalid command data", details: error.issues },
-          400,
-        );
+        return c.json({ error: "Invalid command data", details: error.issues }, 400);
       }
       return c.json({ error: "Failed to create custom command" }, 500);
     }
@@ -924,10 +845,7 @@ export function createSettingsRoutes(db: Database) {
     } catch (error) {
       logger.error("Failed to update custom command:", error);
       if (error instanceof z.ZodError) {
-        return c.json(
-          { error: "Invalid command data", details: error.issues },
-          400,
-        );
+        return c.json({ error: "Invalid command data", details: error.issues }, 400);
       }
       return c.json({ error: "Failed to update custom command" }, 500);
     }
@@ -1000,10 +918,7 @@ export function createSettingsRoutes(db: Database) {
     } catch (error) {
       logger.error("Failed to update AGENTS.md:", error);
       if (error instanceof z.ZodError) {
-        return c.json(
-          { error: "Invalid request data", details: error.issues },
-          400,
-        );
+        return c.json({ error: "Invalid request data", details: error.issues }, 400);
       }
       return c.json({ error: "Failed to update AGENTS.md" }, 500);
     }
@@ -1012,8 +927,7 @@ export function createSettingsRoutes(db: Database) {
   app.post("/test-ssh", async (c) => {
     try {
       const body = await c.req.json();
-      const { host, sshPrivateKey, passphrase } =
-        TestSSHConnectionSchema.parse(body);
+      const { host, sshPrivateKey, passphrase } = TestSSHConnectionSchema.parse(body);
 
       logger.info(`Testing SSH connection to ${host}`);
 
@@ -1028,8 +942,9 @@ export function createSettingsRoutes(db: Database) {
         );
       }
 
-      const { writeTemporarySSHKey, cleanupSSHKey, parseSSHHost } =
-        await import("../utils/ssh-key-manager");
+      const { writeTemporarySSHKey, cleanupSSHKey, parseSSHHost } = await import(
+        "../utils/ssh-key-manager"
+      );
 
       let keyPath: string | null = null;
       try {
@@ -1065,11 +980,7 @@ export function createSettingsRoutes(db: Database) {
           env.SSHPASS = passphrase;
         }
 
-        const { output, timedOut } = spawnWithTimeout(
-          [executable, ...sshArgs],
-          30000,
-          env,
-        );
+        const { output, timedOut } = spawnWithTimeout([executable, ...sshArgs], 30000, env);
 
         if (timedOut) {
           logger.warn(`SSH connection test to ${host} timed out`);
@@ -1082,10 +993,7 @@ export function createSettingsRoutes(db: Database) {
 
         const outputStr = String(output);
 
-        if (
-          outputStr.includes("Permission denied") ||
-          outputStr.includes("Access denied")
-        ) {
+        if (outputStr.includes("Permission denied") || outputStr.includes("Access denied")) {
           return c.json({
             success: false,
             message:
@@ -1128,9 +1036,7 @@ export function createSettingsRoutes(db: Database) {
           });
         }
 
-        logger.warn(
-          `SSH connection test to ${host} returned ambiguous output: ${outputStr}`,
-        );
+        logger.warn(`SSH connection test to ${host} returned ambiguous output: ${outputStr}`);
         return c.json({
           success: false,
           message: `Authentication failed. The key may not be authorized on this host. Details: ${outputStr.trim().substring(0, 200)}`,
@@ -1143,18 +1049,12 @@ export function createSettingsRoutes(db: Database) {
     } catch (error) {
       logger.error("Failed to test SSH connection:", error);
       if (error instanceof z.ZodError) {
-        return c.json(
-          { error: "Invalid request data", details: error.issues },
-          400,
-        );
+        return c.json({ error: "Invalid request data", details: error.issues }, 400);
       }
       return c.json(
         {
           success: false,
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to test SSH connection",
+          message: error instanceof Error ? error.message : "Failed to test SSH connection",
         },
         500,
       );
@@ -1175,10 +1075,7 @@ export function createSettingsRoutes(db: Database) {
       );
 
       if (!response.ok) {
-        const errorMsg = await extractOpenCodeError(
-          response,
-          "Failed to connect MCP server",
-        );
+        const errorMsg = await extractOpenCodeError(response, "Failed to connect MCP server");
         return c.json({ error: errorMsg }, 400);
       }
 
@@ -1186,10 +1083,7 @@ export function createSettingsRoutes(db: Database) {
     } catch (error) {
       logger.error("Failed to connect MCP server for directory:", error);
       if (error instanceof z.ZodError) {
-        return c.json(
-          { error: "Invalid request data", details: error.issues },
-          400,
-        );
+        return c.json({ error: "Invalid request data", details: error.issues }, 400);
       }
       return c.json({ error: "Failed to connect MCP server" }, 500);
     }
@@ -1208,10 +1102,7 @@ export function createSettingsRoutes(db: Database) {
       );
 
       if (!response.ok) {
-        const errorMsg = await extractOpenCodeError(
-          response,
-          "Failed to disconnect MCP server",
-        );
+        const errorMsg = await extractOpenCodeError(response, "Failed to disconnect MCP server");
         return c.json({ error: errorMsg }, 400);
       }
 
@@ -1219,10 +1110,7 @@ export function createSettingsRoutes(db: Database) {
     } catch (error) {
       logger.error("Failed to disconnect MCP server for directory:", error);
       if (error instanceof z.ZodError) {
-        return c.json(
-          { error: "Invalid request data", details: error.issues },
-          400,
-        );
+        return c.json({ error: "Invalid request data", details: error.issues }, 400);
       }
       return c.json({ error: "Failed to disconnect MCP server" }, 500);
     }
@@ -1230,30 +1118,30 @@ export function createSettingsRoutes(db: Database) {
 
   app.post("/mcp/:name/authdirectedir", async (c) => {
     try {
-      const serverName = c.req.param('name')
-      const body = await c.req.json()
-      const { directory } = McpAuthDirectorySchema.parse(body)
-      
+      const serverName = c.req.param("name");
+      const body = await c.req.json();
+      const { directory } = McpAuthDirectorySchema.parse(body);
+
       const response = await proxyToOpenCodeWithDirectory(
         `/mcp/${encodeURIComponent(serverName)}/auth/authenticate`,
-        'POST',
+        "POST",
         directory,
-      )
-      
+      );
+
       if (!response.ok) {
-        const errorMsg = await extractOpenCodeError(response, 'Failed to authenticate MCP server')
-        return c.json({ error: errorMsg }, 400)
+        const errorMsg = await extractOpenCodeError(response, "Failed to authenticate MCP server");
+        return c.json({ error: errorMsg }, 400);
       }
-      
-      return c.json(await response.json())
+
+      return c.json(await response.json());
     } catch (error) {
-      logger.error('Failed to authenticate MCP server for directory:', error)
+      logger.error("Failed to authenticate MCP server for directory:", error);
       if (error instanceof z.ZodError) {
-        return c.json({ error: 'Invalid request data', details: error.issues }, 400)
+        return c.json({ error: "Invalid request data", details: error.issues }, 400);
       }
-      return c.json({ error: 'Failed to authenticate MCP server' }, 500)
+      return c.json({ error: "Failed to authenticate MCP server" }, 500);
     }
-  })
+  });
 
   app.delete("/mcp/:name/authdir", async (c) => {
     try {
@@ -1268,10 +1156,7 @@ export function createSettingsRoutes(db: Database) {
       );
 
       if (!response.ok) {
-        const errorMsg = await extractOpenCodeError(
-          response,
-          "Failed to remove MCP auth",
-        );
+        const errorMsg = await extractOpenCodeError(response, "Failed to remove MCP auth");
         return c.json({ error: errorMsg }, 400);
       }
 
@@ -1279,10 +1164,7 @@ export function createSettingsRoutes(db: Database) {
     } catch (error) {
       logger.error("Failed to remove MCP auth for directory:", error);
       if (error instanceof z.ZodError) {
-        return c.json(
-          { error: "Invalid request data", details: error.issues },
-          400,
-        );
+        return c.json({ error: "Invalid request data", details: error.issues }, 400);
       }
       return c.json({ error: "Failed to remove MCP auth" }, 500);
     }

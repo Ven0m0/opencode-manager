@@ -15,10 +15,7 @@ import {
 interface DownloadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onDownload: (options: {
-    includeGit?: boolean;
-    includePaths?: string[];
-  }) => Promise<void>;
+  onDownload: (options: { includeGit?: boolean; includePaths?: string[] }) => Promise<void>;
   title: string;
   description: string;
   itemName: string;
@@ -38,9 +35,7 @@ export function DownloadDialog({
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [isLoadingIgnored, setIsLoadingIgnored] = useState(false);
   const [ignoredPaths, setIgnoredPaths] = useState<string[]>([]);
-  const [ignoredPathsError, setIgnoredPathsError] = useState<string | null>(
-    null,
-  );
+  const [ignoredPathsError, setIgnoredPathsError] = useState<string | null>(null);
   const [includeAll, setIncludeAll] = useState(false);
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
 
@@ -92,9 +87,7 @@ export function DownloadDialog({
     setIsDownloading(true);
     try {
       const includeGit = selectedPaths.has(".git/");
-      const includePaths = Array.from(selectedPaths).filter(
-        (p) => p !== ".git/",
-      );
+      const includePaths = Array.from(selectedPaths).filter((p) => p !== ".git/");
       await onDownload({ includeGit, includePaths });
     } catch (error) {
       console.error("Download failed:", error);
@@ -133,9 +126,7 @@ export function DownloadDialog({
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          {!isDownloading && (
-            <DialogDescription>{description}</DialogDescription>
-          )}
+          {!isDownloading && <DialogDescription>{description}</DialogDescription>}
 
           {!isDownloading && !isLoadingIgnored && ignoredPaths.length > 0 && (
             <div className="space-y-3">
@@ -146,11 +137,7 @@ export function DownloadDialog({
                   setIncludeAll(!includeAll);
                 }}
               >
-                <Checkbox
-                  id="download-all"
-                  checked={includeAll}
-                  onCheckedChange={() => {}}
-                />
+                <Checkbox id="download-all" checked={includeAll} onCheckedChange={() => {}} />
                 <span className="text-sm font-medium">Download All</span>
               </div>
 
@@ -194,9 +181,7 @@ export function DownloadDialog({
           <div className="flex items-center gap-3 p-3 bg-muted rounded-md">
             <Archive className="w-8 h-8 text-muted-foreground" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">
-                {isConfirmed ? "Processing..." : itemName}
-              </p>
+              <p className="text-sm font-medium">{isConfirmed ? "Processing..." : itemName}</p>
               {isDownloading && (
                 <p className="text-xs text-muted-foreground mt-1">
                   Creating ZIP archive, please wait...
@@ -210,28 +195,17 @@ export function DownloadDialog({
               <div className="h-2 bg-muted rounded-full overflow-hidden">
                 <div className="h-full bg-primary animate-progress w-full" />
               </div>
-              <p className="text-xs text-center text-muted-foreground">
-                Download starting...
-              </p>
+              <p className="text-xs text-center text-muted-foreground">Download starting...</p>
             </div>
           )}
         </div>
         <DialogFooter>
           {!isDownloading && !isConfirmed && (
             <div className="flex gap-2 w-full">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCancel}
-                className="flex-1"
-              >
+              <Button type="button" variant="outline" onClick={handleCancel} className="flex-1">
                 Cancel
               </Button>
-              <Button
-                type="button"
-                onClick={handleConfirm}
-                className="gap-2 flex-1"
-              >
+              <Button type="button" onClick={handleConfirm} className="gap-2 flex-1">
                 <Download className="w-4 h-4" />
                 Download
               </Button>

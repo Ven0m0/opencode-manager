@@ -1,26 +1,32 @@
-import { useCommitDetails } from '@/api/git'
-import { Loader2, GitCommit, ArrowLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { GitFlatFileList } from './GitFlatFileList'
-import { FileDiffView } from '@/components/file-browser/FileDiffView'
+import { ArrowLeft, GitCommit, Loader2 } from "lucide-react";
+import { useCommitDetails } from "@/api/git";
+import { FileDiffView } from "@/components/file-browser/FileDiffView";
+import { Button } from "@/components/ui/button";
+import { GitFlatFileList } from "./GitFlatFileList";
 
 interface CommitDetailViewProps {
-  repoId: number
-  commitHash: string
-  onBack: () => void
-  onFileSelect: (path: string) => void
-  selectedFile?: string
+  repoId: number;
+  commitHash: string;
+  onBack: () => void;
+  onFileSelect: (path: string) => void;
+  selectedFile?: string;
 }
 
-export function CommitDetailView({ repoId, commitHash, onBack, onFileSelect, selectedFile }: CommitDetailViewProps) {
-  const { data: commit, isLoading, error } = useCommitDetails(repoId, commitHash)
+export function CommitDetailView({
+  repoId,
+  commitHash,
+  onBack,
+  onFileSelect,
+  selectedFile,
+}: CommitDetailViewProps) {
+  const { data: commit, isLoading, error } = useCommitDetails(repoId, commitHash);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full py-12">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   if (error || !commit) {
@@ -34,20 +40,20 @@ export function CommitDetailView({ repoId, commitHash, onBack, onFileSelect, sel
           Back to commits
         </Button>
       </div>
-    )
+    );
   }
 
-  const commitFiles = commit.files.map(f => ({
+  const commitFiles = commit.files.map((f) => ({
     path: f.path,
     status: f.status,
     staged: false,
     oldPath: f.oldPath,
     additions: f.additions,
-    deletions: f.deletions
-  }))
+    deletions: f.deletions,
+  }));
 
-  const totalAdditions = commit.files.reduce((sum, f) => sum + (f.additions || 0), 0)
-  const totalDeletions = commit.files.reduce((sum, f) => sum + (f.deletions || 0), 0)
+  const totalAdditions = commit.files.reduce((sum, f) => sum + (f.additions || 0), 0);
+  const totalDeletions = commit.files.reduce((sum, f) => sum + (f.deletions || 0), 0);
 
   if (selectedFile) {
     return (
@@ -57,10 +63,10 @@ export function CommitDetailView({ repoId, commitHash, onBack, onFileSelect, sel
           filePath={selectedFile}
           includeStaged={false}
           commitHash={commitHash}
-          onBack={() => onFileSelect('')}
+          onBack={() => onFileSelect("")}
         />
       </div>
-    )
+    );
   }
 
   return (
@@ -82,7 +88,9 @@ export function CommitDetailView({ repoId, commitHash, onBack, onFileSelect, sel
           <span>·</span>
           <span className="truncate">{commit.authorName}</span>
           <span>·</span>
-          <span className="flex-shrink-0">{new Date(parseInt(commit.date, 10) * 1000).toLocaleDateString()}</span>
+          <span className="flex-shrink-0">
+            {new Date(parseInt(commit.date, 10) * 1000).toLocaleDateString()}
+          </span>
         </div>
       </div>
 
@@ -98,5 +106,5 @@ export function CommitDetailView({ repoId, commitHash, onBack, onFileSelect, sel
         />
       </div>
     </div>
-  )
+  );
 }

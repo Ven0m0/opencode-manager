@@ -1,8 +1,5 @@
 import { z } from "zod";
-import {
-  DEFAULT_NOTIFICATION_PREFERENCES,
-  NotificationPreferencesSchema,
-} from "./notifications";
+import { DEFAULT_NOTIFICATION_PREFERENCES, NotificationPreferencesSchema } from "./notifications";
 
 export const CustomCommandSchema = z.object({
   name: z.string(),

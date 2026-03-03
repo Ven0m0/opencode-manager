@@ -1,13 +1,6 @@
 import type { Database } from "bun:sqlite";
 import type { Hono } from "hono";
-import {
-  beforeEach,
-  describe,
-  expect,
-  it,
-  type MockedFunction,
-  vi,
-} from "vitest";
+import { beforeEach, describe, expect, it, type MockedFunction, vi } from "vitest";
 import type { Repo } from "../../../shared/src/types";
 import { getRepoById } from "../../src/db/queries";
 import { createRepoRoutes } from "../../src/routes/repos";
@@ -260,10 +253,7 @@ describe("Git Routes", () => {
       const body = await response.json();
 
       expect(response.status).toBe(400);
-      expect(body).toHaveProperty(
-        "error",
-        "paths is required and must be an array",
-      );
+      expect(body).toHaveProperty("error", "paths is required and must be an array");
     });
 
     it("should return 400 when paths is missing", async () => {
@@ -276,10 +266,7 @@ describe("Git Routes", () => {
       const body = await response.json();
 
       expect(response.status).toBe(400);
-      expect(body).toHaveProperty(
-        "error",
-        "paths is required and must be an array",
-      );
+      expect(body).toHaveProperty("error", "paths is required and must be an array");
     });
 
     it("should accept array of paths", async () => {
@@ -333,10 +320,7 @@ describe("Git Routes", () => {
       const body = await response.json();
 
       expect(response.status).toBe(400);
-      expect(body).toHaveProperty(
-        "error",
-        "paths is required and must be an array",
-      );
+      expect(body).toHaveProperty("error", "paths is required and must be an array");
     });
 
     it("should return 400 when paths is missing", async () => {
@@ -349,10 +333,7 @@ describe("Git Routes", () => {
       const body = await response.json();
 
       expect(response.status).toBe(400);
-      expect(body).toHaveProperty(
-        "error",
-        "paths is required and must be an array",
-      );
+      expect(body).toHaveProperty("error", "paths is required and must be an array");
     });
 
     it("should accept array of paths", async () => {
@@ -448,9 +429,7 @@ describe("Git Routes", () => {
 
     it("should handle special characters in path", async () => {
       getRepoByIdMock.mockReturnValue(createMockRepo());
-      const response = await app.request(
-        "/1/git/diff?path=src%2Fcomponents%2FButton.tsx",
-      );
+      const response = await app.request("/1/git/diff?path=src%2Fcomponents%2FButton.tsx");
       expect([200, 500]).toContain(response.status);
     });
 

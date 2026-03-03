@@ -9,8 +9,7 @@ import { showToast } from "@/lib/toast";
 import { GitCredentialDialog } from "./GitCredentialDialog";
 
 export function GitSettings() {
-  const { preferences, isLoading, updateSettingsAsync, isUpdating } =
-    useSettings();
+  const { preferences, isLoading, updateSettingsAsync, isUpdating } = useSettings();
   const [gitCredentials, setGitCredentials] = useState<GitCredential[]>([]);
   const [gitIdentity, setGitIdentity] = useState<GitIdentity>({
     name: "",
@@ -19,9 +18,7 @@ export function GitSettings() {
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [isCredentialDialogOpen, setIsCredentialDialogOpen] = useState(false);
-  const [editingCredentialIndex, setEditingCredentialIndex] = useState<
-    number | null
-  >(null);
+  const [editingCredentialIndex, setEditingCredentialIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (preferences) {
@@ -34,8 +31,7 @@ export function GitSettings() {
   const checkForIdentityChanges = (newIdentity: GitIdentity) => {
     const currentIdentity = preferences?.gitIdentity || { name: "", email: "" };
     const identityChanged =
-      currentIdentity.name !== newIdentity.name ||
-      currentIdentity.email !== newIdentity.email;
+      currentIdentity.name !== newIdentity.name || currentIdentity.email !== newIdentity.email;
     setHasChanges(identityChanged);
   };
 
@@ -137,9 +133,7 @@ export function GitSettings() {
     <div className="bg-card border border-border rounded-lg">
       <div className="flex items-center justify-between px-6 py-4 border-b border-border">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">
-            Git Configuration
-          </h2>
+          <h2 className="text-lg font-semibold text-foreground">Git Configuration</h2>
           <p className="text-sm text-muted-foreground">
             Manage your git identity and credentials for repository operations
           </p>
@@ -176,8 +170,7 @@ export function GitSettings() {
 
           <div className="px-6 space-y-4 sm:ml-7">
             <p className="text-sm text-muted-foreground">
-              Author identity used for git commits. Leave empty to use system
-              defaults.
+              Author identity used for git commits. Leave empty to use system defaults.
             </p>
             <div className="grid pb-4 grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -260,15 +253,10 @@ export function GitSettings() {
                   </thead>
                   <tbody className="divide-y divide-border">
                     {gitCredentials.map((cred, index) => (
-                      <tr
-                        key={index}
-                        className="hover:bg-accent/30 transition-colors"
-                      >
+                      <tr key={index} className="hover:bg-accent/30 transition-colors">
                         <td className="px-3 py-2">
                           <div>
-                            <span className="font-medium">
-                              {cred.name || "Unnamed"}
-                            </span>
+                            <span className="font-medium">{cred.name || "Unnamed"}</span>
                             <div className="text-xs text-muted-foreground sm:hidden">
                               {cred.host}
                             </div>
@@ -323,9 +311,7 @@ export function GitSettings() {
         onOpenChange={setIsCredentialDialogOpen}
         onSave={saveCredential}
         credential={
-          editingCredentialIndex !== null
-            ? gitCredentials[editingCredentialIndex]
-            : undefined
+          editingCredentialIndex !== null ? gitCredentials[editingCredentialIndex] : undefined
         }
         isSaving={isSaving || isUpdating}
       />

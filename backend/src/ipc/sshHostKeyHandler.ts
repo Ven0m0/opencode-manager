@@ -33,11 +33,13 @@ export class SSHHostKeyHandler implements IPCHandler {
   private database: Database;
 
   constructor(database: Database, timeoutMs: number = 120_000) {
-    this.database = database
-    this.timeoutMs = timeoutMs
-    const configDir = path.join(getWorkspacePath(), 'config')
-    this.knownHostsPath = path.join(configDir, 'known_hosts')
-    logger.info(`SSHHostKeyHandler initialized with timeout=${timeoutMs}ms, known_hosts=${this.knownHostsPath}`)
+    this.database = database;
+    this.timeoutMs = timeoutMs;
+    const configDir = path.join(getWorkspacePath(), "config");
+    this.knownHostsPath = path.join(configDir, "known_hosts");
+    logger.info(
+      `SSHHostKeyHandler initialized with timeout=${timeoutMs}ms, known_hosts=${this.knownHostsPath}`,
+    );
   }
 
   private async ensureKnownHostsFile(): Promise<void> {
@@ -82,9 +84,7 @@ export class SSHHostKeyHandler implements IPCHandler {
         isKeyChanged: false,
       };
 
-      logger.info(
-        `Broadcasting SSH host key request: ${requestId} for host=${hostPort}`,
-      );
+      logger.info(`Broadcasting SSH host key request: ${requestId} for host=${hostPort}`);
       broadcastSSHHostKeyRequest({
         ...hostKeyRequest,
         requestId,
@@ -93,9 +93,7 @@ export class SSHHostKeyHandler implements IPCHandler {
 
       return new Promise<boolean>((resolve) => {
         const timeout = setTimeout(() => {
-          logger.info(
-            `SSH host key request timed out: ${requestId}, rejecting connection`,
-          );
+          logger.info(`SSH host key request timed out: ${requestId}, rejecting connection`);
           this.pendingRequests.delete(requestId);
           resolve(false);
         }, this.timeoutMs);
@@ -116,30 +114,30 @@ export class SSHHostKeyHandler implements IPCHandler {
   }
 
   async autoAcceptHostKey(repoUrl: string): Promise<void> {
-    const { host, port } = parseSSHHost(repoUrl)
-    const hostPort = normalizeHostPort(host, port)
+    const { host, port } = parseSSHHost(repoUrl);
+    const hostPort = normalizeHostPort(host, port);
 
-    const trustedHost = this.getTrustedHost(hostPort)
+    const trustedHost = this.getTrustedHost(hostPort);
     if (trustedHost) {
-      logger.info(`Host ${hostPort} already trusted, skipping auto-accept`)
-      return
+      logger.info(`Host ${hostPort} already trusted, skipping auto-accept`);
+      return;
     }
 
-    const publicKey = await this.fetchHostPublicKey(host, port)
-    await this.addToKnownHosts(hostPort, publicKey)
-    this.saveTrustedHost(hostPort, publicKey)
-    logger.info(`Auto-accepted SSH host key for ${hostPort}`)
+    const publicKey = await this.fetchHostPublicKey(host, port);
+    await this.addToKnownHosts(hostPort, publicKey);
+    this.saveTrustedHost(hostPort, publicKey);
+    logger.info(`Auto-accepted SSH host key for ${hostPort}`);
   }
 
   private async fetchHostPublicKey(host: string, port?: string): Promise<string> {
-    const portArgs = port ? ['-p', port] : []
-    const result = await executeCommand(
-      ['ssh-keyscan', '-t', 'ed25519,rsa,ecdsa', ...portArgs, host],
-      { silent: true, ignoreExitCode: true }
-    ) as string | { exitCode: number; stdout: string; stderr: string }
-    const output = typeof result === 'string' ? result : result.stdout
-    const bracketedHost = port && port !== '22' ? `[${host}]:${port}` : host
-    const lines = output.trim().split('\n')
+    const portArgs = port ? ["-p", port] : [];
+    const result = (await executeCommand(
+      ["ssh-keyscan", "-t", "ed25519,rsa,ecdsa", ...portArgs, host],
+      { silent: true, ignoreExitCode: true },
+    )) as string | { exitCode: number; stdout: string; stderr: string };
+    const output = typeof result === "string" ? result : result.stdout;
+    const bracketedHost = port && port !== "22" ? `[${host}]:${port}` : host;
+    const lines = output.trim().split("\n");
     for (const line of lines) {
       if (line.startsWith(host) || line.startsWith(bracketedHost)) {
         return line;
@@ -170,10 +168,7 @@ export class SSHHostKeyHandler implements IPCHandler {
     this.pendingRequests.delete(response.requestId);
 
     if (response.response === "accept") {
-      await this.addToKnownHosts(
-        pending.request.host,
-        pending.request.fingerprint,
-      );
+      await this.addToKnownHosts(pending.request.host, pending.request.fingerprint);
       this.saveTrustedHost(pending.request.host, pending.request.fingerprint);
       logger.info(`Accepted SSH host key for ${pending.request.host}`);
     } else {
@@ -184,10 +179,7 @@ export class SSHHostKeyHandler implements IPCHandler {
     return { success: true };
   }
 
-  private async addToKnownHosts(
-    host: string,
-    publicKey: string,
-  ): Promise<void> {
+  private async addToKnownHosts(host: string, publicKey: string): Promise<void> {
     try {
       await fs.appendFile(this.knownHostsPath, `${publicKey}\n`);
       logger.info(`Added host to known_hosts: ${host}`);
@@ -198,9 +190,7 @@ export class SSHHostKeyHandler implements IPCHandler {
 
   private async loadFromDatabaseToKnownHosts(): Promise<void> {
     try {
-      const hosts = this.database
-        .prepare("SELECT * FROM trusted_ssh_hosts")
-        .all() as Array<{
+      const hosts = this.database.prepare("SELECT * FROM trusted_ssh_hosts").all() as Array<{
         id: number;
         host: string;
         key_type: string;
@@ -211,22 +201,16 @@ export class SSHHostKeyHandler implements IPCHandler {
 
       const entries = hosts.map((h) => h.public_key).join("\n");
       await fs.writeFile(this.knownHostsPath, `${entries}\n`, { mode: 0o600 });
-      logger.info(
-        `Loaded ${hosts.length} trusted hosts from database to known_hosts`,
-      );
+      logger.info(`Loaded ${hosts.length} trusted hosts from database to known_hosts`);
     } catch (error) {
       logger.error("Failed to load trusted hosts from database:", error);
     }
   }
 
-  private getTrustedHost(
-    host: string,
-  ): { key_type: string; public_key: string } | null {
+  private getTrustedHost(host: string): { key_type: string; public_key: string } | null {
     try {
       const result = this.database
-        .prepare(
-          "SELECT key_type, public_key FROM trusted_ssh_hosts WHERE host = ?",
-        )
+        .prepare("SELECT key_type, public_key FROM trusted_ssh_hosts WHERE host = ?")
         .get(host) as
         | {
             key_type: string;
@@ -287,9 +271,6 @@ export class SSHHostKeyHandler implements IPCHandler {
   }
 }
 
-export function createSSHHostKeyHandler(
-  database: Database,
-  timeoutMs?: number,
-): SSHHostKeyHandler {
+export function createSSHHostKeyHandler(database: Database, timeoutMs?: number): SSHHostKeyHandler {
   return new SSHHostKeyHandler(database, timeoutMs);
 }

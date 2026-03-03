@@ -17,9 +17,7 @@ describe("sanitizeForTTS", () => {
   });
 
   it("should remove inline code but keep content", () => {
-    expect(sanitizeForTTS("Use `const x = 1` here")).toBe(
-      "Use const x = 1 here",
-    );
+    expect(sanitizeForTTS("Use `const x = 1` here")).toBe("Use const x = 1 here");
   });
 
   it("should remove code blocks entirely", () => {
@@ -31,21 +29,17 @@ describe("sanitizeForTTS", () => {
   });
 
   it("should handle italic formatting", () => {
-    expect(sanitizeForTTS("Simple *italic* example")).toBe(
-      "Simple italic example",
-    );
+    expect(sanitizeForTTS("Simple *italic* example")).toBe("Simple italic example");
   });
 
   it("should remove markdown links but keep display text", () => {
-    expect(sanitizeForTTS("Visit [OpenCode](https://opencode.ai)")).toBe(
-      "Visit OpenCode",
-    );
+    expect(sanitizeForTTS("Visit [OpenCode](https://opencode.ai)")).toBe("Visit OpenCode");
   });
 
   it("should handle images and tables", () => {
-    expect(
-      sanitizeForTTS("See ![diagram](url) below:\n|A|B|\n|-|-|\n|1|2|"),
-    ).toBe("See diagram below:\nA B\n1 2");
+    expect(sanitizeForTTS("See ![diagram](url) below:\n|A|B|\n|-|-|\n|1|2|")).toBe(
+      "See diagram below:\nA B\n1 2",
+    );
   });
 
   it("should handle blockquotes", () => {
@@ -53,9 +47,7 @@ describe("sanitizeForTTS", () => {
   });
 
   it("should remove citations and footnotes", () => {
-    expect(sanitizeForTTS("See [1] and [^2] for more")).toBe(
-      "See and for more",
-    );
+    expect(sanitizeForTTS("See [1] and [^2] for more")).toBe("See and for more");
   });
 
   it("should handle strikethrough", () => {
@@ -87,14 +79,10 @@ describe("sanitizeForTTS", () => {
   });
 
   it("should handle headers and lists combined", () => {
-    expect(sanitizeForTTS("## Shopping List\n- Milk\n- Eggs")).toBe(
-      "Shopping List\nMilk\nEggs",
-    );
+    expect(sanitizeForTTS("## Shopping List\n- Milk\n- Eggs")).toBe("Shopping List\nMilk\nEggs");
   });
 
   it("should handle HTML tags", () => {
-    expect(sanitizeForTTS("Text with <tag>content</tag> here")).toBe(
-      "Text with content here",
-    );
+    expect(sanitizeForTTS("Text with <tag>content</tag> here")).toBe("Text with content here");
   });
 });

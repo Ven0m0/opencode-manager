@@ -24,10 +24,7 @@ export const notificationsApi = {
     });
   },
 
-  unsubscribe: async (
-    endpoint: string,
-    userId = "default",
-  ): Promise<{ success: boolean }> => {
+  unsubscribe: async (endpoint: string, userId = "default"): Promise<{ success: boolean }> => {
     return fetchWrapper(`${API_BASE_URL}/api/notifications/subscribe`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -46,14 +43,11 @@ export const notificationsApi = {
     });
   },
 
-  removeSubscription: async (
-    id: number,
-    userId = "default",
-  ): Promise<{ success: boolean }> => {
-    return fetchWrapper(
-      `${API_BASE_URL}/api/notifications/subscriptions/${id}`,
-      { method: "DELETE", params: { userId } },
-    );
+  removeSubscription: async (id: number, userId = "default"): Promise<{ success: boolean }> => {
+    return fetchWrapper(`${API_BASE_URL}/api/notifications/subscriptions/${id}`, {
+      method: "DELETE",
+      params: { userId },
+    });
   },
 
   sendTest: async (

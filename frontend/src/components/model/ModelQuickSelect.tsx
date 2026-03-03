@@ -29,17 +29,11 @@ export function ModelQuickSelect({
   disabled,
   children,
 }: ModelQuickSelectProps) {
-  const { modelString, recentModels, setModel } = useModelSelection(
+  const { modelString, recentModels, setModel } = useModelSelection(opcodeUrl, directory);
+  const { availableVariants, currentVariant, setVariant, clearVariant, hasVariants } = useVariants(
     opcodeUrl,
     directory,
   );
-  const {
-    availableVariants,
-    currentVariant,
-    setVariant,
-    clearVariant,
-    hasVariants,
-  } = useVariants(opcodeUrl, directory);
   const client = useOpenCodeClient(opcodeUrl, directory);
 
   const { data: providersData } = useQuery({
@@ -121,9 +115,7 @@ export function ModelQuickSelect({
                 onClick={() => handleVariantSelect(variant)}
                 className="flex items-center justify-between"
               >
-                <span className="capitalize text-orange-500 text-center">
-                  {variant}
-                </span>
+                <span className="capitalize text-orange-500 text-center">{variant}</span>
                 {currentVariant === variant && <Check className="h-4 w-4" />}
               </DropdownMenuItem>
             ))}
@@ -140,9 +132,7 @@ export function ModelQuickSelect({
             {recentModelsWithNames.map((recent) => (
               <DropdownMenuItem
                 key={recent.key}
-                onClick={() =>
-                  handleModelSelect(recent.providerID, recent.modelID)
-                }
+                onClick={() => handleModelSelect(recent.providerID, recent.modelID)}
                 className="flex items-center justify-between"
               >
                 <span className="truncate">{recent.displayName}</span>
@@ -153,10 +143,7 @@ export function ModelQuickSelect({
           </>
         )}
 
-        <DropdownMenuItem
-          onClick={onOpenFullDialog}
-          className="flex items-center justify-between"
-        >
+        <DropdownMenuItem onClick={onOpenFullDialog} className="flex items-center justify-between">
           <span>All Models...</span>
           <ChevronRight className="h-4 w-4" />
         </DropdownMenuItem>

@@ -1,10 +1,10 @@
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { AlertCircle, X } from 'lucide-react'
+import { AlertCircle, X } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 interface GitErrorBannerProps {
-  error: { summary: string; detail?: string }
-  onDismiss: () => void
+  error: { summary: string; detail?: string };
+  onDismiss: () => void;
 }
 
 export function GitErrorBanner({ error, onDismiss }: GitErrorBannerProps) {
@@ -30,5 +30,5 @@ export function GitErrorBanner({ error, onDismiss }: GitErrorBannerProps) {
         )}
       </div>
     </Alert>
-  )
+  );
 }

@@ -1,19 +1,27 @@
-import { spawn, execSync } from 'child_process'
-import path from 'path'
-import { logger } from '../utils/logger'
-import { createGitEnv, createGitIdentityEnv, resolveGitIdentity } from '../utils/git-auth'
-import type { GitCredential } from '@opencode-manager/shared'
+import type { Database } from "bun:sqlite";
+import { execSync, spawn } from "node:child_process";
+import path from "node:path";
+import type { GitCredential } from "@opencode-manager/shared";
+import {
+  ENV,
+  getOpenCodeConfigFilePath,
+  getWorkspacePath,
+} from "@opencode-manager/shared/config/env";
+import { decryptSecret } from "../utils/crypto";
+import { createGitEnv, createGitIdentityEnv, resolveGitIdentity } from "../utils/git-auth";
+import { logger } from "../utils/logger";
 import {
   buildSSHCommandWithConfig,
   buildSSHCommandWithKnownHosts,
   cleanupPersistentSSHKeys,
-  parseSSHHost
-, writePersistentSSHKey, stripKeyPassphrase, generateSSHConfig, writeSSHConfig } from "../utils/ssh-key-manager";
-import { decryptSecret } from '../utils/crypto'
-import { SettingsService } from './settings'
-import { getWorkspacePath, getOpenCodeConfigFilePath, ENV } from '@opencode-manager/shared/config/env'
-import type { Database } from 'bun:sqlite'
-import { compareVersions } from '../utils/version-utils'
+  generateSSHConfig,
+  parseSSHHost,
+  stripKeyPassphrase,
+  writePersistentSSHKey,
+  writeSSHConfig,
+} from "../utils/ssh-key-manager";
+import { compareVersions } from "../utils/version-utils";
+import { SettingsService } from "./settings";
 
 const OPENCODE_SERVER_PORT = ENV.OPENCODE.PORT;
 const OPENCODE_SERVER_HOST = ENV.OPENCODE.HOST;
@@ -60,33 +68,23 @@ class OpenCodeServerManager {
         const settings = settingsService.getSettings("default");
         gitCredentials = settings.preferences.gitCredentials || [];
 
-        const identity = await resolveGitIdentity(
-          settings.preferences.gitIdentity,
-          gitCredentials,
-        );
+        const identity = await resolveGitIdentity(settings.preferences.gitIdentity, gitCredentials);
         if (identity) {
           gitIdentityEnv = createGitIdentityEnv(identity);
-          logger.info(
-            `Git identity resolved: ${identity.name} <${identity.email}>`,
-          );
+          logger.info(`Git identity resolved: ${identity.name} <${identity.email}>`);
         }
       } catch (error) {
         logger.warn("Failed to get git settings:", error);
       }
     }
 
-    const existingProcesses =
-      await this.findProcessesByPort(OPENCODE_SERVER_PORT);
+    const existingProcesses = await this.findProcessesByPort(OPENCODE_SERVER_PORT);
     if (existingProcesses.length > 0) {
-      logger.info(
-        `OpenCode server already running on port ${OPENCODE_SERVER_PORT}`,
-      );
+      logger.info(`OpenCode server already running on port ${OPENCODE_SERVER_PORT}`);
       const healthy = await this.checkHealth();
       if (healthy) {
         if (isDevelopment) {
-          logger.warn(
-            "Development mode: Killing existing server for hot reload",
-          );
+          logger.warn("Development mode: Killing existing server for hot reload");
           for (const proc of existingProcesses) {
             try {
               process.kill(proc.pid, "SIGKILL");
@@ -116,22 +114,14 @@ class OpenCodeServerManager {
     }
 
     const useHomeConfig = ENV.WORKSPACE.USE_HOME_OPENCODE_CONFIG;
-    logger.info(
-      `OpenCode server working directory: ${OPENCODE_SERVER_DIRECTORY}`,
-    );
+    logger.info(`OpenCode server working directory: ${OPENCODE_SERVER_DIRECTORY}`);
     logger.info(
       `OpenCode config: ${useHomeConfig ? "~/.config/opencode (home)" : "workspace .config/opencode"}`,
     );
-    logger.info(
-      `OpenCode will use ?directory= parameter for session isolation`,
-    );
+    logger.info(`OpenCode will use ?directory= parameter for session isolation`);
 
     const gitEnv = createGitEnv(gitCredentials);
-    const knownHostsPath = path.join(
-      getWorkspacePath(),
-      "config",
-      "known_hosts",
-    );
+    const knownHostsPath = path.join(getWorkspacePath(), "config", "known_hosts");
     let gitSshCommand: string;
     let sshConfigPath: string | null = null;
 
@@ -139,9 +129,7 @@ class OpenCodeServerManager {
       (cred) => cred.type === "ssh" && cred.sshPrivateKeyEncrypted,
     );
     if (sshCredentials.length > 0) {
-      logger.info(
-        `Setting up ${sshCredentials.length} SSH credential(s) for OpenCode server`,
-      );
+      logger.info(`Setting up ${sshCredentials.length} SSH credential(s) for OpenCode server`);
 
       const sshConfigEntries: Array<{
         hostname: string;
@@ -156,13 +144,11 @@ class OpenCodeServerManager {
           const keyPath = await writePersistentSSHKey(privateKey, cred.name);
 
           if (cred.passphrase) {
-            const passphrase = decryptSecret(cred.passphrase)
-            await stripKeyPassphrase(keyPath, passphrase)
-            logger.info(`Stripped passphrase from SSH key for ${cred.name} (${host}:${port})`)
+            const passphrase = decryptSecret(cred.passphrase);
+            await stripKeyPassphrase(keyPath, passphrase);
+            logger.info(`Stripped passphrase from SSH key for ${cred.name} (${host}:${port})`);
           } else {
-            logger.info(
-              `Setup SSH key for ${cred.name} (${host}:${port}): ${keyPath}`,
-            );
+            logger.info(`Setup SSH key for ${cred.name} (${host}:${port}): ${keyPath}`);
           }
 
           sshConfigEntries.push({ hostname: host, port, keyPath });
@@ -175,18 +161,13 @@ class OpenCodeServerManager {
         const sshConfigContent = generateSSHConfig(sshConfigEntries);
         sshConfigPath = path.join(getWorkspacePath(), "config", "ssh_config");
         await writeSSHConfig(sshConfigPath, sshConfigContent);
-        gitSshCommand = buildSSHCommandWithConfig(
-          sshConfigPath,
-          knownHostsPath,
-        );
+        gitSshCommand = buildSSHCommandWithConfig(sshConfigPath, knownHostsPath);
         logger.info(
           `OpenCode server SSH config written to ${sshConfigPath} with ${sshConfigEntries.length} host(s)`,
         );
       } else {
         gitSshCommand = buildSSHCommandWithKnownHosts(knownHostsPath);
-        logger.warn(
-          `No SSH credentials could be set up, using default known_hosts only`,
-        );
+        logger.warn(`No SSH credentials could be set up, using default known_hosts only`);
       }
     } else {
       gitSshCommand = buildSSHCommandWithKnownHosts(knownHostsPath);
@@ -204,22 +185,13 @@ class OpenCodeServerManager {
       XDG_DATA_HOME: path.join(OPENCODE_SERVER_DIRECTORY, ".opencode/state"),
     };
     if (!useHomeConfig) {
-      spawnEnv.XDG_CONFIG_HOME = path.join(
-        OPENCODE_SERVER_DIRECTORY,
-        ".config",
-      );
+      spawnEnv.XDG_CONFIG_HOME = path.join(OPENCODE_SERVER_DIRECTORY, ".config");
       spawnEnv.OPENCODE_CONFIG = OPENCODE_CONFIG_PATH;
     }
 
     this.serverProcess = spawn(
       "opencode",
-      [
-        "serve",
-        "--port",
-        OPENCODE_SERVER_PORT.toString(),
-        "--hostname",
-        OPENCODE_SERVER_HOST,
-      ],
+      ["serve", "--port", OPENCODE_SERVER_PORT.toString(), "--hostname", OPENCODE_SERVER_HOST],
       {
         cwd: OPENCODE_SERVER_DIRECTORY,
         detached: !isDevelopment,
@@ -243,10 +215,7 @@ class OpenCodeServerManager {
         logger.error("OpenCode server process exited:", this.lastStartupError);
       } else if (signal) {
         this.lastStartupError = `Server terminated by signal ${signal}`;
-        logger.error(
-          "OpenCode server process terminated:",
-          this.lastStartupError,
-        );
+        logger.error("OpenCode server process terminated:", this.lastStartupError);
       }
     });
 
@@ -394,12 +363,9 @@ class OpenCodeServerManager {
 
   async checkHealth(): Promise<boolean> {
     try {
-      const response = await fetch(
-        `http://${OPENCODE_SERVER_HOST}:${OPENCODE_SERVER_PORT}/doc`,
-        {
-          signal: AbortSignal.timeout(3000),
-        },
-      );
+      const response = await fetch(`http://${OPENCODE_SERVER_HOST}:${OPENCODE_SERVER_PORT}/doc`, {
+        signal: AbortSignal.timeout(3000),
+      });
       return response.ok;
     } catch {
       return false;
@@ -431,9 +397,7 @@ class OpenCodeServerManager {
     return false;
   }
 
-  private async findProcessesByPort(
-    port: number,
-  ): Promise<Array<{ pid: number }>> {
+  private async findProcessesByPort(port: number): Promise<Array<{ pid: number }>> {
     try {
       const pids = execSync(`lsof -ti:${port}`).toString().trim().split("\n");
       return pids.filter(Boolean).map((pid) => ({ pid: parseInt(pid, 10) }));

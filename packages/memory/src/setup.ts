@@ -1,45 +1,45 @@
-import { readFileSync, existsSync, mkdirSync, copyFileSync } from 'fs'
-import { dirname, join } from 'path'
-import { fileURLToPath } from 'url'
-import { resolveDataDir, resolveLogPath } from './storage'
-import type { PluginConfig, EmbeddingConfig } from './types'
+import { copyFileSync, existsSync, mkdirSync, readFileSync } from "fs";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
+import { resolveDataDir, resolveLogPath } from "./storage";
+import type { EmbeddingConfig, PluginConfig } from "./types";
 
 function resolveBundledConfigPath(): string {
-  const pluginDir = dirname(fileURLToPath(import.meta.url))
-  return join(pluginDir, '..', 'config.json')
+  const pluginDir = dirname(fileURLToPath(import.meta.url));
+  return join(pluginDir, "..", "config.json");
 }
 
 export function resolveConfigPath(): string {
-  const dataDir = resolveDataDir()
-  return `${dataDir}/config.json`
+  const dataDir = resolveDataDir();
+  return `${dataDir}/config.json`;
 }
 
 function ensureGlobalConfig(): void {
-  const dataDir = resolveDataDir()
-  const globalConfigPath = resolveConfigPath()
+  const dataDir = resolveDataDir();
+  const globalConfigPath = resolveConfigPath();
 
   if (existsSync(globalConfigPath)) {
-    return
+    return;
   }
 
-  const bundledConfigPath = resolveBundledConfigPath()
+  const bundledConfigPath = resolveBundledConfigPath();
   if (!existsSync(bundledConfigPath)) {
-    return
+    return;
   }
 
   if (!existsSync(dataDir)) {
-    mkdirSync(dataDir, { recursive: true })
+    mkdirSync(dataDir, { recursive: true });
   }
 
-  copyFileSync(bundledConfigPath, globalConfigPath)
+  copyFileSync(bundledConfigPath, globalConfigPath);
 }
 
 function getDefaultEmbeddingConfig(): EmbeddingConfig {
   return {
-    provider: 'local',
-    model: 'all-MiniLM-L6-v2',
+    provider: "local",
+    model: "all-MiniLM-L6-v2",
     dimensions: 384,
-  }
+  };
 }
 
 function getDefaultConfig(): PluginConfig {
@@ -49,58 +49,58 @@ function getDefaultConfig(): PluginConfig {
       enabled: false,
       file: resolveLogPath(),
     },
-  }
+  };
 }
 
 function isValidPluginConfig(config: unknown): config is PluginConfig {
-  if (!config || typeof config !== 'object') return false
+  if (!config || typeof config !== "object") return false;
 
-  const obj = config as Record<string, unknown>
+  const obj = config as Record<string, unknown>;
 
-  if (!obj.embedding || typeof obj.embedding !== 'object') return false
+  if (!obj.embedding || typeof obj.embedding !== "object") return false;
 
-  const embedding = obj.embedding as Record<string, unknown>
+  const embedding = obj.embedding as Record<string, unknown>;
   if (
-    typeof embedding.provider !== 'string' ||
-    !['openai', 'voyage', 'local'].includes(embedding.provider)
+    typeof embedding.provider !== "string" ||
+    !["openai", "voyage", "local"].includes(embedding.provider)
   ) {
-    return false
+    return false;
   }
 
-  if (typeof embedding.model !== 'string') return false
+  if (typeof embedding.model !== "string") return false;
 
-  return true
+  return true;
 }
 
 export function loadPluginConfig(): PluginConfig {
-  ensureGlobalConfig()
-  
-  const configPath = resolveConfigPath()
+  ensureGlobalConfig();
+
+  const configPath = resolveConfigPath();
 
   if (!existsSync(configPath)) {
-    return getDefaultConfig()
+    return getDefaultConfig();
   }
 
   try {
-    const content = readFileSync(configPath, 'utf-8')
-    const sanitized = sanitizeJson(content)
-    const parsed = JSON.parse(sanitized)
+    const content = readFileSync(configPath, "utf-8");
+    const sanitized = sanitizeJson(content);
+    const parsed = JSON.parse(sanitized);
 
     if (!isValidPluginConfig(parsed)) {
-      console.warn(`[memory] Invalid config at ${configPath}, using defaults`)
-      return getDefaultConfig()
+      console.warn(`[memory] Invalid config at ${configPath}, using defaults`);
+      return getDefaultConfig();
     }
 
-    return normalizeConfig(parsed)
+    return normalizeConfig(parsed);
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    console.warn(`[memory] Failed to load config at ${configPath}: ${message}, using defaults`)
-    return getDefaultConfig()
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn(`[memory] Failed to load config at ${configPath}: ${message}, using defaults`);
+    return getDefaultConfig();
   }
 }
 
 function sanitizeJson(raw: string): string {
-  return raw.replace(/,(\s*[}\]])/g, '$1')
+  return raw.replace(/,(\s*[}\]])/g, "$1");
 }
 
 function normalizeConfig(config: PluginConfig): PluginConfig {
@@ -110,21 +110,21 @@ function normalizeConfig(config: PluginConfig): PluginConfig {
     dedupThreshold: config.dedupThreshold,
     logging: config.logging,
     compaction: config.compaction,
-  }
-  
+  };
+
   if (normalized.embedding) {
-    const embedding = { ...normalized.embedding }
-    
-    if (embedding.baseUrl === '') {
-      delete embedding.baseUrl
+    const embedding = { ...normalized.embedding };
+
+    if (embedding.baseUrl === "") {
+      delete embedding.baseUrl;
     }
-    
-    if (embedding.apiKey === '') {
-      delete embedding.apiKey
+
+    if (embedding.apiKey === "") {
+      delete embedding.apiKey;
     }
-    
-    normalized.embedding = embedding
+
+    normalized.embedding = embedding;
   }
-  
-  return normalized
+
+  return normalized;
 }

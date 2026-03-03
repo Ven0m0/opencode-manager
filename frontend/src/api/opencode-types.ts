@@ -2055,9 +2055,7 @@ export interface components {
       };
       finish?: string;
     };
-    Message:
-      | components["schemas"]["UserMessage"]
-      | components["schemas"]["AssistantMessage"];
+    Message: components["schemas"]["UserMessage"] | components["schemas"]["AssistantMessage"];
     "Event.message.updated": {
       /** @constant */
       type: "message.updated";
@@ -3231,10 +3229,7 @@ export interface components {
       /** @description MCP (Model Context Protocol) server configurations */
       mcp?: {
         [key: string]:
-          | (
-              | components["schemas"]["McpLocalConfig"]
-              | components["schemas"]["McpRemoteConfig"]
-            )
+          | (components["schemas"]["McpLocalConfig"] | components["schemas"]["McpRemoteConfig"])
           | {
               enabled: boolean;
             };

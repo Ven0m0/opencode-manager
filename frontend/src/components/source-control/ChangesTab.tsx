@@ -1,65 +1,71 @@
-import { useState } from 'react'
-import { useGitStatus } from '@/api/git'
-import { useGit } from '@/hooks/useGit'
-import { GitFlatFileList } from './GitFlatFileList'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { FileDiffView } from '@/components/file-browser/FileDiffView'
-import { DiscardDialog } from '@/components/ui/discard-dialog'
-import { Loader2, GitCommit, FileText, AlertCircle } from 'lucide-react'
+import { AlertCircle, FileText, GitCommit, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { useGitStatus } from "@/api/git";
+import { FileDiffView } from "@/components/file-browser/FileDiffView";
+import { Button } from "@/components/ui/button";
+import { DiscardDialog } from "@/components/ui/discard-dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { useGit } from "@/hooks/useGit";
+import { GitFlatFileList } from "./GitFlatFileList";
 
 interface ChangesTabProps {
-  repoId: number
-  onFileSelect: (path: string, staged: boolean) => void
-  onClearFileSelection?: () => void
-  selectedFile?: {path: string, staged: boolean}
-  isMobile: boolean
-  onError?: (error: unknown) => void
+  repoId: number;
+  onFileSelect: (path: string, staged: boolean) => void;
+  onClearFileSelection?: () => void;
+  selectedFile?: { path: string; staged: boolean };
+  isMobile: boolean;
+  onError?: (error: unknown) => void;
 }
 
-export function ChangesTab({ repoId, onFileSelect, onClearFileSelection, selectedFile, isMobile, onError }: ChangesTabProps) {
-  const { data: status, isLoading, error } = useGitStatus(repoId)
-  const git = useGit(repoId, onError)
-  const [commitMessage, setCommitMessage] = useState('')
+export function ChangesTab({
+  repoId,
+  onFileSelect,
+  onClearFileSelection,
+  selectedFile,
+  isMobile,
+  onError,
+}: ChangesTabProps) {
+  const { data: status, isLoading, error } = useGitStatus(repoId);
+  const git = useGit(repoId, onError);
+  const [commitMessage, setCommitMessage] = useState("");
 
-  const [discardDialogOpen, setDiscardDialogOpen] = useState(false)
-  const [discardPaths, setDiscardPaths] = useState<string[]>([])
-  const [discardStaged, setDiscardStaged] = useState(false)
+  const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
+  const [discardPaths, setDiscardPaths] = useState<string[]>([]);
+  const [discardStaged, setDiscardStaged] = useState(false);
 
   const stagedFiles = status?.files.filter((f) => f.staged) || [];
   const unstagedFiles = status?.files.filter((f) => !f.staged) || [];
-  const canCommit =
-    commitMessage.trim() && stagedFiles.length > 0 && !git.commit.isPending;
+  const canCommit = commitMessage.trim() && stagedFiles.length > 0 && !git.commit.isPending;
 
   const handleStage = (paths: string[]) => {
-    git.stageFiles.mutate(paths)
-  }
+    git.stageFiles.mutate(paths);
+  };
 
   const handleUnstage = (paths: string[]) => {
-    git.unstageFiles.mutate(paths)
-  }
+    git.unstageFiles.mutate(paths);
+  };
 
   const handleDiscard = (paths: string[], staged: boolean) => {
-    setDiscardPaths(paths)
-    setDiscardStaged(staged)
-    setDiscardDialogOpen(true)
-  }
+    setDiscardPaths(paths);
+    setDiscardStaged(staged);
+    setDiscardDialogOpen(true);
+  };
 
   const confirmDiscard = () => {
-    git.discardFiles.mutate({ paths: discardPaths, staged: discardStaged })
-    setDiscardDialogOpen(false)
-    setDiscardPaths([])
-  }
+    git.discardFiles.mutate({ paths: discardPaths, staged: discardStaged });
+    setDiscardDialogOpen(false);
+    setDiscardPaths([]);
+  };
 
   const cancelDiscard = () => {
-    setDiscardDialogOpen(false)
-    setDiscardPaths([])
-  }
+    setDiscardDialogOpen(false);
+    setDiscardPaths([]);
+  };
 
   const handleCommit = () => {
-    git.commit.mutate({ message: commitMessage.trim() })
-    setCommitMessage('')
-  }
+    git.commit.mutate({ message: commitMessage.trim() });
+    setCommitMessage("");
+  };
 
   if (isLoading) {
     return (
@@ -136,31 +142,21 @@ export function ChangesTab({ repoId, onFileSelect, onClearFileSelection, selecte
               onChange={(e) => setCommitMessage(e.target.value)}
               className="min-h-[80px] md:text-sm resize-none"
               onKeyDown={(e) => {
-                if (
-                  (e.metaKey || e.ctrlKey) &&
-                  e.key === "Enter" &&
-                  canCommit
-                ) {
+                if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && canCommit) {
                   handleCommit();
                 }
               }}
             />
-            <Button
-              onClick={handleCommit}
-              disabled={!canCommit}
-              className="w-full h-9"
-            >
+            <Button onClick={handleCommit} disabled={!canCommit} className="w-full h-9">
               {git.commit.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : (
                 <GitCommit className="w-4 h-4 mr-2" />
               )}
-              Commit{" "}
-              {stagedFiles.length > 0 && `(${stagedFiles.length} staged)`}
+              Commit {stagedFiles.length > 0 && `(${stagedFiles.length} staged)`}
             </Button>
             <p className="text-[10px] text-muted-foreground text-center">
-              {navigator.platform.includes("Mac") ? "⌘" : "Ctrl"}+Enter to
-              commit
+              {navigator.platform.includes("Mac") ? "⌘" : "Ctrl"}+Enter to commit
             </p>
           </div>
         )}

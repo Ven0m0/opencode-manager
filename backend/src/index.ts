@@ -1,6 +1,6 @@
+import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { readFile } from "node:fs/promises";
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import {
@@ -8,7 +8,6 @@ import {
   getAgentsMdPath,
   getConfigPath,
   getDatabasePath,
-  getOpenCodeConfigDir,
   getOpenCodeConfigFilePath,
   getReposPath,
   getWorkspacePath,
@@ -22,11 +21,7 @@ import { createAuthMiddleware } from "./auth/middleware";
 import { DEFAULT_AGENTS_MD } from "./constants";
 import { initializeDatabase } from "./db/schema";
 import { createIPCServer, type IPCServer } from "./ipc/ipcServer";
-import {
-  createAuthInfoRoutes,
-  createAuthRoutes,
-  syncAdminFromEnv,
-} from "./routes/auth";
+import { createAuthInfoRoutes, createAuthRoutes, syncAdminFromEnv } from "./routes/auth";
 import { createFileRoutes } from "./routes/files";
 import { createHealthRoutes } from "./routes/health";
 import { createMcpOauthProxyRoutes } from "./routes/mcp-oauth-proxy";
@@ -50,8 +45,7 @@ import {
 import { GitAuthService } from "./services/git-auth";
 import { NotificationService } from "./services/notification";
 import { opencodeServerManager } from "./services/opencode-single-server";
-import { proxyRequest, proxyMcpAuthStart, proxyMcpAuthAuthenticate } from "./services/proxy";
-import { cleanupOrphanedDirectories } from "./services/repo";
+import { proxyMcpAuthAuthenticate, proxyMcpAuthStart, proxyRequest } from "./services/proxy";
 import { SettingsService } from "./services/settings";
 import { sseAggregator } from "./services/sse-aggregator";
 import { logger } from "./utils/logger";
@@ -76,12 +70,10 @@ app.use(
   "/*",
   cors({
     origin: (origin) => {
-      const trustedOrigins = ENV.AUTH.TRUSTED_ORIGINS.split(",").map((o) =>
-        o.trim(),
-      );
-      if (!origin) return trustedOrigins[0];
+      const trustedOrigins = ENV.AUTH.TRUSTED_ORIGINS.split(",").map((o) => o.trim());
+      if (!origin) return null;
       if (trustedOrigins.includes(origin)) return origin;
-      return trustedOrigins[0];
+      return null;
     },
     allowMethods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
@@ -101,9 +93,7 @@ async function ensureDefaultConfigExists(): Promise<void> {
   const workspaceConfigPath = getOpenCodeConfigFilePath();
 
   if (await fileExists(workspaceConfigPath)) {
-    logger.info(
-      `Found workspace config at ${workspaceConfigPath}, syncing to database...`,
-    );
+    logger.info(`Found workspace config at ${workspaceConfigPath}, syncing to database...`);
     try {
       const rawContent = await readFileContent(workspaceConfigPath);
       const parsed = JSON.parse(stripJsonComments(rawContent));
@@ -112,8 +102,7 @@ async function ensureDefaultConfigExists(): Promise<void> {
       if (!validation.success) {
         logger.warn("Workspace config has invalid structure", validation.error);
       } else {
-        const existingDefault =
-          settingsService.getOpenCodeConfigByName("default");
+        const existingDefault = settingsService.getOpenCodeConfigByName("default");
         if (existingDefault) {
           settingsService.updateOpenCodeConfig("default", {
             content: rawContent,
@@ -135,10 +124,7 @@ async function ensureDefaultConfigExists(): Promise<void> {
     }
   }
 
-  const homeConfigPath = path.join(
-    os.homedir(),
-    ".config/opencode/opencode.json",
-  );
+  const homeConfigPath = path.join(os.homedir(), ".config/opencode/opencode.json");
   if (await fileExists(homeConfigPath)) {
     logger.info(`Found home config at ${homeConfigPath}, importing...`);
     try {
@@ -147,8 +133,7 @@ async function ensureDefaultConfigExists(): Promise<void> {
       const validation = OpenCodeConfigSchema.safeParse(parsed);
 
       if (validation.success) {
-        const existingDefault =
-          settingsService.getOpenCodeConfigByName("default");
+        const existingDefault = settingsService.getOpenCodeConfigByName("default");
         if (existingDefault) {
           settingsService.updateOpenCodeConfig("default", {
             content: rawContent,
@@ -182,11 +167,7 @@ async function ensureDefaultConfigExists(): Promise<void> {
   }
 
   logger.info("No existing config found, creating minimal seed config");
-  const seedConfig = JSON.stringify(
-    { $schema: "https://opencode.ai/config.json" },
-    null,
-    2,
-  );
+  const seedConfig = JSON.stringify({ $schema: "https://opencode.ai/config.json" }, null, 2);
   settingsService.createOpenCodeConfig({
     name: "default",
     content: seedConfig,
@@ -217,15 +198,9 @@ try {
   await ensureDirectoryExists(getWorkspacePath());
   await ensureDirectoryExists(getReposPath());
   await ensureDirectoryExists(getConfigPath());
-  await ensureDirectoryExists(getOpenCodeConfigDir());
-  await ensureDirectoryExists(path.join(getOpenCodeConfigDir(), "skills"));
-  await ensureDirectoryExists(
-    path.join(getWorkspacePath(), ".opencode", "skills"),
-  );
+  await ensureDirectoryExists(path.join(getConfigPath(), "skills"));
+  await ensureDirectoryExists(path.join(getWorkspacePath(), ".opencode", "skills"));
   logger.info("Workspace directories initialized");
-
-  await cleanupOrphanedDirectories(db);
-  logger.info("Orphaned directory cleanup completed");
 
   await cleanupExpiredCache();
 
@@ -241,9 +216,7 @@ try {
 
   opencodeServerManager.setDatabase(db);
   await opencodeServerManager.start();
-  logger.info(
-    `OpenCode server running on port ${opencodeServerManager.getPort()}`,
-  );
+  logger.info(`OpenCode server running on port ${opencodeServerManager.getPort()}`);
 
   await syncAdminFromEnv(auth, db);
 } catch (error) {
@@ -294,10 +267,7 @@ protectedApi.route("/stt", createSTTRoutes(db));
 protectedApi.route("/generate-title", createTitleRoutes());
 protectedApi.route("/sse", createSSERoutes());
 protectedApi.route("/ssh", createSSHRoutes(gitAuthService));
-protectedApi.route(
-  "/notifications",
-  createNotificationRoutes(notificationService),
-);
+protectedApi.route("/notifications", createNotificationRoutes(notificationService));
 protectedApi.route("/memory", createMemoryRoutes(db));
 
 app.route("/api", protectedApi);
@@ -411,6 +381,16 @@ const shutdown = async (signal: string) => {
 
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
+
+process.on("unhandledRejection", (reason) => {
+  logger.error("Unhandled promise rejection:", reason);
+  process.exit(1);
+});
+
+process.on("uncaughtException", (error) => {
+  logger.error("Uncaught exception:", error);
+  process.exit(1);
+});
 
 serve({
   fetch: app.fetch,

@@ -1,146 +1,148 @@
-import { describe, test, expect, beforeEach, afterEach } from 'bun:test'
-import { InMemoryCacheService } from '../src/cache/memory-cache'
-import { createCacheService } from '../src/cache'
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { createCacheService } from "../src/cache";
+import { InMemoryCacheService } from "../src/cache/memory-cache";
 
-describe('InMemoryCacheService', () => {
-  let cache: InMemoryCacheService
+describe("InMemoryCacheService", () => {
+  let cache: InMemoryCacheService;
 
   beforeEach(() => {
-    cache = new InMemoryCacheService()
-  })
+    cache = new InMemoryCacheService();
+  });
 
   afterEach(() => {
-    cache.destroy()
-  })
+    cache.destroy();
+  });
 
-  test('In-memory cache set/get', async () => {
-    await cache.set('test-key', { foo: 'bar' })
-    const result = await cache.get<{ foo: string }>('test-key')
+  test("In-memory cache set/get", async () => {
+    await cache.set("test-key", { foo: "bar" });
+    const result = await cache.get<{ foo: string }>("test-key");
 
-    expect(result).toEqual({ foo: 'bar' })
-  })
+    expect(result).toEqual({ foo: "bar" });
+  });
 
-  test('Cache miss returns null', async () => {
-    const result = await cache.get('non-existent-key')
-    expect(result).toBeNull()
-  })
+  test("Cache miss returns null", async () => {
+    const result = await cache.get("non-existent-key");
+    expect(result).toBeNull();
+  });
 
-  test('TTL expiration — set with short TTL, verify expired after timeout', async () => {
-    await cache.set('expiring-key', 'value', 1)
-    
-    const resultBeforeExpiry = await cache.get('expiring-key')
-    expect(resultBeforeExpiry).toBe('value')
+  test("TTL expiration — set with short TTL, verify expired after timeout", async () => {
+    await cache.set("expiring-key", "value", 1);
 
-    await new Promise(resolve => setTimeout(resolve, 1100))
+    const resultBeforeExpiry = await cache.get("expiring-key");
+    expect(resultBeforeExpiry).toBe("value");
 
-    const resultAfterExpiry = await cache.get('expiring-key')
-    expect(resultAfterExpiry).toBeNull()
-  })
+    await new Promise((resolve) => setTimeout(resolve, 1100));
 
-  test('Pattern invalidation — set multiple keys, invalidate with glob pattern', async () => {
-    await cache.set('mem:repo:1:key1', 'value1')
-    await cache.set('mem:repo:1:key2', 'value2')
-    await cache.set('mem:repo:2:key1', 'value3')
+    const resultAfterExpiry = await cache.get("expiring-key");
+    expect(resultAfterExpiry).toBeNull();
+  });
 
-    await cache.invalidatePattern('mem:repo:1:*')
+  test("Pattern invalidation — set multiple keys, invalidate with glob pattern", async () => {
+    await cache.set("mem:repo:1:key1", "value1");
+    await cache.set("mem:repo:1:key2", "value2");
+    await cache.set("mem:repo:2:key1", "value3");
 
-    const result1 = await cache.get('mem:repo:1:key1')
-    const result2 = await cache.get('mem:repo:1:key2')
-    const result3 = await cache.get('mem:repo:2:key1')
+    await cache.invalidatePattern("mem:repo:1:*");
 
-    expect(result1).toBeNull()
-    expect(result2).toBeNull()
-    expect(result3).toBe('value3')
-  })
+    const result1 = await cache.get("mem:repo:1:key1");
+    const result2 = await cache.get("mem:repo:1:key2");
+    const result3 = await cache.get("mem:repo:2:key1");
 
-  test('del removes key', async () => {
-    await cache.set('key-to-delete', 'value')
-    await cache.del('key-to-delete')
+    expect(result1).toBeNull();
+    expect(result2).toBeNull();
+    expect(result3).toBe("value3");
+  });
 
-    const result = await cache.get('key-to-delete')
-    expect(result).toBeNull()
-  })
+  test("del removes key", async () => {
+    await cache.set("key-to-delete", "value");
+    await cache.del("key-to-delete");
 
-  test('Destroy clears all entries', async () => {
-    await cache.set('key1', 'value1')
-    await cache.set('key2', 'value2')
+    const result = await cache.get("key-to-delete");
+    expect(result).toBeNull();
+  });
 
-    cache.destroy()
+  test("Destroy clears all entries", async () => {
+    await cache.set("key1", "value1");
+    await cache.set("key2", "value2");
 
-    const result1 = await cache.get('key1')
-    const result2 = await cache.get('key2')
+    cache.destroy();
 
-    expect(result1).toBeNull()
-    expect(result2).toBeNull()
-  })
+    const result1 = await cache.get("key1");
+    const result2 = await cache.get("key2");
 
-  test('Default TTL is 24 hours', async () => {
-    const now = Date.now()
-    await cache.set('default-ttl-key', 'value')
+    expect(result1).toBeNull();
+    expect(result2).toBeNull();
+  });
 
-    const entry = (cache as unknown as { cache: Map<string, { expiresAt: number }> }).cache.get('default-ttl-key')
-    expect(entry).toBeDefined()
-    expect(entry!.expiresAt).toBeGreaterThan(now + 86300000)
-    expect(entry!.expiresAt).toBeLessThanOrEqual(now + 86500000)
-  })
-})
+  test("Default TTL is 24 hours", async () => {
+    const now = Date.now();
+    await cache.set("default-ttl-key", "value");
 
-describe('createCacheService', () => {
-  test('returns in-memory cache', async () => {
-    const cache = createCacheService()
+    const entry = (cache as unknown as { cache: Map<string, { expiresAt: number }> }).cache.get(
+      "default-ttl-key",
+    );
+    expect(entry).toBeDefined();
+    expect(entry!.expiresAt).toBeGreaterThan(now + 86300000);
+    expect(entry!.expiresAt).toBeLessThanOrEqual(now + 86500000);
+  });
+});
 
-    await cache.set('test-key', 'test-value')
-    const result = await cache.get('test-key')
+describe("createCacheService", () => {
+  test("returns in-memory cache", async () => {
+    const cache = createCacheService();
 
-    expect(result).toBe('test-value')
-  })
+    await cache.set("test-key", "test-value");
+    const result = await cache.get("test-key");
 
-  test('in-memory cache handles various data types', async () => {
-    const cache = createCacheService()
+    expect(result).toBe("test-value");
+  });
 
-    await cache.set('string', 'hello')
-    await cache.set('number', 42)
-    await cache.set('boolean', true)
-    await cache.set('object', { nested: { value: 'deep' } })
-    await cache.set('array', [1, 2, 3])
+  test("in-memory cache handles various data types", async () => {
+    const cache = createCacheService();
 
-    expect(await cache.get('string')).toBe('hello')
-    expect(await cache.get('number')).toBe(42)
-    expect(await cache.get('boolean')).toBe(true)
-    expect(await cache.get('object')).toEqual({ nested: { value: 'deep' } })
-    expect(await cache.get('array')).toEqual([1, 2, 3])
-  })
+    await cache.set("string", "hello");
+    await cache.set("number", 42);
+    await cache.set("boolean", true);
+    await cache.set("object", { nested: { value: "deep" } });
+    await cache.set("array", [1, 2, 3]);
 
-  test('cache handles empty string key', async () => {
-    const cache = createCacheService()
+    expect(await cache.get("string")).toBe("hello");
+    expect(await cache.get("number")).toBe(42);
+    expect(await cache.get("boolean")).toBe(true);
+    expect(await cache.get("object")).toEqual({ nested: { value: "deep" } });
+    expect(await cache.get("array")).toEqual([1, 2, 3]);
+  });
 
-    await cache.set('', 'empty-key-value')
-    const result = await cache.get('')
+  test("cache handles empty string key", async () => {
+    const cache = createCacheService();
 
-    expect(result).toBe('empty-key-value')
-  })
+    await cache.set("", "empty-key-value");
+    const result = await cache.get("");
 
-  test('invalidatePattern handles no matches', async () => {
-    const cache = createCacheService()
+    expect(result).toBe("empty-key-value");
+  });
 
-    await cache.set('key1', 'value1')
-    await cache.set('key2', 'value2')
+  test("invalidatePattern handles no matches", async () => {
+    const cache = createCacheService();
 
-    await cache.invalidatePattern('nonexistent:*')
+    await cache.set("key1", "value1");
+    await cache.set("key2", "value2");
 
-    expect(await cache.get('key1')).toBe('value1')
-    expect(await cache.get('key2')).toBe('value2')
-  })
+    await cache.invalidatePattern("nonexistent:*");
 
-  test('invalidatePattern handles wildcard only', async () => {
-    const cache = createCacheService()
+    expect(await cache.get("key1")).toBe("value1");
+    expect(await cache.get("key2")).toBe("value2");
+  });
 
-    await cache.set('key1', 'value1')
-    await cache.set('key2', 'value2')
+  test("invalidatePattern handles wildcard only", async () => {
+    const cache = createCacheService();
 
-    await cache.invalidatePattern('*')
+    await cache.set("key1", "value1");
+    await cache.set("key2", "value2");
 
-    expect(await cache.get('key1')).toBeNull()
-    expect(await cache.get('key2')).toBeNull()
-  })
-})
+    await cache.invalidatePattern("*");
+
+    expect(await cache.get("key1")).toBeNull();
+    expect(await cache.get("key2")).toBeNull();
+  });
+});

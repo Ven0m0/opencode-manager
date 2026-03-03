@@ -13,8 +13,7 @@ type MessageListResponse =
 type SendPromptRequest = NonNullable<
   paths["/session/{sessionID}/message"]["post"]["requestBody"]
 >["content"]["application/json"];
-type ConfigResponse =
-  paths["/config"]["get"]["responses"]["200"]["content"]["application/json"];
+type ConfigResponse = paths["/config"]["get"]["responses"]["200"]["content"]["application/json"];
 type CommandListResponse =
   paths["/command"]["get"]["responses"]["200"]["content"]["application/json"];
 type CommandRequest = NonNullable<
@@ -23,8 +22,7 @@ type CommandRequest = NonNullable<
 type ShellRequest = NonNullable<
   paths["/session/{sessionID}/shell"]["post"]["requestBody"]
 >["content"]["application/json"];
-type AgentListResponse =
-  paths["/agent"]["get"]["responses"]["200"]["content"]["application/json"];
+type AgentListResponse = paths["/agent"]["get"]["responses"]["200"]["content"]["application/json"];
 type QuestionListResponse =
   paths["/question"]["get"]["responses"]["200"]["content"]["application/json"];
 type SendPromptResponse =
@@ -46,8 +44,8 @@ export class OpenCodeClient {
   }
 
   private getParams(params?: Record<string, string>) {
-    if (!this.directory) return params
-    return { ...params, directory: this.directory }
+    if (!this.directory) return params;
+    return { ...params, directory: this.directory };
   }
 
   async listSessions() {
@@ -57,12 +55,9 @@ export class OpenCodeClient {
   }
 
   async getSession(sessionID: string) {
-    return fetchWrapper<SessionResponse>(
-      `${this.baseURL}/session/${sessionID}`,
-      {
-        params: this.getParams(),
-      },
-    );
+    return fetchWrapper<SessionResponse>(`${this.baseURL}/session/${sessionID}`, {
+      params: this.getParams(),
+    });
   }
 
   async createSession(data: CreateSessionRequest) {
@@ -91,15 +86,12 @@ export class OpenCodeClient {
   }
 
   async forkSession(sessionID: string, messageID?: string) {
-    return fetchWrapper<SessionResponse>(
-      `${this.baseURL}/session/${sessionID}/fork`,
-      {
-        method: "POST",
-        params: this.getParams(),
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messageID }),
-      },
-    );
+    return fetchWrapper<SessionResponse>(`${this.baseURL}/session/${sessionID}/fork`, {
+      method: "POST",
+      params: this.getParams(),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messageID }),
+    });
   }
 
   async abortSession(sessionID: string) {
@@ -110,35 +102,22 @@ export class OpenCodeClient {
   }
 
   async listMessages(sessionID: string) {
-    return fetchWrapper<MessageListResponse>(
-      `${this.baseURL}/session/${sessionID}/message`,
-      {
-        params: this.getParams(),
-      },
-    );
+    return fetchWrapper<MessageListResponse>(`${this.baseURL}/session/${sessionID}/message`, {
+      params: this.getParams(),
+    });
   }
 
-  async sendPrompt(
-    sessionID: string,
-    data: SendPromptRequest,
-  ): Promise<SendPromptResponse> {
-    return fetchWrapper<SendPromptResponse>(
-      `${this.baseURL}/session/${sessionID}/message`,
-      {
-        method: "POST",
-        params: this.getParams(),
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-        timeout: 0,
-      },
-    );
+  async sendPrompt(sessionID: string, data: SendPromptRequest): Promise<SendPromptResponse> {
+    return fetchWrapper<SendPromptResponse>(`${this.baseURL}/session/${sessionID}/message`, {
+      method: "POST",
+      params: this.getParams(),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+      timeout: 0,
+    });
   }
 
-  async summarizeSession(
-    sessionID: string,
-    providerID: string,
-    modelID: string,
-  ) {
+  async summarizeSession(sessionID: string, providerID: string, modelID: string) {
     return fetchWrapper(`${this.baseURL}/session/${sessionID}/summarize`, {
       method: "POST",
       params: this.getParams(),
@@ -203,15 +182,12 @@ export class OpenCodeClient {
     permissionID: string,
     response: "once" | "always" | "reject",
   ) {
-    return fetchWrapper(
-      `${this.baseURL}/session/${sessionID}/permissions/${permissionID}`,
-      {
-        method: "POST",
-        params: this.getParams(),
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ response }),
-      },
-    );
+    return fetchWrapper(`${this.baseURL}/session/${sessionID}/permissions/${permissionID}`, {
+      method: "POST",
+      params: this.getParams(),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ response }),
+    });
   }
 
   async replyToQuestion(requestID: string, answers: string[][]) {
@@ -242,10 +218,7 @@ export class OpenCodeClient {
     });
   }
 
-  async revertMessage(
-    sessionID: string,
-    data: { messageID: string; partID?: string },
-  ) {
+  async revertMessage(sessionID: string, data: { messageID: string; partID?: string }) {
     return fetchWrapper(`${this.baseURL}/session/${sessionID}/revert`, {
       method: "POST",
       params: this.getParams(),

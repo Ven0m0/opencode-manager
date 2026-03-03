@@ -221,9 +221,9 @@ export type ContentPart =
     };
 
 export interface FileAttachmentInfo {
-  path: string
-  name: string
-  mime?: string
+  path: string;
+  name: string;
+  mime?: string;
 }
 
 export interface ImageAttachment {

@@ -1,10 +1,10 @@
-import * as path from 'path'
-import { fileURLToPath } from 'url'
-import type { IPCServer, IPCHandler } from './ipcServer'
-import type { Database } from 'bun:sqlite'
-import { SettingsService } from '../services/settings'
-import type { GitCredential } from '@opencode-manager/shared'
-import { logger } from '../utils/logger'
+import type { Database } from "bun:sqlite";
+import * as path from "node:path";
+import { fileURLToPath } from "node:url";
+import type { GitCredential } from "@opencode-manager/shared";
+import { SettingsService } from "../services/settings";
+import { logger } from "../utils/logger";
+import type { IPCHandler, IPCServer } from "./ipcServer";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,10 +30,7 @@ export class AskpassHandler implements IPCHandler {
     const scriptsDir = path.join(__dirname, "../../scripts");
 
     this.env = {
-      GIT_ASKPASS: path.join(
-        scriptsDir,
-        this.ipcServer ? "askpass.sh" : "askpass-empty.sh",
-      ),
+      GIT_ASKPASS: path.join(scriptsDir, this.ipcServer ? "askpass.sh" : "askpass-empty.sh"),
       VSCODE_GIT_ASKPASS_NODE: process.execPath,
       VSCODE_GIT_ASKPASS_EXTRA_ARGS: "",
       VSCODE_GIT_ASKPASS_MAIN: path.join(scriptsDir, "askpass-main.ts"),
@@ -47,9 +44,7 @@ export class AskpassHandler implements IPCHandler {
       this.ipcServer.registerHandler("askpass", this);
       logger.info("AskpassHandler registered with IPC server");
     } else {
-      logger.warn(
-        "AskpassHandler: No IPC server provided, using empty askpass",
-      );
+      logger.warn("AskpassHandler: No IPC server provided, using empty askpass");
     }
   }
 
@@ -114,21 +109,14 @@ export class AskpassHandler implements IPCHandler {
     }
   }
 
-  private async getCredentialsForHost(
-    hostname: string,
-  ): Promise<Credentials | null> {
+  private async getCredentialsForHost(hostname: string): Promise<Credentials | null> {
     const normalizedRequest = this.normalizeHostname(hostname);
-    logger.info(
-      `Looking up credentials for host: ${hostname} (normalized: ${normalizedRequest})`,
-    );
+    logger.info(`Looking up credentials for host: ${hostname} (normalized: ${normalizedRequest})`);
 
     const settingsService = new SettingsService(this.database);
     const settings = settingsService.getSettings("default");
-    const allCredentials = (settings.preferences.gitCredentials ||
-      []) as GitCredential[];
-    const gitCredentials = allCredentials.filter(
-      (cred) => !cred.type || cred.type === "pat",
-    );
+    const allCredentials = (settings.preferences.gitCredentials || []) as GitCredential[];
+    const gitCredentials = allCredentials.filter((cred) => !cred.type || cred.type === "pat");
     logger.info(
       `Found ${gitCredentials.length} configured PAT credentials (${allCredentials.length} total)`,
     );
@@ -140,9 +128,7 @@ export class AskpassHandler implements IPCHandler {
       );
 
       if (normalizedCred === normalizedRequest) {
-        logger.info(
-          `Found matching PAT credential '${cred.name}' for ${hostname}`,
-        );
+        logger.info(`Found matching PAT credential '${cred.name}' for ${hostname}`);
         return {
           username: cred.username || this.getDefaultUsername(cred.host),
           password: cred.token || "",
@@ -155,9 +141,7 @@ export class AskpassHandler implements IPCHandler {
         `No credentials found for host: ${hostname}. Configured hosts: ${gitCredentials.map((c) => c.host).join(", ")}`,
       );
     } else {
-      logger.warn(
-        `No credentials found for host: ${hostname}. No git credentials configured.`,
-      );
+      logger.warn(`No credentials found for host: ${hostname}. No git credentials configured.`);
     }
     return null;
   }

@@ -10,12 +10,7 @@ import {
 } from "@opencode-manager/shared";
 import type { NotificationPreferences } from "@opencode-manager/shared/types";
 
-export type {
-  TTSConfig,
-  STTConfig,
-  OpenCodeConfigContent,
-  NotificationPreferences,
-};
+export type { TTSConfig, STTConfig, OpenCodeConfigContent, NotificationPreferences };
 export {
   DEFAULT_TTS_CONFIG,
   DEFAULT_STT_CONFIG,
@@ -48,25 +43,25 @@ export interface GitIdentity {
 }
 
 export interface UserPreferences {
-  theme: 'dark' | 'light' | 'system'
-  mode: 'plan' | 'build'
-  defaultModel?: string
-  defaultAgent?: string
-  autoScroll: boolean
-  showReasoning: boolean
-  expandToolCalls: boolean
-  expandDiffs: boolean
-  leaderKey?: string
-  directShortcuts?: string[]
-  keyboardShortcuts: Record<string, string>
-  customCommands: CustomCommand[]
-  gitCredentials?: GitCredential[]
-  gitIdentity?: GitIdentity
-  tts?: TTSConfig
-  stt?: STTConfig
-  notifications?: NotificationPreferences
-  repoOrder?: number[]
-  memoryDedupThreshold?: number
+  theme: "dark" | "light" | "system";
+  mode: "plan" | "build";
+  defaultModel?: string;
+  defaultAgent?: string;
+  autoScroll: boolean;
+  showReasoning: boolean;
+  expandToolCalls: boolean;
+  expandDiffs: boolean;
+  leaderKey?: string;
+  directShortcuts?: string[];
+  keyboardShortcuts: Record<string, string>;
+  customCommands: CustomCommand[];
+  gitCredentials?: GitCredential[];
+  gitIdentity?: GitIdentity;
+  tts?: TTSConfig;
+  stt?: STTConfig;
+  notifications?: NotificationPreferences;
+  repoOrder?: number[];
+  memoryDedupThreshold?: number;
 }
 
 export interface SettingsResponse {

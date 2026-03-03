@@ -7,12 +7,12 @@ export type GitFileStatusType =
   | "copied";
 
 export interface GitFileStatus {
-  path: string
-  status: GitFileStatusType
-  staged: boolean
-  oldPath?: string
-  additions?: number
-  deletions?: number
+  path: string;
+  status: GitFileStatusType;
+  staged: boolean;
+  oldPath?: string;
+  additions?: number;
+  deletions?: number;
 }
 
 export interface GitCommit {
@@ -25,15 +25,15 @@ export interface GitCommit {
 }
 
 export interface CommitFile {
-  path: string
-  status: GitFileStatusType
-  oldPath?: string
-  additions: number
-  deletions: number
+  path: string;
+  status: GitFileStatusType;
+  oldPath?: string;
+  additions: number;
+  deletions: number;
 }
 
 export interface CommitDetails extends GitCommit {
-  files: CommitFile[]
+  files: CommitFile[];
 }
 
 export interface GitStatusResponse {

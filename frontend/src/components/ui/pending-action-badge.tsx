@@ -4,10 +4,7 @@ import { Button } from "./button";
 
 type BadgeColor = "orange" | "blue";
 
-const colorStyles: Record<
-  BadgeColor,
-  { bg: string; hover: string; text: string }
-> = {
+const colorStyles: Record<BadgeColor, { bg: string; hover: string; text: string }> = {
   orange: {
     bg: "bg-orange-500/10",
     hover: "hover:bg-orange-500/20",

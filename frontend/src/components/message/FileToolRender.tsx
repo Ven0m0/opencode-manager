@@ -102,9 +102,7 @@ export function FileToolRender({
         className="w-full px-3 py-1.5 bg-card hover:bg-card-hover text-left flex items-center justify-between text-sm gap-2"
       >
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-green-600 dark:text-green-400 flex-shrink-0">
-            ✓
-          </span>
+          <span className="text-green-600 dark:text-green-400 flex-shrink-0">✓</span>
           <span className="font-medium flex-shrink-0">{toolName}</span>
           {filePath && (
             <span
@@ -116,12 +114,7 @@ export function FileToolRender({
           )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          {filediff && (
-            <DiffStats
-              additions={filediff.additions}
-              deletions={filediff.deletions}
-            />
-          )}
+          {filediff && <DiffStats additions={filediff.additions} deletions={filediff.deletions} />}
           <span className="text-muted-foreground text-xs">{getDuration()}</span>
           {hasExpandableContent &&
             (expanded ? (
@@ -134,15 +127,8 @@ export function FileToolRender({
 
       {expanded && hasExpandableContent && (
         <div className="bg-card p-0">
-          {filediff && (
-            <ContentDiffViewer
-              before={filediff.before}
-              after={filediff.after}
-            />
-          )}
-          {content && !filediff && (
-            <CodePreview fileName={filePath || ""} content={content} />
-          )}
+          {filediff && <ContentDiffViewer before={filediff.before} after={filediff.after} />}
+          {content && !filediff && <CodePreview fileName={filePath || ""} content={content} />}
         </div>
       )}
     </div>
@@ -191,12 +177,7 @@ export function getToolSpecificRender(
     const filePath = part.state.input?.filePath as string | undefined;
     if (filePath) {
       return (
-        <FileToolRender
-          part={part}
-          filePath={filePath}
-          toolName="Read"
-          onFileClick={onFileClick}
-        />
+        <FileToolRender part={part} filePath={filePath} toolName="Read" onFileClick={onFileClick} />
       );
     }
   }

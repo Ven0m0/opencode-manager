@@ -1,13 +1,4 @@
-import {
-  Code,
-  Download,
-  Edit3,
-  Eye,
-  Save,
-  WrapText,
-  X,
-  X as XIcon,
-} from "lucide-react";
+import { Code, Download, Edit3, Eye, Save, WrapText, X, X as XIcon } from "lucide-react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,9 +40,7 @@ export const FilePreview = memo(function FilePreview({
   const [editContent, setEditContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [hasVirtualizedChanges, setHasVirtualizedChanges] = useState(false);
-  const [highlightedLine, setHighlightedLine] = useState<number | undefined>(
-    initialLineNumber,
-  );
+  const [highlightedLine, setHighlightedLine] = useState<number | undefined>(initialLineNumber);
   const [lineWrap, setLineWrap] = useState(true);
   const [markdownPreview, setMarkdownPreview] = useState(isMarkdownFile);
   const [isLoadingAllContent, setIsLoadingAllContent] = useState(false);
@@ -61,8 +50,7 @@ export const FilePreview = memo(function FilePreview({
   const contentRef = useRef<HTMLDivElement>(null);
 
   const shouldVirtualize =
-    file.size > VIRTUALIZATION_THRESHOLD_BYTES &&
-    !file.mimeType?.startsWith("image/");
+    file.size > VIRTUALIZATION_THRESHOLD_BYTES && !file.mimeType?.startsWith("image/");
   const isMarkdownTooLarge = file.size > MARKDOWN_PREVIEW_SIZE_LIMIT;
 
   useEffect(() => {
@@ -94,13 +82,7 @@ export const FilePreview = memo(function FilePreview({
       const timer = setTimeout(loadContent, 0);
       return () => clearTimeout(timer);
     }
-  }, [
-    shouldVirtualize,
-    isMarkdownFile,
-    markdownPreview,
-    isMarkdownTooLarge,
-    fullContentLoaded,
-  ]);
+  }, [shouldVirtualize, isMarkdownFile, markdownPreview, isMarkdownTooLarge, fullContentLoaded]);
 
   useEffect(() => {
     if (initialLineNumber && contentRef.current && !shouldVirtualize) {
@@ -216,12 +198,9 @@ export const FilePreview = memo(function FilePreview({
     window.dispatchEvent(event);
   };
 
-  const handleVirtualizedSaveStateChange = useCallback(
-    (hasChanges: boolean) => {
-      setHasVirtualizedChanges(hasChanges);
-    },
-    [],
-  );
+  const handleVirtualizedSaveStateChange = useCallback((hasChanges: boolean) => {
+    setHasVirtualizedChanges(hasChanges);
+  }, []);
 
   const handleVirtualizedSave = useCallback(() => {
     setViewMode("preview");
@@ -236,12 +215,9 @@ export const FilePreview = memo(function FilePreview({
 
   const isTextFile =
     file.mimeType?.startsWith("text/") ||
-    [
-      "application/json",
-      "application/xml",
-      "text/javascript",
-      "text/typescript",
-    ].includes(file.mimeType || "");
+    ["application/json", "application/xml", "text/javascript", "text/typescript"].includes(
+      file.mimeType || "",
+    );
 
   const renderContent = () => {
     if (file.mimeType?.startsWith("image/")) {
@@ -257,16 +233,11 @@ export const FilePreview = memo(function FilePreview({
     }
 
     if (shouldVirtualize && isTextFile) {
-      const showMarkdownPreview =
-        isMarkdownFile && markdownPreview && viewMode !== "edit";
+      const showMarkdownPreview = isMarkdownFile && markdownPreview && viewMode !== "edit";
 
       return (
         <>
-          <div
-            className={
-              showMarkdownPreview && fullContentLoaded ? "hidden" : "h-full"
-            }
-          >
+          <div className={showMarkdownPreview && fullContentLoaded ? "hidden" : "h-full"}>
             <VirtualizedTextView
               ref={virtualizedRef}
               filePath={file.path}
@@ -284,11 +255,7 @@ export const FilePreview = memo(function FilePreview({
             (isMarkdownTooLarge ? (
               <div className="flex flex-col items-center justify-center h-32 gap-2 text-muted-foreground">
                 <span>File too large for markdown preview (max 1MB)</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setMarkdownPreview(false)}
-                >
+                <Button variant="outline" size="sm" onClick={() => setMarkdownPreview(false)}>
                   View raw
                 </Button>
               </div>
@@ -312,9 +279,7 @@ export const FilePreview = memo(function FilePreview({
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
             className={`text-[16px] bg-muted text-foreground p-2 rounded font-mono w-full resize-none focus:outline-none focus:ring-0 border-none block ${
-              lineWrap
-                ? "whitespace-pre-wrap break-all"
-                : "whitespace-pre overflow-x-auto"
+              lineWrap ? "whitespace-pre-wrap break-all" : "whitespace-pre overflow-x-auto"
             }`}
             style={{ minHeight: "95vh" }}
             placeholder="Edit file content..."
@@ -358,9 +323,7 @@ export const FilePreview = memo(function FilePreview({
                   </span>
                   <pre
                     className={`flex-1 pl-3 ${
-                      lineWrap
-                        ? "whitespace-pre-wrap break-words"
-                        : "whitespace-pre"
+                      lineWrap ? "whitespace-pre-wrap break-words" : "whitespace-pre"
                     }`}
                   >
                     {line || " "}
@@ -414,21 +377,15 @@ export const FilePreview = memo(function FilePreview({
               <span className="bg-muted px-1.5 py-0.5 rounded text-xs truncate max-w-[80px] flex-shrink-0">
                 {file.mimeType || "Unknown"}
               </span>
-              <span className="truncate flex-shrink-0">
-                {formatFileSize(file.size)}
-              </span>
+              <span className="truncate flex-shrink-0">{formatFileSize(file.size)}</span>
               <span className="hidden sm:inline truncate flex-shrink-0">
                 {formatDate(file.lastModified)}
               </span>
               {shouldVirtualize && (
-                <span className="text-xs text-blue-500 flex-shrink-0">
-                  Virtualized
-                </span>
+                <span className="text-xs text-blue-500 flex-shrink-0">Virtualized</span>
               )}
               {hasVirtualizedChanges && (
-                <span className="text-xs text-yellow-500 flex-shrink-0">
-                  Unsaved changes
-                </span>
+                <span className="text-xs text-yellow-500 flex-shrink-0">Unsaved changes</span>
               )}
             </div>
           </div>
@@ -444,17 +401,9 @@ export const FilePreview = memo(function FilePreview({
                   setMarkdownPreview(!markdownPreview);
                 }}
                 className={`h-7 w-7 p-0 ${markdownPreview ? "bg-primary text-primary-foreground" : ""}`}
-                title={
-                  markdownPreview
-                    ? "Show raw markdown"
-                    : "Preview rendered markdown"
-                }
+                title={markdownPreview ? "Show raw markdown" : "Preview rendered markdown"}
               >
-                {markdownPreview ? (
-                  <Code className="w-3 h-3" />
-                ) : (
-                  <Eye className="w-3 h-3" />
-                )}
+                {markdownPreview ? <Code className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
               </Button>
             )}
 
@@ -502,9 +451,7 @@ export const FilePreview = memo(function FilePreview({
                     handleSave();
                   }
                 }}
-                disabled={
-                  isSaving || (shouldVirtualize && !hasVirtualizedChanges)
-                }
+                disabled={isSaving || (shouldVirtualize && !hasVirtualizedChanges)}
                 className="border-green-600 bg-green-600/10 text-green-600 hover:bg-green-600/20 h-7 w-7 p-0"
               >
                 <Save className="w-3 h-3" />
@@ -563,9 +510,7 @@ export const FilePreview = memo(function FilePreview({
         ref={contentRef}
         className={`flex-1 ${viewMode === "edit" && !shouldVirtualize ? "overflow-hidden" : shouldVirtualize ? "" : "overflow-y-auto overscroll-contain"} min-h-0 overflow-x-hidden`}
       >
-        <div className={`${shouldVirtualize ? "h-full" : "p-2"} min-w-0`}>
-          {renderContent()}
-        </div>
+        <div className={`${shouldVirtualize ? "h-full" : "p-2"} min-w-0`}>{renderContent()}</div>
       </div>
     </div>
   );

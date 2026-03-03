@@ -66,11 +66,7 @@ function writeString(view: DataView, offset: number, string: string): void {
   }
 }
 
-function floatTo16BitPCM(
-  view: DataView,
-  offset: number,
-  input: Float32Array,
-): void {
+function floatTo16BitPCM(view: DataView, offset: number, input: Float32Array): void {
   for (let i = 0; i < input.length; i++, offset += 2) {
     const s = Math.max(-1, Math.min(1, input[i]));
     view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
@@ -173,11 +169,7 @@ export class AudioRecorder {
       this.source = this.audioContext.createMediaStreamSource(this.mediaStream);
 
       const bufferSize = 4096;
-      this.processor = this.audioContext.createScriptProcessor(
-        bufferSize,
-        1,
-        1,
-      );
+      this.processor = this.audioContext.createScriptProcessor(bufferSize, 1, 1);
 
       this.audioBuffer = new Float32Array(0);
 

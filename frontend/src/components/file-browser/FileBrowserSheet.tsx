@@ -59,21 +59,14 @@ export const FileBrowserSheet = memo(function FileBrowserSheet({
     if (isOpen) {
       setShouldRender(true);
     } else {
-      const timer = setTimeout(
-        () => setShouldRender(false),
-        MODAL_TRANSITION_MS,
-      );
+      const timer = setTimeout(() => setShouldRender(false), MODAL_TRANSITION_MS);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
   const handleDirectoryLoad = useCallback(
     (info: { workspaceRoot?: string; currentPath: string }) => {
-      if (
-        !info.currentPath ||
-        info.currentPath === "." ||
-        info.currentPath === ""
-      ) {
+      if (!info.currentPath || info.currentPath === "." || info.currentPath === "") {
         setDisplayPath("/");
         setCurrentPath(basePath || ".");
         return;
@@ -127,27 +120,19 @@ export const FileBrowserSheet = memo(function FileBrowserSheet({
       }
     };
 
-    const handleEditModeChange = (
-      event: CustomEvent<{ isEditing: boolean }>,
-    ) => {
+    const handleEditModeChange = (event: CustomEvent<{ isEditing: boolean }>) => {
       setIsEditing(event.detail.isEditing);
     };
 
     if (isOpen) {
       document.addEventListener("keydown", handleEscape);
-      document.addEventListener(
-        "editModeChange",
-        handleEditModeChange as EventListener,
-      );
+      document.addEventListener("editModeChange", handleEditModeChange as EventListener);
       document.body.style.overflow = "hidden";
     }
 
     return () => {
       document.removeEventListener("keydown", handleEscape);
-      document.removeEventListener(
-        "editModeChange",
-        handleEditModeChange as EventListener,
-      );
+      document.removeEventListener("editModeChange", handleEditModeChange as EventListener);
       document.body.style.overflow = "unset";
     };
   }, [isOpen, onClose]);
@@ -173,11 +158,7 @@ export const FileBrowserSheet = memo(function FileBrowserSheet({
                   {repoName}
                 </h1>
               )}
-              <PathDisplay
-                path={displayPath}
-                maxSegments={2}
-                className="truncate"
-              />
+              <PathDisplay path={displayPath} maxSegments={2} className="truncate" />
             </div>
             <div className="flex items-center gap-2">
               {repoId && !isEditing && (
@@ -192,15 +173,11 @@ export const FileBrowserSheet = memo(function FileBrowserSheet({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => handleOpenDownloadDialog("directory")}
-                    >
+                    <DropdownMenuItem onClick={() => handleOpenDownloadDialog("directory")}>
                       <Download className="w-4 h-4 mr-2" />
                       Current Directory
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => handleOpenDownloadDialog("repository")}
-                    >
+                    <DropdownMenuItem onClick={() => handleOpenDownloadDialog("repository")}>
                       <Download className="w-4 h-4 mr-2" />
                       Entire Repository
                     </DropdownMenuItem>
@@ -235,9 +212,7 @@ export const FileBrowserSheet = memo(function FileBrowserSheet({
         open={downloadDialog !== null}
         onOpenChange={(open) => !open && setDownloadDialog(null)}
         onDownload={
-          downloadDialog?.type === "directory"
-            ? handleDownloadDirectory
-            : handleDownloadRepo
+          downloadDialog?.type === "directory" ? handleDownloadDirectory : handleDownloadRepo
         }
         title={
           downloadDialog?.type === "directory"
@@ -254,9 +229,7 @@ export const FileBrowserSheet = memo(function FileBrowserSheet({
             ? currentPath.split("/").pop() || "Directory"
             : repoName || "Repository"
         }
-        targetPath={
-          downloadDialog?.type === "directory" ? currentPath : basePath
-        }
+        targetPath={downloadDialog?.type === "directory" ? currentPath : basePath}
       />
     </div>
   );

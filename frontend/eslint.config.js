@@ -6,7 +6,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default defineConfig([
-  globalIgnores(['dist', 'src/sw.ts']),
+  globalIgnores(["dist", "src/sw.ts"]),
   {
     files: ["**/*.{ts,tsx}"],
     extends: [
@@ -30,10 +30,7 @@ export default defineConfig([
     },
   },
   {
-    files: [
-      "src/components/ui/**/*.{ts,tsx}",
-      "src/components/message/FileToolRender.tsx",
-    ],
+    files: ["src/components/ui/**/*.{ts,tsx}", "src/components/message/FileToolRender.tsx"],
     rules: {
       "react-refresh/only-export-components": "off",
     },
@@ -47,13 +44,7 @@ export default defineConfig([
   },
   // Special rules for test files
   {
-    files: [
-      "**/*.test.ts",
-      "**/*.test.tsx",
-      "**/*.spec.ts",
-      "**/*.spec.tsx",
-      "vitest.config.ts",
-    ],
+    files: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "vitest.config.ts"],
     languageOptions: {
       parserOptions: {
         tsconfigRootDir: import.meta.dirname,

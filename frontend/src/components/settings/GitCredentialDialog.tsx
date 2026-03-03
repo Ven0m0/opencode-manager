@@ -31,18 +31,18 @@ export function GitCredentialDialog({
   isSaving,
 }: GitCredentialDialogProps) {
   const [formData, setFormData] = useState<GitCredential>({
-    name: '',
-    host: '',
-    type: 'pat',
-    token: '',
-    username: '',
-    sshPrivateKey: '',
-    passphrase: ''
-  })
-  const [tokenEdited, setTokenEdited] = useState(false)
-  const [isTesting, setIsTesting] = useState(false)
-  const [showPassphraseInput, setShowPassphraseInput] = useState(false)
-  const [testPassphrase, setTestPassphrase] = useState('')
+    name: "",
+    host: "",
+    type: "pat",
+    token: "",
+    username: "",
+    sshPrivateKey: "",
+    passphrase: "",
+  });
+  const [tokenEdited, setTokenEdited] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [showPassphraseInput, setShowPassphraseInput] = useState(false);
+  const [testPassphrase, setTestPassphrase] = useState("");
 
   const maskToken = (token: string) => {
     if (!token) return "";
@@ -99,10 +99,7 @@ export function GitCredentialDialog({
     try {
       const dataToSave: GitCredential = {
         ...formData,
-        hasPassphrase:
-          formData.type === "ssh"
-            ? Boolean(formData.passphrase?.trim())
-            : false,
+        hasPassphrase: formData.type === "ssh" ? Boolean(formData.passphrase?.trim()) : false,
       };
       if (formData.type === "pat" && credential?.token && !tokenEdited) {
         dataToSave.token = credential.token;
@@ -146,10 +143,7 @@ export function GitCredentialDialog({
         showToast.error(result.message);
       }
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to test SSH connection";
+      const message = error instanceof Error ? error.message : "Failed to test SSH connection";
       showToast.error(message);
     } finally {
       setIsTesting(false);
@@ -158,11 +152,12 @@ export function GitCredentialDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent mobileFullscreen className="max-w-lg h-[90vh] sm:h-auto sm:max-h-[85vh] flex flex-col">
+      <DialogContent
+        mobileFullscreen
+        className="max-w-lg h-[90vh] sm:h-auto sm:max-h-[85vh] flex flex-col"
+      >
         <DialogHeader className="flex-shrink-0 px-4 sm:px-6 pt-4 sm:pt-6 pb-2 sm:pb-3">
-          <DialogTitle>
-            {credential ? "Edit Git Credential" : "Add Git Credential"}
-          </DialogTitle>
+          <DialogTitle>{credential ? "Edit Git Credential" : "Add Git Credential"}</DialogTitle>
         </DialogHeader>
 
         <form
@@ -179,9 +174,7 @@ export function GitCredentialDialog({
                 id="cred-name"
                 placeholder="GitHub Personal, Work GitLab"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 disabled={isSaving}
                 autoComplete="off"
               />
@@ -197,8 +190,7 @@ export function GitCredentialDialog({
                     setFormData({
                       ...formData,
                       type: "pat",
-                      host:
-                        formData.type === "pat" ? formData.host : "github.com",
+                      host: formData.type === "pat" ? formData.host : "github.com",
                       sshPrivateKey: "",
                       passphrase: "",
                     })
@@ -216,10 +208,7 @@ export function GitCredentialDialog({
                     setFormData({
                       ...formData,
                       type: "ssh",
-                      host:
-                        formData.type === "ssh"
-                          ? formData.host
-                          : "git@github.com",
+                      host: formData.type === "ssh" ? formData.host : "git@github.com",
                       token: "",
                     })
                   }
@@ -238,9 +227,7 @@ export function GitCredentialDialog({
                 id="cred-host"
                 placeholder="github.com or git@github.com"
                 value={formData.host}
-                onChange={(e) =>
-                  setFormData({ ...formData, host: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, host: e.target.value })}
                 disabled={isSaving}
                 autoComplete="off"
               />
@@ -250,16 +237,13 @@ export function GitCredentialDialog({
               <>
                 <div className="space-y-2">
                   <Label htmlFor="cred-token">
-                    Access Token{" "}
-                    {credential?.token && !tokenEdited ? "(unchanged)" : "*"}
+                    Access Token {credential?.token && !tokenEdited ? "(unchanged)" : "*"}
                   </Label>
                   <Input
                     id="cred-token"
                     type="password"
                     placeholder={
-                      credential?.token
-                        ? maskToken(credential.token)
-                        : "Personal access token"
+                      credential?.token ? maskToken(credential.token) : "Personal access token"
                     }
                     value={formData.token || ""}
                     onChange={(e) => {
@@ -282,9 +266,7 @@ export function GitCredentialDialog({
                     id="cred-pat-username"
                     placeholder="Auto-detected if empty"
                     value={formData.username || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, username: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     disabled={isSaving}
                     autoComplete="off"
                   />
@@ -333,9 +315,7 @@ export function GitCredentialDialog({
                       type="password"
                       placeholder="Enter passphrase for SSH key"
                       value={formData.passphrase || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, passphrase: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, passphrase: e.target.value })}
                       disabled={isSaving}
                       autoComplete="new-password"
                     />
@@ -346,9 +326,7 @@ export function GitCredentialDialog({
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="test-passphrase">
-                    Passphrase for Test (if protected)
-                  </Label>
+                  <Label htmlFor="test-passphrase">Passphrase for Test (if protected)</Label>
                   <Input
                     id="test-passphrase"
                     type="password"
@@ -364,14 +342,10 @@ export function GitCredentialDialog({
                   type="button"
                   variant="outline"
                   onClick={handleTestConnection}
-                  disabled={
-                    isTesting || isSaving || !formData.sshPrivateKey?.trim()
-                  }
+                  disabled={isTesting || isSaving || !formData.sshPrivateKey?.trim()}
                   className="w-full"
                 >
-                  {isTesting && (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  )}
+                  {isTesting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Test Connection
                 </Button>
 
@@ -379,8 +353,7 @@ export function GitCredentialDialog({
                   <AlertTriangle className="h-4 w-4" />
                   <p className="text-sm font-medium">Security Notice</p>
                   <p className="text-xs mt-1">
-                    Your private key will be encrypted at rest. Never share it
-                    with anyone.
+                    Your private key will be encrypted at rest. Never share it with anyone.
                   </p>
                 </Alert>
               </>

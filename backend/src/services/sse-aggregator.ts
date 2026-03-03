@@ -7,11 +7,11 @@ type SSEClientCallback = (event: string, data: string) => void;
 type SSEEventListener = (directory: string, event: SSEEvent) => void;
 
 interface SSEClient {
-  id: string
-  callback: SSEClientCallback
-  directories: Set<string>
-  visible: boolean
-  activeSessionId: string | null
+  id: string;
+  callback: SSEClientCallback;
+  directories: Set<string>;
+  visible: boolean;
+  activeSessionId: string | null;
 }
 
 interface DirectoryConnection {
@@ -27,8 +27,7 @@ export interface SSEEvent {
 }
 
 const OPENCODE_PORT = ENV.OPENCODE.PORT;
-const { RECONNECT_DELAY_MS, MAX_RECONNECT_DELAY_MS, IDLE_GRACE_PERIOD_MS } =
-  DEFAULTS.SSE;
+const { RECONNECT_DELAY_MS, MAX_RECONNECT_DELAY_MS, IDLE_GRACE_PERIOD_MS } = DEFAULTS.SSE;
 
 class SSEAggregator {
   private static instance: SSEAggregator;
@@ -48,22 +47,20 @@ class SSEAggregator {
     return SSEAggregator.instance;
   }
 
-  addClient(
-    id: string,
-    callback: SSEClientCallback,
-    directories: string[],
-  ): () => void {
+  addClient(id: string, callback: SSEClientCallback, directories: string[]): () => void {
     const client: SSEClient = {
       id,
       callback,
       directories: new Set(directories),
       visible: false,
-      activeSessionId: null
-    }
-    this.clients.set(id, client)
-    
-    logger.info(`Client ${id} connected with directories: ${directories.length > 0 ? directories.join(', ') : '(none)'}`)
-    this.syncConnections()
+      activeSessionId: null,
+    };
+    this.clients.set(id, client);
+
+    logger.info(
+      `Client ${id} connected with directories: ${directories.length > 0 ? directories.join(", ") : "(none)"}`,
+    );
+    this.syncConnections();
 
     logger.info(
       `Client ${id} connected with directories: ${directories.length > 0 ? directories.join(", ") : "(none)"}`,
@@ -84,7 +81,7 @@ class SSEAggregator {
       logger.warn(`addDirectories: client ${clientId} not found`);
       return false;
     }
-    directories.forEach((dir) => client.directories.add(dir));
+    for (const dir of directories) client.directories.add(dir);
     logger.info(`Client ${clientId} subscribed to: ${directories.join(", ")}`);
     this.syncConnections();
     return true;
@@ -96,19 +93,17 @@ class SSEAggregator {
       logger.warn(`removeDirectories: client ${clientId} not found`);
       return false;
     }
-    directories.forEach((dir) => client.directories.delete(dir));
-    logger.info(
-      `Client ${clientId} unsubscribed from: ${directories.join(", ")}`,
-    );
+    for (const dir of directories) client.directories.delete(dir);
+    logger.info(`Client ${clientId} unsubscribed from: ${directories.join(", ")}`);
     this.syncConnections();
     return true;
   }
 
   private getRequiredDirectories(): Set<string> {
     const dirs = new Set<string>();
-    this.clients.forEach((client) => {
-      client.directories.forEach((dir) => dirs.add(dir));
-    });
+    for (const client of this.clients.values()) {
+      for (const dir of client.directories) dirs.add(dir);
+    }
     return dirs;
   }
 
@@ -205,10 +200,7 @@ class SSEAggregator {
 
     conn.reconnectTimeout = setTimeout(() => {
       conn.reconnectTimeout = null;
-      conn.reconnectDelay = Math.min(
-        conn.reconnectDelay * 2,
-        MAX_RECONNECT_DELAY_MS,
-      );
+      conn.reconnectDelay = Math.min(conn.reconnectDelay * 2, MAX_RECONNECT_DELAY_MS);
       this.establishConnection(directory);
     }, conn.reconnectDelay);
   }
@@ -220,11 +212,7 @@ class SSEAggregator {
     };
   }
 
-  private broadcastToDirectory(
-    directory: string,
-    event: string,
-    data: string,
-  ): void {
+  private broadcastToDirectory(directory: string, event: string, data: string): void {
     try {
       const parsed = JSON.parse(data) as SSEEvent;
       this.handleEvent(directory, parsed);
@@ -260,9 +248,7 @@ class SSEAggregator {
       if (!sessionID || !status) return;
 
       const isActive =
-        status.type === "busy" ||
-        status.type === "retry" ||
-        status.type === "compact";
+        status.type === "busy" || status.type === "retry" || status.type === "compact";
 
       if (isActive) {
         this.markSessionActive(directory, sessionID);
@@ -303,9 +289,7 @@ class SSEAggregator {
     }
     sessions.add(sessionID);
 
-    logger.info(
-      `Session active: ${sessionID} in ${directory} (${sessions.size} active)`,
-    );
+    logger.info(`Session active: ${sessionID} in ${directory} (${sessions.size} active)`);
   }
 
   private markSessionIdle(directory: string, sessionID: string): void {
@@ -318,9 +302,7 @@ class SSEAggregator {
     const sessions = this.activeSessions.get(directory);
     if (sessions) {
       sessions.delete(sessionID);
-      logger.info(
-        `Session idle: ${sessionID} in ${directory} (${sessions.size} active)`,
-      );
+      logger.info(`Session idle: ${sessionID} in ${directory} (${sessions.size} active)`);
 
       if (sessions.size === 0) {
         this.activeSessions.delete(directory);
@@ -340,9 +322,7 @@ class SSEAggregator {
 
   private scheduleIdleDisconnect(directory: string): void {
     if (this.hasActiveViewers(directory)) {
-      logger.info(
-        `Skipping idle disconnect for ${directory} - has active viewers`,
-      );
+      logger.info(`Skipping idle disconnect for ${directory} - has active viewers`);
       return;
     }
 
@@ -374,9 +354,7 @@ class SSEAggregator {
         logger.info(`Idle disconnect: ${directory}`);
         this.disconnectDirectory(directory);
       } else if (hasViewers) {
-        logger.info(
-          `Cancelled idle disconnect for ${directory} - has active viewers`,
-        );
+        logger.info(`Cancelled idle disconnect for ${directory} - has active viewers`);
       }
     }, IDLE_GRACE_PERIOD_MS);
 
@@ -395,21 +373,25 @@ class SSEAggregator {
     return this.clients.size;
   }
 
-  setClientVisibility(id: string, visible: boolean, activeSessionId: string | null = null): boolean {
-    const client = this.clients.get(id)
+  setClientVisibility(
+    id: string,
+    visible: boolean,
+    activeSessionId: string | null = null,
+  ): boolean {
+    const client = this.clients.get(id);
     if (!client) {
       logger.warn(`setClientVisibility: client ${id} not found`);
       return false;
     }
-    client.visible = visible
-    client.activeSessionId = visible ? activeSessionId : null
-    return true
+    client.visible = visible;
+    client.activeSessionId = visible ? activeSessionId : null;
+    return true;
   }
 
   isSessionBeingViewed(sessionId: string): boolean {
     for (const client of this.clients.values()) {
       if (client.visible && client.activeSessionId === sessionId) {
-        return true
+        return true;
       }
     }
     return false;
@@ -462,9 +444,7 @@ class SSEAggregator {
 
 export const sseAggregator = SSEAggregator.getInstance();
 
-export function broadcastSSHHostKeyRequest(
-  data: Record<string, unknown>,
-): void {
+export function broadcastSSHHostKeyRequest(data: Record<string, unknown>): void {
   const event = JSON.stringify({
     type: "ssh.host-key-request",
     properties: data,

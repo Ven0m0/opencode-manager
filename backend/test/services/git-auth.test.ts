@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import type { GitCredential } from '@opencode-manager/shared'
-import type { IPCServer } from '../../src/ipc/ipcServer'
-import type { Database } from 'bun:sqlite'
+import type { Database } from "bun:sqlite";
+import type { GitCredential } from "@opencode-manager/shared";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { IPCServer } from "../../src/ipc/ipcServer";
 
 vi.mock("bun:sqlite", () => ({
   Database: vi.fn(),
@@ -38,25 +38,21 @@ vi.mock("eventsource", () => ({
 }));
 
 vi.mock("../../src/utils/ssh-key-manager", () => ({
-  writeTemporarySSHKey: vi
-    .fn()
-    .mockResolvedValue("/tmp/test-workspace/.ssh-keys/test-key"),
+  writeTemporarySSHKey: vi.fn().mockResolvedValue("/tmp/test-workspace/.ssh-keys/test-key"),
   cleanupSSHKey: vi.fn().mockResolvedValue(undefined),
-  buildSSHCommand: vi.fn(
-    (keyPath: string, passphrase?: string, knownHostsPath?: string) => {
-      const knownHostsOption = knownHostsPath
-        ? `-o UserKnownHostsFile="${knownHostsPath}" -o StrictHostKeyChecking=accept-new`
-        : "-o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=/dev/null";
-      const baseCommand = `ssh -i ${keyPath} -o IdentitiesOnly=yes -o PasswordAuthentication=no ${knownHostsOption}`;
-      if (passphrase) {
-        return {
-          command: `sshpass -e ${baseCommand}`,
-          env: { SSHPASS: passphrase },
-        };
-      }
-      return { command: baseCommand };
-    },
-  ),
+  buildSSHCommand: vi.fn((keyPath: string, passphrase?: string, knownHostsPath?: string) => {
+    const knownHostsOption = knownHostsPath
+      ? `-o UserKnownHostsFile="${knownHostsPath}" -o StrictHostKeyChecking=accept-new`
+      : "-o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=/dev/null";
+    const baseCommand = `ssh -i ${keyPath} -o IdentitiesOnly=yes -o PasswordAuthentication=no ${knownHostsOption}`;
+    if (passphrase) {
+      return {
+        command: `sshpass -e ${baseCommand}`,
+        env: { SSHPASS: passphrase },
+      };
+    }
+    return { command: baseCommand };
+  }),
   buildSSHCommandWithKnownHosts: vi.fn(
     (knownHostsPath: string) =>
       `ssh -o UserKnownHostsFile="${knownHostsPath}" -o StrictHostKeyChecking=accept-new -o PasswordAuthentication=no`,

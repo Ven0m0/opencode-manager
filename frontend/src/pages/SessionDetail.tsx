@@ -1,46 +1,61 @@
-import { useState } from "react";
-import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import {
+  Brain,
+  CornerUpLeft,
+  FolderOpen,
+  GitCommitHorizontal,
+  Plug,
+  Settings,
+  ShieldOff,
+  VolumeX,
+  X,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { createOpenCodeClient } from "@/api/opencode";
 import { getRepo } from "@/api/repos";
+import type { MessageWithParts } from "@/api/types";
+import { FileBrowserSheet } from "@/components/file-browser/FileBrowserSheet";
+import { MessageSkeleton } from "@/components/message/MessageSkeleton";
 import { MessageThread } from "@/components/message/MessageThread";
 import { PromptInput, type PromptInputHandle } from "@/components/message/PromptInput";
-import { X, VolumeX, FolderOpen, Plug, Settings, CornerUpLeft, GitCommitHorizontal, Brain, ShieldOff } from "lucide-react";
+import { SessionTodoDisplay } from "@/components/message/SessionTodoDisplay";
 import { ModelSelectDialog } from "@/components/model/ModelSelectDialog";
-import { Header } from "@/components/ui/header";
-import { SessionList } from "@/components/session/SessionList";
-
-import { FileBrowserSheet } from "@/components/file-browser/FileBrowserSheet";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { ContextUsageIndicator } from "@/components/session/ContextUsageIndicator";
-import { useSession, useAbortSession, useUpdateSession, useMessages, useTitleGenerating, useCreateSession } from "@/hooks/useOpenCode";
-import { OPENCODE_API_ENDPOINT } from "@/config";
-import { useSSE } from "@/hooks/useSSE";
-import { useUIState } from "@/stores/uiStateStore";
-import { useSettings } from "@/hooks/useSettings";
-import { useModelSelection } from "@/hooks/useModelSelection";
-import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { useSettingsDialog } from "@/hooks/useSettingsDialog";
-import { useAutoScroll } from "@/hooks/useAutoScroll";
-import { useSwipeBack, useMobile } from "@/hooks/useMobile";
-import { useVisualViewport } from "@/hooks/useVisualViewport";
-import { useTTS } from "@/hooks/useTTS";
-import { useEffect, useRef, useCallback, useMemo } from "react";
-import { MessageSkeleton } from "@/components/message/MessageSkeleton";
-import { exportSession, downloadMarkdown } from "@/lib/exportSession";
-import type { MessageWithParts } from "@/api/types";
-import { showToast } from "@/lib/toast";
-import { getRepoDisplayName } from "@/lib/utils";
+import { PendingActionsGroup } from "@/components/notifications/PendingActionsGroup";
 import { RepoMcpDialog } from "@/components/repo/RepoMcpDialog";
 import { ResetPermissionsDialog } from "@/components/repo/ResetPermissionsDialog";
-import { createOpenCodeClient } from "@/api/opencode";
-import { useSessionStatus, useSessionStatusForSession } from "@/stores/sessionStatusStore";
-import { useQuestions } from "@/contexts/EventContext";
+import { ContextUsageIndicator } from "@/components/session/ContextUsageIndicator";
 import { QuestionPrompt } from "@/components/session/QuestionPrompt";
-import { PendingActionsGroup } from "@/components/notifications/PendingActionsGroup";
+import { SessionList } from "@/components/session/SessionList";
 import { SourceControlPanel } from "@/components/source-control";
-import { SessionTodoDisplay } from "@/components/message/SessionTodoDisplay";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Header } from "@/components/ui/header";
+import { OPENCODE_API_ENDPOINT } from "@/config";
+import { useQuestions } from "@/contexts/EventContext";
+import { useAutoScroll } from "@/hooks/useAutoScroll";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useMobile, useSwipeBack } from "@/hooks/useMobile";
+import { useModelSelection } from "@/hooks/useModelSelection";
+import {
+  useAbortSession,
+  useCreateSession,
+  useMessages,
+  useSession,
+  useTitleGenerating,
+  useUpdateSession,
+} from "@/hooks/useOpenCode";
+import { useSettings } from "@/hooks/useSettings";
+import { useSettingsDialog } from "@/hooks/useSettingsDialog";
+import { useSSE } from "@/hooks/useSSE";
+import { useTTS } from "@/hooks/useTTS";
+import { useVisualViewport } from "@/hooks/useVisualViewport";
+import { downloadMarkdown, exportSession } from "@/lib/exportSession";
+import { showToast } from "@/lib/toast";
+import { getRepoDisplayName } from "@/lib/utils";
+import { useSessionStatus, useSessionStatusForSession } from "@/stores/sessionStatusStore";
+import { useUIState } from "@/stores/uiStateStore";
 
 const compareMessageIds = (id1: string, id2: string): number => {
   const num1 = parseInt(id1, 10);
@@ -105,29 +120,27 @@ export function SessionDetail() {
   );
 
   const messages = useMemo(() => {
-    if (!rawMessages) return undefined
-    const revertMessageID = session?.revert?.messageID
-    if (!revertMessageID) return rawMessages
-    return rawMessages.filter(msgWithParts => compareMessageIds(msgWithParts.info.id, revertMessageID) < 0)
+    if (!rawMessages) return undefined;
+    const revertMessageID = session?.revert?.messageID;
+    if (!revertMessageID) return rawMessages;
+    return rawMessages.filter(
+      (msgWithParts) => compareMessageIds(msgWithParts.info.id, revertMessageID) < 0,
+    );
   }, [rawMessages, session?.revert?.messageID]);
 
   const getMessagesWithParts = useCallback((): MessageWithParts[] | undefined => {
-    return messages
-  }, [messages])
+    return messages;
+  }, [messages]);
 
   const { scrollToBottom } = useAutoScroll({
     containerRef: messageContainerRef,
-    messages: messages?.map(m => m.info),
+    messages: messages?.map((m) => m.info),
     sessionId,
     contentVersion: messages?.reduce((sum, m) => sum + m.parts.length, 0) ?? 0,
-    onScrollStateChange: setShowScrollButton
+    onScrollStateChange: setShowScrollButton,
   });
 
-  const { isConnected, isReconnecting } = useSSE(
-    opcodeUrl,
-    repoDirectory,
-    sessionId,
-  );
+  const { isConnected, isReconnecting } = useSSE(opcodeUrl, repoDirectory, sessionId);
   const abortSession = useAbortSession(opcodeUrl, repoDirectory, sessionId);
   const updateSession = useUpdateSession(opcodeUrl, repoDirectory);
   const createSession = useCreateSession(opcodeUrl, repoDirectory);
@@ -144,9 +157,11 @@ export function SessionDetail() {
   } = useQuestions();
 
   const sessionStatus = useSessionStatusForSession(sessionId);
-  const isSessionActive = sessionStatus.type === 'busy' || sessionStatus.type === 'retry';
-  const lastAssistantMessage = messages?.filter(m => m.info.role === 'assistant').at(-1);
-  const hasIncompleteMessages = lastAssistantMessage ? !('completed' in lastAssistantMessage.info.time && lastAssistantMessage.info.time.completed) : false;
+  const isSessionActive = sessionStatus.type === "busy" || sessionStatus.type === "retry";
+  const lastAssistantMessage = messages?.filter((m) => m.info.role === "assistant").at(-1);
+  const hasIncompleteMessages = lastAssistantMessage
+    ? !("completed" in lastAssistantMessage.info.time && lastAssistantMessage.info.time.completed)
+    : false;
   const hasActiveStream = hasIncompleteMessages && isSessionActive;
 
   const handleShowModelsDialog = useCallback(() => setModelDialogOpen(true), []);
@@ -167,9 +182,7 @@ export function SessionDetail() {
   const handleCompact = useCallback(async () => {
     if (!opcodeUrl || !sessionId) return;
     if (!model?.providerID || !model?.modelID) {
-      showToast.error(
-        "No model selected. Please select a provider and model first.",
-      );
+      showToast.error("No model selected. Please select a provider and model first.");
       return;
     }
 
@@ -193,9 +206,7 @@ export function SessionDetail() {
       const client = createOpenCodeClient(opcodeUrl, repoDirectory);
       await client.sendCommand(sessionId, { command: "undo", arguments: "" });
     } catch (error) {
-      showToast.error(
-        `Undo failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
+      showToast.error(`Undo failed: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   }, [sessionId, repoDirectory]);
 
@@ -205,9 +216,7 @@ export function SessionDetail() {
       const client = createOpenCodeClient(opcodeUrl, repoDirectory);
       await client.sendCommand(sessionId, { command: "redo", arguments: "" });
     } catch (error) {
-      showToast.error(
-        `Redo failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
+      showToast.error(`Redo failed: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   }, [sessionId, repoDirectory]);
 
@@ -221,9 +230,7 @@ export function SessionDetail() {
         showToast.success("Session forked");
       }
     } catch (error) {
-      showToast.error(
-        `Fork failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
+      showToast.error(`Fork failed: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   }, [sessionId, repoDirectory, navigate, repoId]);
 
@@ -243,15 +250,11 @@ export function SessionDetail() {
     fork: handleFork,
     toggleSidebar: () => setFileBrowserOpen((prev) => !prev),
     toggleMode: () => {
-      const modeButton = document.querySelector(
-        "[data-toggle-mode]",
-      ) as HTMLButtonElement;
+      const modeButton = document.querySelector("[data-toggle-mode]") as HTMLButtonElement;
       modeButton?.click();
     },
     submitPrompt: () => {
-      const submitButton = document.querySelector(
-        "[data-submit-prompt]",
-      ) as HTMLButtonElement;
+      const submitButton = document.querySelector("[data-submit-prompt]") as HTMLButtonElement;
       submitButton?.click();
     },
     abortSession: () => {
@@ -266,10 +269,7 @@ export function SessionDetail() {
       let pathToOpen = filePath;
 
       if (filePath.startsWith("/") && repo?.fullPath) {
-        const workspaceReposPath = repo.fullPath.substring(
-          0,
-          repo.fullPath.lastIndexOf("/"),
-        );
+        const workspaceReposPath = repo.fullPath.substring(0, repo.fullPath.lastIndexOf("/"));
 
         if (filePath.startsWith(`${workspaceReposPath}/`)) {
           pathToOpen = filePath.substring(workspaceReposPath.length + 1);
@@ -316,15 +316,15 @@ export function SessionDetail() {
   }, [preferences?.expandToolCalls, updateSettings]);
 
   const handleExportSession = useCallback(() => {
-    const data = getMessagesWithParts()
+    const data = getMessagesWithParts();
     if (!data || !session) {
-      showToast.error('No session data to export')
-      return
+      showToast.error("No session data to export");
+      return;
     }
-    
-    const { filename, content } = exportSession(data, session)
-    downloadMarkdown(content, filename)
-    showToast.success(`Exported to ${filename}`)
+
+    const { filename, content } = exportSession(data, session);
+    downloadMarkdown(content, filename);
+    showToast.success(`Exported to ${filename}`);
   }, [getMessagesWithParts, session]);
 
   const handleUndoMessage = useCallback((restoredPrompt: string) => {
@@ -371,22 +371,20 @@ export function SessionDetail() {
                 <span className="hidden sm:inline text-xs">Parent</span>
               </Button>
               <div className="hidden sm:block">
-                <Header.BackButton
-                  to={`/repos/${repoId}`}
-                  className="text-xs sm:text-sm"
-                />
+                <Header.BackButton to={`/repos/${repoId}`} className="text-xs sm:text-sm" />
               </div>
             </>
           ) : (
-            <Header.BackButton
-              to={`/repos/${repoId}`}
-              className="text-xs sm:text-sm"
-            />
+            <Header.BackButton to={`/repos/${repoId}`} className="text-xs sm:text-sm" />
           )}
           <Header.EditableTitle
             value={session?.title || "Untitled Session"}
             onChange={handleSessionTitleUpdate}
-            subtitle={<span className="text-orange-600 dark:text-orange-400">{getRepoDisplayName(repo.repoUrl, repo.localPath)}</span>}
+            subtitle={
+              <span className="text-orange-600 dark:text-orange-400">
+                {getRepoDisplayName(repo.repoUrl, repo.localPath)}
+              </span>
+            }
             generating={isTitleGenerating}
           />
         </div>
@@ -516,16 +514,12 @@ export function SessionDetail() {
                   aria-label="Clear"
                 >
                   <X className="w-6 h-6" />
-                  <span className="text-sm font-medium hidden sm:inline">
-                    Clear
-                  </span>
+                  <span className="text-sm font-medium hidden sm:inline">Clear</span>
                 </button>
               )}
               {leaderActive && (
                 <div className="absolute -top-12 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-primary/90 text-primary-foreground border border-primary shadow-lg backdrop-blur-md animate-pulse">
-                  <span className="text-sm font-medium">
-                    Waiting for shortcut key...
-                  </span>
+                  <span className="text-sm font-medium">Waiting for shortcut key...</span>
                 </div>
               )}
               {isPlaying && !leaderActive && (
@@ -540,9 +534,7 @@ export function SessionDetail() {
                   aria-label="Stop Audio"
                 >
                   <VolumeX className="w-6 h-6" />
-                  <span className="text-sm font-medium hidden sm:inline">
-                    Stop Audio
-                  </span>
+                  <span className="text-sm font-medium hidden sm:inline">Stop Audio</span>
                 </button>
               )}
               {currentQuestion && currentQuestion.sessionID === sessionId && (

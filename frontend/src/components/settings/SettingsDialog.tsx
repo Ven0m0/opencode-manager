@@ -125,29 +125,34 @@ export function SettingsDialog() {
     setActiveTab(tab as SettingsView);
   };
 
-   return (
-     <Dialog open={isOpen} modal={false}>
-       <DialogContent 
-         ref={contentRef}
-         className="inset-0 w-full h-full max-w-none max-h-none p-0 rounded-none bg-gradient-to-br from-background via-background to-background border-border overflow-hidden !flex !flex-col"
-         style={swipeStyles}
-         fullscreen
-       >
-         <div className="hidden sm:flex sm:flex-col sm:h-full">
-           <div className="sticky top-0 z-10 bg-gradient-to-b from-background via-background to-transparent border-b border-border backdrop-blur-sm px-6 py-4 flex-shrink-0 flex items-center justify-between">
-             <h2 className="text-2xl font-semibold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-               Settings
-             </h2>
-             <Button
-               variant="ghost"
-               size="icon"
-               onClick={close}
-               className="text-muted-foreground hover:text-foreground min-w-[44px] min-h-[44px]"
-             >
-               <X className="w-5 h-5" />
-             </Button>
-           </div>
-          <Tabs defaultValue="account" value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col flex-1 min-h-0">
+  return (
+    <Dialog open={isOpen} modal={false}>
+      <DialogContent
+        ref={contentRef}
+        className="inset-0 w-full h-full max-w-none max-h-none p-0 rounded-none bg-gradient-to-br from-background via-background to-background border-border overflow-hidden !flex !flex-col"
+        style={swipeStyles}
+        fullscreen
+      >
+        <div className="hidden sm:flex sm:flex-col sm:h-full">
+          <div className="sticky top-0 z-10 bg-gradient-to-b from-background via-background to-transparent border-b border-border backdrop-blur-sm px-6 py-4 flex-shrink-0 flex items-center justify-between">
+            <h2 className="text-2xl font-semibold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+              Settings
+            </h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={close}
+              className="text-muted-foreground hover:text-foreground min-w-[44px] min-h-[44px]"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
+          <Tabs
+            defaultValue="account"
+            value={activeTab}
+            onValueChange={handleTabChange}
+            className="w-full flex flex-col flex-1 min-h-0"
+          >
             <div className="px-6 pt-6 pb-4 flex-shrink-0">
               <TabsList className="grid w-full grid-cols-8 bg-card p-1">
                 <TabsTrigger
@@ -209,11 +214,7 @@ export function SettingsDialog() {
                 <TabsContent key="general" value="general" className="mt-0">
                   <GeneralSettings />
                 </TabsContent>
-                <TabsContent
-                  key="notifications"
-                  value="notifications"
-                  className="mt-0"
-                >
+                <TabsContent key="notifications" value="notifications" className="mt-0">
                   <NotificationSettings />
                 </TabsContent>
                 <TabsContent key="voice" value="voice" className="mt-0">
@@ -282,12 +283,8 @@ export function SettingsDialog() {
                         <item.icon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-foreground mb-1">
-                          {item.label}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          {item.description}
-                        </p>
+                        <h3 className="font-semibold text-foreground mb-1">{item.label}</h3>
+                        <p className="text-sm text-muted-foreground">{item.description}</p>
                       </div>
                     </div>
                   </button>

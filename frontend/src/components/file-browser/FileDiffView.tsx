@@ -1,10 +1,9 @@
-import { useFileDiff, useCommitFileDiff } from "@/api/git";
 import {
   ArrowLeft,
   ExternalLink,
   X,
 } from "lucide-react";
-import { useFileDiff } from "@/api/git";
+import { useCommitFileDiff, useFileDiff, useFileDiff } from "@/api/git";
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/ui/copy-button";
 import { GIT_STATUS_COLORS, GIT_STATUS_LABELS } from "@/lib/git-status-styles";

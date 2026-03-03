@@ -1,9 +1,6 @@
 import { Loader2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  DEFAULT_KEYBOARD_SHORTCUTS,
-  DEFAULT_LEADER_KEY,
-} from "@/api/types/settings";
+import { DEFAULT_KEYBOARD_SHORTCUTS, DEFAULT_LEADER_KEY } from "@/api/types/settings";
 import { useMobile } from "@/hooks/useMobile";
 import { useSettings } from "@/hooks/useSettings";
 
@@ -21,16 +18,12 @@ export function KeyboardShortcuts() {
   const isMobile = useMobile();
   const [recordingKey, setRecordingKey] = useState<string | null>(null);
   const [recordingLeader, setRecordingLeader] = useState(false);
-  const [tempShortcuts, setTempShortcuts] = useState<Record<string, string>>(
-    {},
-  );
+  const [tempShortcuts, setTempShortcuts] = useState<Record<string, string>>({});
   const [tempLeaderKey, setTempLeaderKey] = useState<string | null>(null);
   const [currentKeys, setCurrentKeys] = useState<string>("");
 
-  const leaderKey =
-    tempLeaderKey ?? preferences?.leaderKey ?? DEFAULT_LEADER_KEY;
-  const directShortcuts =
-    preferences?.directShortcuts ?? DEFAULT_DIRECT_SHORTCUTS;
+  const leaderKey = tempLeaderKey ?? preferences?.leaderKey ?? DEFAULT_LEADER_KEY;
+  const directShortcuts = preferences?.directShortcuts ?? DEFAULT_DIRECT_SHORTCUTS;
 
   const shortcuts = useMemo(
     () => ({
@@ -166,9 +159,7 @@ export function KeyboardShortcuts() {
   if (isMobile) {
     return (
       <div className="bg-card border border-border rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4">
-          Keyboard Shortcuts
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground mb-4">Keyboard Shortcuts</h2>
         <p className="text-sm text-muted-foreground">
           Keyboard shortcuts are not available on mobile devices.
         </p>
@@ -178,17 +169,13 @@ export function KeyboardShortcuts() {
 
   return (
     <div className="bg-card border border-border rounded-lg p-6">
-      <h2 className="text-lg font-semibold text-foreground mb-6">
-        Keyboard Shortcuts
-      </h2>
+      <h2 className="text-lg font-semibold text-foreground mb-6">Keyboard Shortcuts</h2>
 
       <div className="space-y-4">
         <div className="flex items-center justify-between py-3 border-b border-border">
           <div className="space-y-1">
             <p className="text-foreground font-medium">Leader Key</p>
-            <p className="text-xs text-muted-foreground">
-              Press this first, then the shortcut key
-            </p>
+            <p className="text-xs text-muted-foreground">Press this first, then the shortcut key</p>
           </div>
 
           {recordingLeader ? (
@@ -278,9 +265,8 @@ export function KeyboardShortcuts() {
       </div>
 
       <p className="mt-6 text-sm text-muted-foreground">
-        Click on any shortcut to record a new key combination. Click on the
-        status text below each action to toggle whether it requires the leader
-        key.
+        Click on any shortcut to record a new key combination. Click on the status text below each
+        action to toggle whether it requires the leader key.
       </p>
     </div>
   );

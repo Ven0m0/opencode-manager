@@ -26,10 +26,7 @@ const commandFormSchema = z.object({
   name: z
     .string()
     .min(1, "Command name is required")
-    .regex(
-      /^[a-z0-9-]+$/,
-      "Must be lowercase letters, numbers, and hyphens only",
-    ),
+    .regex(/^[a-z0-9-]+$/, "Must be lowercase letters, numbers, and hyphens only"),
   template: z.string().min(1, "Template is required"),
   description: z.string().optional(),
   agent: z.string().optional(),
@@ -101,9 +98,7 @@ export function CommandDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] sm:max-h-[85vh] gap-0 flex flex-col p-0 md:p-6">
         <DialogHeader className="p-4 sm:p-6 border-b flex flex-row items-center justify-between space-y-0">
-          <DialogTitle>
-            {editingCommand ? "Edit Command" : "Create Command"}
-          </DialogTitle>
+          <DialogTitle>{editingCommand ? "Edit Command" : "Create Command"}</DialogTitle>
         </DialogHeader>
 
         <div className="p-2 flex-1 overflow-y-auto sm:p-4">
@@ -163,8 +158,7 @@ export function CommandDialog({
                       />
                     </FormControl>
                     <FormDescription>
-                      Use $ARGUMENTS for all arguments or $1, $2, etc. for
-                      specific parameters
+                      Use $ARGUMENTS for all arguments or $1, $2, etc. for specific parameters
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -198,9 +192,7 @@ export function CommandDialog({
                           min="0"
                           max="1"
                           step="0.1"
-                          onChange={(e) =>
-                            field.onChange(parseFloat(e.target.value))
-                          }
+                          onChange={(e) => field.onChange(parseFloat(e.target.value))}
                         />
                       </FormControl>
                       <FormMessage />
@@ -215,10 +207,7 @@ export function CommandDialog({
                     <FormItem>
                       <FormLabel>Model (optional)</FormLabel>
                       <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="anthropic/claude-3-5-sonnet-20241022"
-                        />
+                        <Input {...field} placeholder="anthropic/claude-3-5-sonnet-20241022" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -232,18 +221,11 @@ export function CommandDialog({
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-base">
-                        Run as subtask
-                      </FormLabel>
-                      <FormDescription>
-                        Execute this command as a separate subtask
-                      </FormDescription>
+                      <FormLabel className="text-base">Run as subtask</FormLabel>
+                      <FormDescription>Execute this command as a separate subtask</FormDescription>
                     </div>
                     <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
                   </FormItem>
                 )}

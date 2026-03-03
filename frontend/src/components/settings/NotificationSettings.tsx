@@ -27,14 +27,10 @@ export function NotificationSettings() {
   if (!isSupported) {
     return (
       <div className="bg-card border border-border rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4">
-          Push Notifications
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground mb-4">Push Notifications</h2>
         <div className="flex items-center gap-3 text-muted-foreground">
           <BellOff className="h-5 w-5" />
-          <p className="text-sm">
-            Push notifications are not supported in this browser.
-          </p>
+          <p className="text-sm">Push notifications are not supported in this browser.</p>
         </div>
       </div>
     );
@@ -43,15 +39,12 @@ export function NotificationSettings() {
   if (!isAvailable) {
     return (
       <div className="bg-card border border-border rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4">
-          Push Notifications
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground mb-4">Push Notifications</h2>
         <div className="flex items-center gap-3 text-muted-foreground">
           <BellOff className="h-5 w-5" />
           <p className="text-sm">
-            Push notifications are not configured on the server. Set
-            VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY environment variables to
-            enable.
+            Push notifications are not configured on the server. Set VAPID_PUBLIC_KEY and
+            VAPID_PRIVATE_KEY environment variables to enable.
           </p>
         </div>
       </div>
@@ -61,14 +54,12 @@ export function NotificationSettings() {
   if (permission === "denied") {
     return (
       <div className="bg-card border border-border rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4">
-          Push Notifications
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground mb-4">Push Notifications</h2>
         <div className="flex items-center gap-3 text-yellow-500">
           <BellOff className="h-5 w-5" />
           <p className="text-sm">
-            Notification permission was denied. Please enable notifications in
-            your browser settings for this site.
+            Notification permission was denied. Please enable notifications in your browser settings
+            for this site.
           </p>
         </div>
       </div>
@@ -96,9 +87,7 @@ export function NotificationSettings() {
   const handleTest = () => {
     sendTest(undefined, {
       onSuccess: (data) => {
-        showToast.success(
-          `Test notification sent to ${data.devicesNotified} device(s)`,
-        );
+        showToast.success(`Test notification sent to ${data.devicesNotified} device(s)`);
       },
       onError: () => {
         showToast.error("Failed to send test notification");
@@ -109,9 +98,7 @@ export function NotificationSettings() {
   return (
     <div className="space-y-6">
       <div className="bg-card border border-border rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-6">
-          Push Notifications
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground mb-6">Push Notifications</h2>
 
         <div className="space-y-6">
           <div className="flex flex-row items-center justify-between rounded-lg border border-border p-4">
@@ -127,18 +114,14 @@ export function NotificationSettings() {
               id="notificationsEnabled"
               checked={isEnabled}
               disabled={isSubscribing}
-              onCheckedChange={(checked) =>
-                checked ? handleEnable() : handleDisable()
-              }
+              onCheckedChange={(checked) => (checked ? handleEnable() : handleDisable())}
             />
           </div>
 
           {isEnabled && (
             <>
               <div className="space-y-4">
-                <h3 className="text-sm font-medium text-foreground">
-                  Notification Events
-                </h3>
+                <h3 className="text-sm font-medium text-foreground">Notification Events</h3>
 
                 <div className="flex flex-row items-center justify-between rounded-lg border border-border p-4">
                   <div className="space-y-0.5">
@@ -152,9 +135,7 @@ export function NotificationSettings() {
                   <Switch
                     id="notifPermission"
                     checked={preferences.events.permissionAsked}
-                    onCheckedChange={(checked) =>
-                      updateEventPreference("permissionAsked", checked)
-                    }
+                    onCheckedChange={(checked) => updateEventPreference("permissionAsked", checked)}
                   />
                 </div>
 
@@ -170,9 +151,7 @@ export function NotificationSettings() {
                   <Switch
                     id="notifQuestion"
                     checked={preferences.events.questionAsked}
-                    onCheckedChange={(checked) =>
-                      updateEventPreference("questionAsked", checked)
-                    }
+                    onCheckedChange={(checked) => updateEventPreference("questionAsked", checked)}
                   />
                 </div>
 
@@ -188,9 +167,7 @@ export function NotificationSettings() {
                   <Switch
                     id="notifError"
                     checked={preferences.events.sessionError}
-                    onCheckedChange={(checked) =>
-                      updateEventPreference("sessionError", checked)
-                    }
+                    onCheckedChange={(checked) => updateEventPreference("sessionError", checked)}
                   />
                 </div>
 
@@ -206,9 +183,7 @@ export function NotificationSettings() {
                   <Switch
                     id="notifIdle"
                     checked={preferences.events.sessionIdle}
-                    onCheckedChange={(checked) =>
-                      updateEventPreference("sessionIdle", checked)
-                    }
+                    onCheckedChange={(checked) => updateEventPreference("sessionIdle", checked)}
                   />
                 </div>
               </div>
@@ -235,9 +210,7 @@ export function NotificationSettings() {
 
       {isEnabled && (
         <div className="bg-card border border-border rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">
-            Registered Devices
-          </h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Registered Devices</h2>
 
           {isLoadingSubscriptions ? (
             <div className="flex items-center justify-center py-4">

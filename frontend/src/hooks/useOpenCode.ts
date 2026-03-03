@@ -2,11 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { OpenCodeClient } from "../api/opencode";
 import type { components, paths } from "../api/opencode-types";
-import type {
-  ContentPart,
-  MessageListResponse,
-  MessageWithParts,
-} from "../api/types";
+import type { ContentPart, MessageListResponse, MessageWithParts } from "../api/types";
 import { API_BASE_URL } from "../config";
 import { parseNetworkError } from "../lib/opencode-errors";
 import { ensureSSEConnected, reconnectSSE } from "../lib/sseManager";
@@ -27,9 +23,7 @@ export function useTitleGenerating(sessionID: string | undefined) {
 
   useEffect(() => {
     const listener = () => {
-      setIsGenerating(
-        sessionID ? titleGeneratingSessionsState.has(sessionID) : false,
-      );
+      setIsGenerating(sessionID ? titleGeneratingSessionsState.has(sessionID) : false);
     };
     titleGeneratingListeners.add(listener);
     return () => {
@@ -46,20 +40,14 @@ type SendPromptRequest = NonNullable<
   paths["/session/{sessionID}/message"]["post"]["requestBody"]
 >["content"]["application/json"];
 
-export const useOpenCodeClient = (
-  opcodeUrl: string | null | undefined,
-  directory?: string,
-) => {
+export const useOpenCodeClient = (opcodeUrl: string | null | undefined, directory?: string) => {
   return useMemo(
     () => (opcodeUrl ? new OpenCodeClient(opcodeUrl, directory) : null),
     [opcodeUrl, directory],
   );
 };
 
-export const useSessions = (
-  opcodeUrl: string | null | undefined,
-  directory?: string,
-) => {
+export const useSessions = (opcodeUrl: string | null | undefined, directory?: string) => {
   const client = useOpenCodeClient(opcodeUrl, directory);
 
   return useQuery({
@@ -108,19 +96,12 @@ export const useMessages = (
   });
 };
 
-export const useCreateSession = (
-  opcodeUrl: string | null | undefined,
-  directory?: string,
-) => {
+export const useCreateSession = (opcodeUrl: string | null | undefined, directory?: string) => {
   const client = useOpenCodeClient(opcodeUrl, directory);
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: {
-      title?: string;
-      agent?: string;
-      model?: string;
-    }) => {
+    mutationFn: async (data: { title?: string; agent?: string; model?: string }) => {
       if (!client) throw new Error("No client available");
       return client.createSession(data);
     },
@@ -132,10 +113,7 @@ export const useCreateSession = (
   });
 };
 
-export const useDeleteSession = (
-  opcodeUrl: string | null | undefined,
-  directory?: string,
-) => {
+export const useDeleteSession = (opcodeUrl: string | null | undefined, directory?: string) => {
   const queryClient = useQueryClient();
   const client = useOpenCodeClient(opcodeUrl, directory);
 
@@ -168,21 +146,12 @@ export const useDeleteSession = (
   });
 };
 
-export const useUpdateSession = (
-  opcodeUrl: string | null | undefined,
-  directory?: string,
-) => {
+export const useUpdateSession = (opcodeUrl: string | null | undefined, directory?: string) => {
   const queryClient = useQueryClient();
   const client = useOpenCodeClient(opcodeUrl, directory);
 
   return useMutation({
-    mutationFn: async ({
-      sessionID,
-      title,
-    }: {
-      sessionID: string;
-      title: string;
-    }) => {
+    mutationFn: async ({ sessionID, title }: { sessionID: string; title: string }) => {
       if (!client) throw new Error("No client available");
       return client.updateSession(sessionID, { title });
     },
@@ -245,19 +214,13 @@ const createOptimisticUserMessage = (
   } as MessageWithParts;
 };
 
-export const useSendPrompt = (
-  opcodeUrl: string | null | undefined,
-  directory?: string,
-) => {
+export const useSendPrompt = (opcodeUrl: string | null | undefined, directory?: string) => {
   const client = useOpenCodeClient(opcodeUrl, directory);
   const queryClient = useQueryClient();
   const hasInitializedRef = useRef<Set<string>>(new Set());
   const setSessionStatus = useSessionStatus((state) => state.setStatus);
 
-  const generateSessionTitle = async (
-    sessionID: string,
-    userPromptText: string,
-  ) => {
+  const generateSessionTitle = async (sessionID: string, userPromptText: string) => {
     if (!client || hasInitializedRef.current.has(sessionID)) return;
 
     try {
@@ -283,13 +246,7 @@ export const useSendPrompt = (
           if (response.ok) {
             hasInitializedRef.current.add(sessionID);
             queryClient.invalidateQueries({
-              queryKey: [
-                "opencode",
-                "session",
-                opcodeUrl,
-                sessionID,
-                directory,
-              ],
+              queryKey: ["opencode", "session", opcodeUrl, sessionID, directory],
             });
             queryClient.invalidateQueries({
               queryKey: ["opencode", "sessions", opcodeUrl, directory],
@@ -333,27 +290,13 @@ export const useSendPrompt = (
 
       const optimisticUserID = `optimistic_user_${Date.now()}_${Math.random()}`;
 
-      const contentParts = parts || [
-        { type: "text" as const, content: prompt || "", name: "" },
-      ];
+      const contentParts = parts || [{ type: "text" as const, content: prompt || "", name: "" }];
       const userPromptText =
-        prompt ||
-        (contentParts[0] as ContentPart & { type: "text" })?.content ||
-        "";
+        prompt || (contentParts[0] as ContentPart & { type: "text" })?.content || "";
 
-      const userMessage = createOptimisticUserMessage(
-        sessionID,
-        contentParts,
-        optimisticUserID,
-      );
+      const userMessage = createOptimisticUserMessage(sessionID, contentParts, optimisticUserID);
 
-      const messagesQueryKey = [
-        "opencode",
-        "messages",
-        opcodeUrl,
-        sessionID,
-        directory,
-      ];
+      const messagesQueryKey = ["opencode", "messages", opcodeUrl, sessionID, directory];
       await queryClient.cancelQueries({ queryKey: messagesQueryKey });
 
       queryClient.setQueryData<MessageListResponse>(messagesQueryKey, (old) => [
@@ -379,9 +322,7 @@ export const useSendPrompt = (
                   type: "file",
                   mime: "text/plain",
                   filename: part.name,
-                  url: part.path.startsWith("file:")
-                    ? part.path
-                    : `file://${part.path}`,
+                  url: part.path.startsWith("file:") ? part.path : `file://${part.path}`,
                 },
         ) || [{ type: "text", text: prompt || "" }],
       };
@@ -410,13 +351,7 @@ export const useSendPrompt = (
     },
     onError: (error, variables) => {
       const { sessionID } = variables;
-      const messagesQueryKey = [
-        "opencode",
-        "messages",
-        opcodeUrl,
-        sessionID,
-        directory,
-      ];
+      const messagesQueryKey = ["opencode", "messages", opcodeUrl, sessionID, directory];
 
       const axiosError = error as { code?: string; response?: unknown };
       const isNetworkError =
@@ -449,33 +384,20 @@ export const useSendPrompt = (
     onSuccess: async (data, variables) => {
       const { sessionID } = variables;
       const { optimisticUserID, userPromptText, response } = data;
-      const messagesQueryKey = [
-        "opencode",
-        "messages",
-        opcodeUrl,
-        sessionID,
-        directory,
-      ];
+      const messagesQueryKey = ["opencode", "messages", opcodeUrl, sessionID, directory];
 
       queryClient.setQueryData<MessageListResponse>(messagesQueryKey, (old) => {
         if (!old) return old;
-        const withoutOptimistic = old.filter(
-          (msg) => msg.info.id !== optimisticUserID,
-        );
+        const withoutOptimistic = old.filter((msg) => msg.info.id !== optimisticUserID);
 
-        const existingIdx = withoutOptimistic.findIndex(
-          (m) => m.info.id === response.info.id,
-        );
+        const existingIdx = withoutOptimistic.findIndex((m) => m.info.id === response.info.id);
         if (existingIdx >= 0) {
           const updated = [...withoutOptimistic];
           updated[existingIdx] = { info: response.info, parts: response.parts };
           return updated;
         }
 
-        return [
-          ...withoutOptimistic,
-          { info: response.info, parts: response.parts },
-        ];
+        return [...withoutOptimistic, { info: response.info, parts: response.parts }];
       });
 
       setSessionStatus(sessionID, { type: "idle" });
@@ -504,13 +426,7 @@ export const useAbortSession = (
 
   const forceCompleteMessages = useCallback(
     (targetSessionID: string) => {
-      const queryKey = [
-        "opencode",
-        "messages",
-        opcodeUrl,
-        targetSessionID,
-        directory,
-      ];
+      const queryKey = ["opencode", "messages", opcodeUrl, targetSessionID, directory];
 
       queryClient.setQueryData<MessageListResponse>(queryKey, (old) => {
         if (!old) return old;
@@ -552,13 +468,7 @@ export const useAbortSession = (
 
   const isSessionComplete = useCallback(
     (targetSessionID: string) => {
-      const queryKey = [
-        "opencode",
-        "messages",
-        opcodeUrl,
-        targetSessionID,
-        directory,
-      ];
+      const queryKey = ["opencode", "messages", opcodeUrl, targetSessionID, directory];
       const messages = queryClient.getQueryData<MessageListResponse>(queryKey);
 
       const hasActiveStream = messages?.some((msg) => {
@@ -576,13 +486,7 @@ export const useAbortSession = (
     if (!sessionID) return;
 
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      const queryKey = [
-        "opencode",
-        "messages",
-        opcodeUrl,
-        sessionID,
-        directory,
-      ];
+      const queryKey = ["opencode", "messages", opcodeUrl, sessionID, directory];
       if (event.query.queryKey.join(",") === queryKey.join(",")) {
         if (isSessionComplete(sessionID) && retryIntervalRef.current) {
           stopRetrying();
@@ -591,14 +495,7 @@ export const useAbortSession = (
     });
 
     return () => unsubscribe();
-  }, [
-    sessionID,
-    queryClient,
-    opcodeUrl,
-    directory,
-    isSessionComplete,
-    stopRetrying,
-  ]);
+  }, [sessionID, queryClient, opcodeUrl, directory, isSessionComplete, stopRetrying]);
 
   useEffect(() => {
     return () => stopRetrying();
@@ -645,10 +542,7 @@ export const useAbortSession = (
   return mutation;
 };
 
-export const useSendShell = (
-  opcodeUrl: string | null | undefined,
-  directory?: string,
-) => {
+export const useSendShell = (opcodeUrl: string | null | undefined, directory?: string) => {
   const client = useOpenCodeClient(opcodeUrl, directory);
   const queryClient = useQueryClient();
   const setSessionStatus = useSessionStatus((state) => state.setStatus);
@@ -675,13 +569,7 @@ export const useSendShell = (
         optimisticUserID,
       );
 
-      const messagesQueryKey = [
-        "opencode",
-        "messages",
-        opcodeUrl,
-        sessionID,
-        directory,
-      ];
+      const messagesQueryKey = ["opencode", "messages", opcodeUrl, sessionID, directory];
       await queryClient.cancelQueries({ queryKey: messagesQueryKey });
 
       queryClient.setQueryData<MessageListResponse>(messagesQueryKey, (old) => [
@@ -726,10 +614,7 @@ export const useSendShell = (
   });
 };
 
-export const useConfig = (
-  opcodeUrl: string | null | undefined,
-  directory?: string,
-) => {
+export const useConfig = (opcodeUrl: string | null | undefined, directory?: string) => {
   const client = useOpenCodeClient(opcodeUrl, directory);
 
   return useQuery({
@@ -741,10 +626,7 @@ export const useConfig = (
   });
 };
 
-export const useAgents = (
-  opcodeUrl: string | null | undefined,
-  directory?: string,
-) => {
+export const useAgents = (opcodeUrl: string | null | undefined, directory?: string) => {
   const client = useOpenCodeClient(opcodeUrl, directory);
 
   return useQuery({

@@ -12,9 +12,7 @@ export function createAuthMiddleware(auth: AuthInstance) {
     const cookies = c.req.header("cookie");
     const origin = c.req.header("origin");
 
-    logger.debug(
-      `Auth check - Path: ${c.req.path}, Origin: ${origin}, Has cookies: ${!!cookies}`,
-    );
+    logger.debug(`Auth check - Path: ${c.req.path}, Origin: ${origin}, Has cookies: ${!!cookies}`);
     if (cookies) {
       const cookieNames = cookies
         .split(";")
@@ -22,15 +20,15 @@ export function createAuthMiddleware(auth: AuthInstance) {
         .join(", ");
       logger.debug(`Cookie names: ${cookieNames}`);
     }
-    
-    let session
+
+    let session: Awaited<ReturnType<typeof auth.api.getSession>>;
     try {
       session = await auth.api.getSession({
         headers: c.req.raw.headers,
-      })
+      });
     } catch (error) {
-      logger.error('Session lookup failed', { error })
-      return c.json({ error: 'Internal Server Error' }, 500)
+      logger.error("Session lookup failed", { error });
+      return c.json({ error: "Internal Server Error" }, 500);
     }
 
     logger.debug(`Session result: ${session ? "found" : "not found"}`);
@@ -80,14 +78,14 @@ export function createAdminMiddleware(auth: AuthInstance) {
       user: Session["user"];
     };
   }>(async (c, next) => {
-    let session
+    let session: Awaited<ReturnType<typeof auth.api.getSession>>;
     try {
       session = await auth.api.getSession({
         headers: c.req.raw.headers,
-      })
+      });
     } catch (error) {
-      logger.error('Session lookup failed', { error })
-      return c.json({ error: 'Internal Server Error' }, 500)
+      logger.error("Session lookup failed", { error });
+      return c.json({ error: "Internal Server Error" }, 500);
     }
 
     if (!session) {

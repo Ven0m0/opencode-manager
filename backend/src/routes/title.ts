@@ -81,14 +81,11 @@ export function createTitleRoutes() {
       const modelStr = config.small_model || (config.model ?? "");
       const [providerID, modelID] = modelStr.split("/");
 
-      const titleSessionResponse = await fetch(
-        buildUrl("/session", directory),
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: "Title Generation" }),
-        },
-      );
+      const titleSessionResponse = await fetch(buildUrl("/session", directory), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: "Title Generation" }),
+      });
 
       if (!titleSessionResponse.ok) {
         logger.error("Failed to create title generation session");
@@ -132,9 +129,7 @@ export function createTitleRoutes() {
 
         let title = "";
         if (result.parts) {
-          const textPart = result.parts.find(
-            (p: { type: string }) => p.type === "text",
-          );
+          const textPart = result.parts.find((p: { type: string }) => p.type === "text");
           if (textPart && "text" in textPart) {
             title =
               (textPart.text as string)
@@ -150,14 +145,11 @@ export function createTitleRoutes() {
         }
 
         if (title) {
-          const updateResponse = await fetch(
-            buildUrl(`/session/${sessionID}`, directory),
-            {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ title }),
-            },
-          );
+          const updateResponse = await fetch(buildUrl(`/session/${sessionID}`, directory), {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title }),
+          });
 
           if (!updateResponse.ok) {
             logger.error("Failed to update session title");
@@ -175,8 +167,7 @@ export function createTitleRoutes() {
       logger.error("Failed to generate session title:", error);
       return c.json(
         {
-          error:
-            error instanceof Error ? error.message : "Failed to generate title",
+          error: error instanceof Error ? error.message : "Failed to generate title",
         },
         500,
       );

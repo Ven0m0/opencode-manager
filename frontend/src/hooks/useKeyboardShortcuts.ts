@@ -127,15 +127,10 @@ export function useKeyboardShortcuts(actions: ShortcutActions = {}) {
 
       const prefs = preferencesRef.current;
       const shortcuts = prefs?.keyboardShortcuts || {};
-      const leaderKey = normalizeShortcut(
-        prefs?.leaderKey || DEFAULT_LEADER_KEY,
-      );
-      const directShortcuts =
-        prefs?.directShortcuts ?? DEFAULT_DIRECT_SHORTCUTS;
+      const leaderKey = normalizeShortcut(prefs?.leaderKey || DEFAULT_LEADER_KEY);
+      const directShortcuts = prefs?.directShortcuts ?? DEFAULT_DIRECT_SHORTCUTS;
 
-      const activeFileEditor = document.querySelector(
-        '[data-file-editor="true"]',
-      );
+      const activeFileEditor = document.querySelector('[data-file-editor="true"]');
       if (activeFileEditor && document.activeElement === activeFileEditor) {
         return;
       }
@@ -175,20 +170,14 @@ export function useKeyboardShortcuts(actions: ShortcutActions = {}) {
         return;
       }
 
-      const directAction = Object.entries(shortcuts).find(
-        ([actionName, keys]) => {
-          if (!directShortcuts.includes(actionName)) return false;
-          if (!keys) return false;
-          return normalizeShortcut(keys) === shortcut;
-        },
-      )?.[0];
+      const directAction = Object.entries(shortcuts).find(([actionName, keys]) => {
+        if (!directShortcuts.includes(actionName)) return false;
+        if (!keys) return false;
+        return normalizeShortcut(keys) === shortcut;
+      })?.[0];
 
       if (directAction) {
-        if (
-          isInInput &&
-          directAction !== "submit" &&
-          directAction !== "abort"
-        ) {
+        if (isInInput && directAction !== "submit" && directAction !== "abort") {
           return;
         }
         executeAction(directAction, e);

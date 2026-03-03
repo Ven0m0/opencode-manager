@@ -6,10 +6,7 @@ import { betterAuth } from "better-auth";
 export type AuthInstance = ReturnType<typeof createAuth>;
 
 export function createAuth(db: Database) {
-  const socialProviders: Record<
-    string,
-    { clientId: string; clientSecret: string }
-  > = {};
+  const socialProviders: Record<string, { clientId: string; clientSecret: string }> = {};
 
   if (ENV.AUTH.GITHUB_CLIENT_ID && ENV.AUTH.GITHUB_CLIENT_SECRET) {
     socialProviders.github = {
@@ -33,25 +30,21 @@ export function createAuth(db: Database) {
   }
 
   const baseURL =
-    ENV.AUTH.TRUSTED_ORIGINS.split(",")[0]?.trim() ||
-    `http://localhost:${ENV.SERVER.PORT}`;
+    ENV.AUTH.TRUSTED_ORIGINS.split(",")[0]?.trim() || `http://localhost:${ENV.SERVER.PORT}`;
 
   const auth = betterAuth({
     baseURL,
     basePath: "/api/auth",
     database: db,
     secret: ENV.AUTH.SECRET,
-    trustedOrigins: ENV.AUTH.TRUSTED_ORIGINS.split(",").map((o: string) =>
-      o.trim(),
-    ),
+    trustedOrigins: ENV.AUTH.TRUSTED_ORIGINS.split(",").map((o: string) => o.trim()),
     emailAndPassword: {
       enabled: true,
       minPasswordLength: 8,
       maxPasswordLength: 128,
       autoSignIn: true,
     },
-    socialProviders:
-      Object.keys(socialProviders).length > 0 ? socialProviders : undefined,
+    socialProviders: Object.keys(socialProviders).length > 0 ? socialProviders : undefined,
     plugins: [
       passkey({
         rpID: ENV.AUTH.PASSKEY_RP_ID,

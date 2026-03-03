@@ -1,13 +1,6 @@
 import type { Database } from "bun:sqlite";
 import type { Hono } from "hono";
-import {
-  beforeEach,
-  describe,
-  expect,
-  it,
-  type MockedFunction,
-  vi,
-} from "vitest";
+import { beforeEach, describe, expect, it, type MockedFunction, vi } from "vitest";
 import * as db from "../../src/db/queries";
 import { createRepoGitRoutes } from "../../src/routes/repo-git";
 import type { GitAuthService } from "../../src/services/git-auth";
@@ -95,10 +88,7 @@ describe("Repo Git Routes", () => {
       const body = await response.json();
 
       expect(response.status).toBe(400);
-      expect(body).toHaveProperty(
-        "error",
-        "repoIds must be an array of numbers",
-      );
+      expect(body).toHaveProperty("error", "repoIds must be an array of numbers");
     });
 
     it("returns 400 when repoIds contains non-numbers", async () => {
@@ -110,10 +100,7 @@ describe("Repo Git Routes", () => {
       const body = await response.json();
 
       expect(response.status).toBe(400);
-      expect(body).toHaveProperty(
-        "error",
-        "repoIds must be an array of numbers",
-      );
+      expect(body).toHaveProperty("error", "repoIds must be an array of numbers");
     });
 
     it("returns empty object when no repos found", async () => {
@@ -131,9 +118,7 @@ describe("Repo Git Routes", () => {
 
     it("returns status for multiple repos", async () => {
       const { executeCommand } = await import("../../src/utils/process");
-      const executeCommandMock = executeCommand as MockedFunction<
-        typeof executeCommand
-      >;
+      const executeCommandMock = executeCommand as MockedFunction<typeof executeCommand>;
 
       getRepoByIdMock.mockImplementation((_, id) => {
         if (id === 1) return { id: 1, fullPath: "/repo1" } as any;
@@ -162,9 +147,7 @@ describe("Repo Git Routes", () => {
 
     it("skips repos that fail and continues with others", async () => {
       const { executeCommand } = await import("../../src/utils/process");
-      const executeCommandMock = executeCommand as MockedFunction<
-        typeof executeCommand
-      >;
+      const executeCommandMock = executeCommand as MockedFunction<typeof executeCommand>;
 
       getRepoByIdMock.mockImplementation((_, id) => {
         if (id === 1) return { id: 1, fullPath: "/repo1" } as any;
@@ -212,9 +195,7 @@ describe("Repo Git Routes", () => {
 
     it("returns diff with includeStaged=true", async () => {
       const { executeCommand } = await import("../../src/utils/process");
-      const executeCommandMock = executeCommand as MockedFunction<
-        typeof executeCommand
-      >;
+      const executeCommandMock = executeCommand as MockedFunction<typeof executeCommand>;
 
       getRepoByIdMock.mockReturnValue({
         id: 1,
@@ -228,9 +209,7 @@ describe("Repo Git Routes", () => {
         return Promise.resolve("");
       });
 
-      const response = await app.request(
-        "/1/git/diff-full?path=file.ts&includeStaged=true",
-      );
+      const response = await app.request("/1/git/diff-full?path=file.ts&includeStaged=true");
       const body = await response.json();
 
       expect(response.status).toBe(200);
@@ -242,9 +221,7 @@ describe("Repo Git Routes", () => {
 
     it("returns diff with includeStaged=false", async () => {
       const { executeCommand } = await import("../../src/utils/process");
-      const executeCommandMock = executeCommand as MockedFunction<
-        typeof executeCommand
-      >;
+      const executeCommandMock = executeCommand as MockedFunction<typeof executeCommand>;
 
       getRepoByIdMock.mockReturnValue({
         id: 1,
@@ -258,9 +235,7 @@ describe("Repo Git Routes", () => {
         return Promise.resolve("");
       });
 
-      const response = await app.request(
-        "/1/git/diff-full?path=file.ts&includeStaged=false",
-      );
+      const response = await app.request("/1/git/diff-full?path=file.ts&includeStaged=false");
       const body = await response.json();
 
       expect(response.status).toBe(200);
@@ -269,16 +244,13 @@ describe("Repo Git Routes", () => {
 
     it("returns 500 when diff operation fails", async () => {
       const { executeCommand } = await import("../../src/utils/process");
-      const executeCommandMock = executeCommand as MockedFunction<
-        typeof executeCommand
-      >;
+      const executeCommandMock = executeCommand as MockedFunction<typeof executeCommand>;
 
       getRepoByIdMock.mockReturnValue({ id: 1, localPath: "test-repo" } as any);
       executeCommandMock.mockImplementation((args) => {
         if (args.includes("status")) return Promise.resolve("M  file.ts");
         if (args.includes("rev-parse")) return Promise.resolve("abc123");
-        if (args.includes("diff"))
-          return Promise.reject(new Error("Diff failed"));
+        if (args.includes("diff")) return Promise.reject(new Error("Diff failed"));
         return Promise.resolve("");
       });
 
@@ -302,9 +274,7 @@ describe("Repo Git Routes", () => {
 
     it("returns branches and status", async () => {
       const { executeCommand } = await import("../../src/utils/process");
-      const executeCommandMock = executeCommand as MockedFunction<
-        typeof executeCommand
-      >;
+      const executeCommandMock = executeCommand as MockedFunction<typeof executeCommand>;
 
       getRepoByIdMock.mockReturnValue({
         id: 1,
@@ -324,16 +294,12 @@ describe("Repo Git Routes", () => {
       expect(response.status).toBe(200);
       expect(body).toHaveProperty("branches");
       expect(body).toHaveProperty("status");
-      expect(Array.isArray((body as { branches: unknown[] }).branches)).toBe(
-        true,
-      );
+      expect(Array.isArray((body as { branches: unknown[] }).branches)).toBe(true);
     });
 
     it("returns 500 when branch operation fails", async () => {
       const { executeCommand } = await import("../../src/utils/process");
-      const executeCommandMock = executeCommand as MockedFunction<
-        typeof executeCommand
-      >;
+      const executeCommandMock = executeCommand as MockedFunction<typeof executeCommand>;
 
       getRepoByIdMock.mockReturnValue({
         id: 1,
@@ -344,125 +310,134 @@ describe("Repo Git Routes", () => {
       const response = await app.request("/1/git/branches");
       const body = await response.json();
 
-      expect(response.status).toBe(500)
-      expect(body).toHaveProperty('error')
-    })
-  })
+      expect(response.status).toBe(500);
+      expect(body).toHaveProperty("error");
+    });
+  });
 
-  describe('POST /:id/git/discard', () => {
-    it('should return 404 when repo does not exist', async () => {
-      ;(db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue(null)
-      const response = await app.request('/999/git/discard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paths: ['file1.ts'] }),
-      })
-      const body = await response.json()
+  describe("POST /:id/git/discard", () => {
+    it("should return 404 when repo does not exist", async () => {
+      (db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue(null);
+      const response = await app.request("/999/git/discard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paths: ["file1.ts"] }),
+      });
+      const body = await response.json();
 
-      expect(response.status).toBe(404)
-      expect(body).toHaveProperty('error', 'Repo not found')
-    })
+      expect(response.status).toBe(404);
+      expect(body).toHaveProperty("error", "Repo not found");
+    });
 
-    it('should return 400 when paths is not an array', async () => {
-      ;(db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue({ id: 1 } as any)
-      const response = await app.request('/1/git/discard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paths: 'not-an-array' }),
-      })
-      const body = await response.json()
+    it("should return 400 when paths is not an array", async () => {
+      (db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue({ id: 1 } as any);
+      const response = await app.request("/1/git/discard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paths: "not-an-array" }),
+      });
+      const body = await response.json();
 
-      expect(response.status).toBe(400)
-      expect(body).toHaveProperty('error', 'paths is required and must be an array')
-    })
+      expect(response.status).toBe(400);
+      expect(body).toHaveProperty("error", "paths is required and must be an array");
+    });
 
-    it('should return 400 when paths is missing', async () => {
-      ;(db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue({ id: 1 } as any)
-      const response = await app.request('/1/git/discard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+    it("should return 400 when paths is missing", async () => {
+      (db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue({ id: 1 } as any);
+      const response = await app.request("/1/git/discard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
-      })
-      const body = await response.json()
+      });
+      const body = await response.json();
 
-      expect(response.status).toBe(400)
-      expect(body).toHaveProperty('error', 'paths is required and must be an array')
-    })
+      expect(response.status).toBe(400);
+      expect(body).toHaveProperty("error", "paths is required and must be an array");
+    });
 
-    it('should return 500 when git operation fails', async () => {
-      ;(db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue({ id: 1, fullPath: '/path/to/repo' } as any)
-      const response = await app.request('/1/git/discard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paths: ['file1.ts'], staged: false }),
-      })
-      const body = await response.json()
+    it("should return 500 when git operation fails", async () => {
+      (db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue({
+        id: 1,
+        fullPath: "/path/to/repo",
+      } as any);
+      const response = await app.request("/1/git/discard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paths: ["file1.ts"], staged: false }),
+      });
+      const body = await response.json();
 
-      expect(response.status).toBe(500)
-      expect(body).toHaveProperty('error')
-    })
-  })
+      expect(response.status).toBe(500);
+      expect(body).toHaveProperty("error");
+    });
+  });
 
-  describe('GET /:id/git/commit/:hash', () => {
-    it('should return 404 when repo does not exist', async () => {
-      ;(db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue(null)
-      const response = await app.request('/999/git/commit/abc123')
+  describe("GET /:id/git/commit/:hash", () => {
+    it("should return 404 when repo does not exist", async () => {
+      (db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue(null);
+      const response = await app.request("/999/git/commit/abc123");
 
-      expect(response.status).toBe(404)
-      const body = await response.json()
-      expect(body).toHaveProperty('error', 'Repo not found')
-    })
+      expect(response.status).toBe(404);
+      const body = await response.json();
+      expect(body).toHaveProperty("error", "Repo not found");
+    });
 
-    it('should return 400 when hash is missing', async () => {
-      ;(db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue({ id: 1 } as any)
-      const response = await app.request('/1/git/commit/')
+    it("should return 400 when hash is missing", async () => {
+      (db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue({ id: 1 } as any);
+      const response = await app.request("/1/git/commit/");
 
-      expect(response.status).toBeGreaterThanOrEqual(400)
-    })
+      expect(response.status).toBeGreaterThanOrEqual(400);
+    });
 
-    it('should return 500 when git operation fails', async () => {
-      ;(db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue({ id: 1, fullPath: '/path/to/repo' } as any)
-      const response = await app.request('/1/git/commit/abc123')
+    it("should return 500 when git operation fails", async () => {
+      (db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue({
+        id: 1,
+        fullPath: "/path/to/repo",
+      } as any);
+      const response = await app.request("/1/git/commit/abc123");
 
-      expect(response.status).toBe(500)
-      const body = await response.json()
-      expect(body).toHaveProperty('error')
-    })
-  })
+      expect(response.status).toBe(500);
+      const body = await response.json();
+      expect(body).toHaveProperty("error");
+    });
+  });
 
-  describe('GET /:id/git/commit/:hash/diff', () => {
-    it('should return 404 when repo does not exist', async () => {
-      ;(db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue(null)
-      const response = await app.request('/999/git/commit/abc123/diff?path=file.ts')
+  describe("GET /:id/git/commit/:hash/diff", () => {
+    it("should return 404 when repo does not exist", async () => {
+      (db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue(null);
+      const response = await app.request("/999/git/commit/abc123/diff?path=file.ts");
 
-      expect(response.status).toBe(404)
-      const body = await response.json()
-      expect(body).toHaveProperty('error', 'Repo not found')
-    })
+      expect(response.status).toBe(404);
+      const body = await response.json();
+      expect(body).toHaveProperty("error", "Repo not found");
+    });
 
-    it('should return 400 when hash is missing', async () => {
-      ;(db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue({ id: 1 } as any)
-      const response = await app.request('/1/git/commit//diff?path=file.ts')
+    it("should return 400 when hash is missing", async () => {
+      (db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue({ id: 1 } as any);
+      const response = await app.request("/1/git/commit//diff?path=file.ts");
 
-      expect(response.status).toBeGreaterThanOrEqual(400)
-    })
+      expect(response.status).toBeGreaterThanOrEqual(400);
+    });
 
-    it('should return 400 when path query parameter is missing', async () => {
-      ;(db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue({ id: 1 } as any)
-      const response = await app.request('/1/git/commit/abc123/diff')
-      const body = await response.json()
+    it("should return 400 when path query parameter is missing", async () => {
+      (db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue({ id: 1 } as any);
+      const response = await app.request("/1/git/commit/abc123/diff");
+      const body = await response.json();
 
-      expect(response.status).toBe(400)
-      expect(body).toHaveProperty('error', 'path query parameter is required')
-    })
+      expect(response.status).toBe(400);
+      expect(body).toHaveProperty("error", "path query parameter is required");
+    });
 
-    it('should return 500 when git operation fails', async () => {
-      ;(db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue({ id: 1, fullPath: '/path/to/repo' } as any)
-      const response = await app.request('/1/git/commit/abc123/diff?path=file.ts')
+    it("should return 500 when git operation fails", async () => {
+      (db.getRepoById as MockedFunction<typeof db.getRepoById>).mockReturnValue({
+        id: 1,
+        fullPath: "/path/to/repo",
+      } as any);
+      const response = await app.request("/1/git/commit/abc123/diff?path=file.ts");
 
-      expect(response.status).toBe(500)
-      const body = await response.json()
-      expect(body).toHaveProperty('error')
-    })
-  })
-})
+      expect(response.status).toBe(500);
+      const body = await response.json();
+      expect(body).toHaveProperty("error");
+    });
+  });
+});

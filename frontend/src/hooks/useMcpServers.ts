@@ -1,11 +1,13 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { mcpApi } from '@/api/mcp'
-import type { McpStatusMap, McpServerConfig } from '@/api/mcp'
-import { showToast as toast } from '@/lib/toast'
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { McpServerConfig, McpStatusMap } from "@/api/mcp";
+import { mcpApi } from "@/api/mcp";
+import { showToast as toast } from "@/lib/toast";
 
 const SESSION_QUERY_PREDICATE = (query: { queryKey: readonly unknown[] }) =>
-  query.queryKey[0] === 'opencode' &&
-  (query.queryKey[1] === 'sessions' || query.queryKey[1] === 'session' || query.queryKey[1] === 'messages')
+  query.queryKey[0] === "opencode" &&
+  (query.queryKey[1] === "sessions" ||
+    query.queryKey[1] === "session" ||
+    query.queryKey[1] === "messages");
 
 export function useMcpServers() {
   const queryClient = useQueryClient();
@@ -21,9 +23,9 @@ export function useMcpServers() {
     mutationFn: ({ name, config }: { name: string; config: McpServerConfig }) =>
       mcpApi.addServer(name, config),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['mcp-status'] })
-      queryClient.invalidateQueries({ predicate: SESSION_QUERY_PREDICATE })
-      toast.success('MCP server added successfully')
+      queryClient.invalidateQueries({ queryKey: ["mcp-status"] });
+      queryClient.invalidateQueries({ predicate: SESSION_QUERY_PREDICATE });
+      toast.success("MCP server added successfully");
     },
     onError: (error: Error) => {
       toast.error(`Failed to add MCP server: ${error.message}`);
@@ -33,9 +35,9 @@ export function useMcpServers() {
   const connectMutation = useMutation({
     mutationFn: (name: string) => mcpApi.connect(name),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['mcp-status'] })
-      queryClient.invalidateQueries({ predicate: SESSION_QUERY_PREDICATE })
-      toast.success('MCP server connected')
+      queryClient.invalidateQueries({ queryKey: ["mcp-status"] });
+      queryClient.invalidateQueries({ predicate: SESSION_QUERY_PREDICATE });
+      toast.success("MCP server connected");
     },
     onError: (error: Error) => {
       toast.error(`Failed to connect MCP server: ${error.message}`);
@@ -45,9 +47,9 @@ export function useMcpServers() {
   const disconnectMutation = useMutation({
     mutationFn: (name: string) => mcpApi.disconnect(name),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['mcp-status'] })
-      queryClient.invalidateQueries({ predicate: SESSION_QUERY_PREDICATE })
-      toast.success('MCP server disconnected')
+      queryClient.invalidateQueries({ queryKey: ["mcp-status"] });
+      queryClient.invalidateQueries({ predicate: SESSION_QUERY_PREDICATE });
+      toast.success("MCP server disconnected");
     },
     onError: (error: Error) => {
       toast.error(`Failed to disconnect MCP server: ${error.message}`);
@@ -55,16 +57,28 @@ export function useMcpServers() {
   });
 
   const startAuthMutation = useMutation({
-    mutationFn: ({ name, serverUrl, scope, clientId, clientSecret, directory }: { name: string; serverUrl: string; scope?: string; clientId?: string; clientSecret?: string; directory?: string }) =>
-      mcpApi.startAuth(name, serverUrl, scope, clientId, clientSecret, directory),
+    mutationFn: ({
+      name,
+      serverUrl,
+      scope,
+      clientId,
+      clientSecret,
+      directory,
+    }: {
+      name: string;
+      serverUrl: string;
+      scope?: string;
+      clientId?: string;
+      clientSecret?: string;
+      directory?: string;
+    }) => mcpApi.startAuth(name, serverUrl, scope, clientId, clientSecret, directory),
     onError: (error: Error) => {
       toast.error(`Failed to start authentication: ${error.message}`);
     },
   });
 
   const completeAuthMutation = useMutation({
-    mutationFn: ({ name, code }: { name: string; code: string }) =>
-      mcpApi.completeAuth(name, code),
+    mutationFn: ({ name, code }: { name: string; code: string }) => mcpApi.completeAuth(name, code),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["mcp-status"] });
       toast.success("Authentication completed");
@@ -77,9 +91,9 @@ export function useMcpServers() {
   const removeAuthMutation = useMutation({
     mutationFn: (name: string) => mcpApi.removeAuth(name),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['mcp-status'] })
-      queryClient.invalidateQueries({ predicate: SESSION_QUERY_PREDICATE })
-      toast.success('Authentication credentials removed')
+      queryClient.invalidateQueries({ queryKey: ["mcp-status"] });
+      queryClient.invalidateQueries({ predicate: SESSION_QUERY_PREDICATE });
+      toast.success("Authentication credentials removed");
     },
     onError: (error: Error) => {
       toast.error(`Failed to remove authentication: ${error.message}`);

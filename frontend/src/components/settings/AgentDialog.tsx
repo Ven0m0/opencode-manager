@@ -37,10 +37,7 @@ const agentFormSchema = z.object({
   name: z
     .string()
     .min(1, "Agent name is required")
-    .regex(
-      /^[a-z0-9-]+$/,
-      "Must be lowercase letters, numbers, and hyphens only",
-    ),
+    .regex(/^[a-z0-9-]+$/, "Must be lowercase letters, numbers, and hyphens only"),
   description: z.string().optional(),
   prompt: z.string().min(1, "Prompt is required"),
   mode: z.enum(["subagent", "primary", "all"]),
@@ -94,12 +91,7 @@ interface AgentDialogProps {
   editingAgent?: { name: string; agent: Agent } | null;
 }
 
-export function AgentDialog({
-  open,
-  onOpenChange,
-  onSubmit,
-  editingAgent,
-}: AgentDialogProps) {
+export function AgentDialog({ open, onOpenChange, onSubmit, editingAgent }: AgentDialogProps) {
   const { data: providers = [] } = useQuery({
     queryKey: ["providers-with-models"],
     queryFn: () => getProvidersWithModels(),
@@ -116,15 +108,12 @@ export function AgentDialog({
     return providers.map((p) => ({
       value: p.id,
       label: p.name || p.id,
-      description:
-        p.models.length > 0 ? `${p.models.length} models` : undefined,
+      description: p.models.length > 0 ? `${p.models.length} models` : undefined,
       group: sourceLabels[p.source] || "Other",
     }));
   }, [providers]);
 
-  const getDefaultValues = (
-    agent?: { name: string; agent: Agent } | null,
-  ): AgentFormValues => {
+  const getDefaultValues = (agent?: { name: string; agent: Agent } | null): AgentFormValues => {
     const parsed = parseModelString(agent?.agent.model);
     return {
       name: agent?.name || "",
@@ -141,9 +130,7 @@ export function AgentDialog({
       webfetch: agent?.agent.tools?.webfetch ?? true,
       editPermission: agent?.agent.permission?.edit ?? "allow",
       bashPermission:
-        typeof agent?.agent.permission?.bash === "string"
-          ? agent.agent.permission.bash
-          : "allow",
+        typeof agent?.agent.permission?.bash === "string" ? agent.agent.permission.bash : "allow",
       webfetchPermission: agent?.agent.permission?.webfetch ?? "allow",
       disable: agent?.agent.disable ?? false,
     };
@@ -220,9 +207,7 @@ export function AgentDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] sm:max-h-[85vh] gap-0 flex flex-col p-0 md:p-6">
         <DialogHeader className="p-4 sm:p-6 border-b flex flex-row items-center justify-between space-y-0">
-          <DialogTitle>
-            {editingAgent ? "Edit Agent" : "Create Agent"}
-          </DialogTitle>
+          <DialogTitle>{editingAgent ? "Edit Agent" : "Create Agent"}</DialogTitle>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-2 sm:p-4">
@@ -257,10 +242,7 @@ export function AgentDialog({
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder="Brief description of what the agent does"
-                      />
+                      <Textarea {...field} placeholder="Brief description of what the agent does" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -293,10 +275,7 @@ export function AgentDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Mode</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select mode" />
@@ -326,9 +305,7 @@ export function AgentDialog({
                           min="0"
                           max="2"
                           step="0.1"
-                          onChange={(e) =>
-                            field.onChange(parseFloat(e.target.value))
-                          }
+                          onChange={(e) => field.onChange(parseFloat(e.target.value))}
                         />
                       </FormControl>
                       <FormMessage />
@@ -349,9 +326,7 @@ export function AgentDialog({
                           min="0"
                           max="1"
                           step="0.1"
-                          onChange={(e) =>
-                            field.onChange(parseFloat(e.target.value))
-                          }
+                          onChange={(e) => field.onChange(parseFloat(e.target.value))}
                         />
                       </FormControl>
                       <FormMessage />
@@ -414,10 +389,7 @@ export function AgentDialog({
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center space-x-2 space-y-0">
                         <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
                         </FormControl>
                         <FormLabel className="font-normal">Write</FormLabel>
                       </FormItem>
@@ -430,10 +402,7 @@ export function AgentDialog({
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center space-x-2 space-y-0">
                         <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
                         </FormControl>
                         <FormLabel className="font-normal">Edit</FormLabel>
                       </FormItem>
@@ -446,10 +415,7 @@ export function AgentDialog({
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center space-x-2 space-y-0">
                         <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
                         </FormControl>
                         <FormLabel className="font-normal">Bash</FormLabel>
                       </FormItem>
@@ -462,10 +428,7 @@ export function AgentDialog({
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center space-x-2 space-y-0">
                         <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
                         </FormControl>
                         <FormLabel className="font-normal">Web Fetch</FormLabel>
                       </FormItem>
@@ -483,10 +446,7 @@ export function AgentDialog({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs">Edit</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue />
@@ -509,10 +469,7 @@ export function AgentDialog({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs">Bash</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue />
@@ -535,10 +492,7 @@ export function AgentDialog({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs">Web Fetch</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue />
@@ -564,15 +518,10 @@ export function AgentDialog({
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">Disable agent</FormLabel>
-                      <FormDescription>
-                        Prevent this agent from being used
-                      </FormDescription>
+                      <FormDescription>Prevent this agent from being used</FormDescription>
                     </div>
                     <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
                   </FormItem>
                 )}

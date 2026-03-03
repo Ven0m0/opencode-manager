@@ -76,9 +76,7 @@ export function OAuthCallbackDialog({
       <DialogContent className="bg-card border-border max-w-lg">
         <DialogHeader>
           <DialogTitle>Complete {providerName} Authentication</DialogTitle>
-          <DialogDescription>
-            Enter the authorization code from the provider.
-          </DialogDescription>
+          <DialogDescription>Enter the authorization code from the provider.</DialogDescription>
         </DialogHeader>
 
         {error && (
@@ -91,12 +89,7 @@ export function OAuthCallbackDialog({
           <div className="space-y-3">
             <div className="bg-muted p-3 rounded-md">
               <p className="text-sm mb-2">{authResponse.instructions}</p>
-              <Button
-                onClick={handleOpenAuthUrl}
-                variant="outline"
-                size="sm"
-                className="w-full"
-              >
+              <Button onClick={handleOpenAuthUrl} variant="outline" size="sm" className="w-full">
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Open Authorization Page
               </Button>
@@ -122,7 +115,7 @@ export function OAuthCallbackDialog({
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  {loadingMessage || 'Completing...'}
+                  {loadingMessage || "Completing..."}
                 </>
               ) : (
                 <>

@@ -96,11 +96,7 @@ export function AgentsEditor({ agents, onChange }: AgentsEditorProps) {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">{name}</CardTitle>
                   <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => startEdit(name, agent)}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => startEdit(name, agent)}>
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
@@ -117,15 +113,11 @@ export function AgentsEditor({ agents, onChange }: AgentsEditorProps) {
               <CardContent className="p-2">
                 <div className="space-y-2">
                   {agent.description && (
-                    <p className="text-sm text-muted-foreground">
-                      {agent.description}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{agent.description}</p>
                   )}
                   <div className="text-xs text-muted-foreground space-y-1">
                     <p>Mode: {agent.mode}</p>
-                    {agent.temperature !== undefined && (
-                      <p>Temperature: {agent.temperature}</p>
-                    )}
+                    {agent.temperature !== undefined && <p>Temperature: {agent.temperature}</p>}
                     {agent.topP !== undefined && <p>Top P: {agent.topP}</p>}
                     {agent.model && <p>Model: {agent.model}</p>}
                     {agent.disable && <p>Status: Disabled</p>}

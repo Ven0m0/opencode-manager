@@ -24,19 +24,13 @@ export interface TTSStatusResponse {
 }
 
 export const ttsApi = {
-  getModels: async (
-    userId = "default",
-    forceRefresh = false,
-  ): Promise<TTSModelsResponse> => {
+  getModels: async (userId = "default", forceRefresh = false): Promise<TTSModelsResponse> => {
     return fetchWrapper(`${API_BASE_URL}/api/tts/models`, {
       params: { userId, ...(forceRefresh && { refresh: "true" }) },
     });
   },
 
-  getVoices: async (
-    userId = "default",
-    forceRefresh = false,
-  ): Promise<TTSVoicesResponse> => {
+  getVoices: async (userId = "default", forceRefresh = false): Promise<TTSVoicesResponse> => {
     return fetchWrapper(`${API_BASE_URL}/api/tts/voices`, {
       params: { userId, ...(forceRefresh && { refresh: "true" }) },
     });
@@ -48,11 +42,7 @@ export const ttsApi = {
     });
   },
 
-  synthesize: async (
-    text: string,
-    userId = "default",
-    signal?: AbortSignal,
-  ): Promise<Blob> => {
+  synthesize: async (text: string, userId = "default", signal?: AbortSignal): Promise<Blob> => {
     return fetchWrapperBlob(`${API_BASE_URL}/api/tts/synthesize`, {
       method: "POST",
       params: { userId },

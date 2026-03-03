@@ -3,9 +3,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { NotificationService } from "../services/notification";
 
-export function createNotificationRoutes(
-  notificationService: NotificationService,
-) {
+export function createNotificationRoutes(notificationService: NotificationService) {
   const app = new Hono();
 
   app.get("/vapid-public-key", (c) => {
@@ -22,10 +20,7 @@ export function createNotificationRoutes(
     const parsed = PushSubscriptionRequestSchema.safeParse(body);
 
     if (!parsed.success) {
-      return c.json(
-        { error: "Invalid subscription data", details: parsed.error.issues },
-        400,
-      );
+      return c.json({ error: "Invalid subscription data", details: parsed.error.issues }, 400);
     }
 
     const { endpoint, keys, deviceName } = parsed.data;
@@ -56,10 +51,7 @@ export function createNotificationRoutes(
       );
     }
 
-    const removed = notificationService.removeSubscription(
-      parsed.data.endpoint,
-      userId,
-    );
+    const removed = notificationService.removeSubscription(parsed.data.endpoint, userId);
     return c.json({ success: removed });
   });
 

@@ -37,10 +37,7 @@ export function useTTSDiscovery(userId = "default") {
   };
 
   const refreshAll = async () => {
-    const [models, voices] = await Promise.all([
-      refreshModels(),
-      refreshVoices(),
-    ]);
+    const [models, voices] = await Promise.all([refreshModels(), refreshVoices()]);
     return { models, voices };
   };
 
@@ -48,10 +45,8 @@ export function useTTSDiscovery(userId = "default") {
     refreshModels,
     refreshVoices,
     refreshAll,
-    invalidateModels: () =>
-      queryClient.invalidateQueries({ queryKey: ["tts-models", userId] }),
-    invalidateVoices: () =>
-      queryClient.invalidateQueries({ queryKey: ["tts-voices", userId] }),
+    invalidateModels: () => queryClient.invalidateQueries({ queryKey: ["tts-models", userId] }),
+    invalidateVoices: () => queryClient.invalidateQueries({ queryKey: ["tts-voices", userId] }),
     invalidateAll: () => {
       queryClient.invalidateQueries({ queryKey: ["tts-models", userId] });
       queryClient.invalidateQueries({ queryKey: ["tts-voices", userId] });

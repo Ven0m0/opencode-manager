@@ -1,9 +1,4 @@
-import {
-  createCipheriv,
-  createDecipheriv,
-  randomBytes,
-  scryptSync,
-} from "node:crypto";
+import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
 import { ENV } from "@opencode-manager/shared/config/env";
 
 const ENCRYPTION_KEY_SALT = Buffer.from("opencode-ssh-key-salt-v1", "utf8");
@@ -11,11 +6,11 @@ const IV_LENGTH = 16;
 const KEY_LENGTH = 32;
 
 function deriveKey(): Buffer {
-  const secret = ENV.AUTH.SECRET
+  const secret = ENV.AUTH.SECRET;
   if (!secret) {
-    throw new Error('AUTH_SECRET must be configured for encryption')
+    throw new Error("AUTH_SECRET must be configured for encryption");
   }
-  return scryptSync(secret, ENCRYPTION_KEY_SALT, KEY_LENGTH)
+  return scryptSync(secret, ENCRYPTION_KEY_SALT, KEY_LENGTH);
 }
 
 export function encryptSecret(plaintext: string): string {

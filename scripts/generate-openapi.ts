@@ -24,10 +24,7 @@ async function generateOpenAPISpec() {
     }
 
     const spec = await response.json();
-    const outputPath = join(
-      __dirname,
-      "../frontend/src/api/opencode-spec.json",
-    );
+    const outputPath = join(__dirname, "../frontend/src/api/opencode-spec.json");
 
     await writeFile(outputPath, JSON.stringify(spec, null, 2));
     console.log(`✅ OpenAPI spec saved to ${outputPath}`);
@@ -48,14 +45,10 @@ async function generateTypeScript(specPath: string) {
   const { spawnSync } = await import("node:child_process");
 
   try {
-    const result = spawnSync(
-      "npx",
-      ["openapi-typescript", specPath, "-o", outputPath],
-      {
-        cwd: join(__dirname, ".."),
-        stdio: "inherit",
-      },
-    );
+    const result = spawnSync("npx", ["openapi-typescript", specPath, "-o", outputPath], {
+      cwd: join(__dirname, ".."),
+      stdio: "inherit",
+    });
 
     if (result.status !== 0) {
       throw new Error(`openapi-typescript exited with code ${result.status}`);

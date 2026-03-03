@@ -36,14 +36,9 @@ export function createProvidersRoutes() {
       const body = await c.req.json();
       const validated = SetCredentialRequestSchema.parse(body);
 
-      const openCodeSuccess = await setOpenCodeAuth(
-        providerId,
-        validated.apiKey,
-      );
+      const openCodeSuccess = await setOpenCodeAuth(providerId, validated.apiKey);
       if (!openCodeSuccess) {
-        logger.warn(
-          `Failed to set OpenCode auth for ${providerId}, saving locally only`,
-        );
+        logger.warn(`Failed to set OpenCode auth for ${providerId}, saving locally only`);
       }
 
       await authService.set(providerId, validated.apiKey);
@@ -51,10 +46,7 @@ export function createProvidersRoutes() {
     } catch (error) {
       logger.error("Failed to set provider credentials:", error);
       if (error instanceof z.ZodError) {
-        return c.json(
-          { error: "Invalid request data", details: error.issues },
-          400,
-        );
+        return c.json({ error: "Invalid request data", details: error.issues }, 400);
       }
       return c.json({ error: "Failed to set provider credentials" }, 500);
     }
@@ -66,9 +58,7 @@ export function createProvidersRoutes() {
 
       const openCodeSuccess = await deleteOpenCodeAuth(providerId);
       if (!openCodeSuccess) {
-        logger.warn(
-          `Failed to delete OpenCode auth for ${providerId}, removing locally only`,
-        );
+        logger.warn(`Failed to delete OpenCode auth for ${providerId}, removing locally only`);
       }
 
       await authService.delete(providerId);

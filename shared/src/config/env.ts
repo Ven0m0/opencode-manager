@@ -1,7 +1,7 @@
-import path from 'path'
-import os from 'os'
-import { randomBytes } from 'crypto'
-import { DEFAULTS } from './defaults'
+import { randomBytes } from "node:crypto";
+import os from "node:os";
+import path from "node:path";
+import { DEFAULTS } from "./defaults";
 
 try {
   const { config } = await import("dotenv");
@@ -39,8 +39,8 @@ const resolveWorkspacePath = (): string => {
 const workspaceBasePath = resolveWorkspacePath();
 
 const generateDefaultSecret = (): string => {
-  return randomBytes(32).toString('base64').slice(0, 32)
-}
+  return randomBytes(32).toString("base64").slice(0, 32);
+};
 
 export const ENV = {
   SERVER: {
@@ -51,8 +51,8 @@ export const ENV = {
   },
 
   OPENCODE: {
-    PORT: getEnvNumber('OPENCODE_SERVER_PORT', DEFAULTS.OPENCODE.PORT),
-    HOST: getEnvString('OPENCODE_HOST', DEFAULTS.OPENCODE.HOST),
+    PORT: getEnvNumber("OPENCODE_SERVER_PORT", DEFAULTS.OPENCODE.PORT),
+    HOST: getEnvString("OPENCODE_HOST", DEFAULTS.OPENCODE.HOST),
     API_URL: process.env.OPENCODE_MANAGER_API_URL ?? `http://127.0.0.1:${DEFAULTS.SERVER.PORT}`,
   },
 
@@ -89,16 +89,9 @@ export const ENV = {
 
   FILE_LIMITS: {
     MAX_SIZE_BYTES:
-      getEnvNumber("MAX_FILE_SIZE_MB", DEFAULTS.FILE_LIMITS.MAX_SIZE_MB) *
-      1024 *
-      1024,
+      getEnvNumber("MAX_FILE_SIZE_MB", DEFAULTS.FILE_LIMITS.MAX_SIZE_MB) * 1024 * 1024,
     MAX_UPLOAD_SIZE_BYTES:
-      getEnvNumber(
-        "MAX_UPLOAD_SIZE_MB",
-        DEFAULTS.FILE_LIMITS.MAX_UPLOAD_SIZE_MB,
-      ) *
-      1024 *
-      1024,
+      getEnvNumber("MAX_UPLOAD_SIZE_MB", DEFAULTS.FILE_LIMITS.MAX_UPLOAD_SIZE_MB) * 1024 * 1024,
   },
 
   LOGGING: {
@@ -140,24 +133,26 @@ export const ENV = {
   },
 
   REDIS: {
-    URL: getEnvString('REDIS_URL', ''),
-    PASSWORD: process.env.REDIS_PASSWORD ?? '',
-    DB: getEnvNumber('REDIS_DB', 0),
+    URL: getEnvString("REDIS_URL", ""),
+    PASSWORD: process.env.REDIS_PASSWORD ?? "",
+    DB: getEnvNumber("REDIS_DB", 0),
   },
-} as const
+} as const;
 
-export const getWorkspacePath = () => ENV.WORKSPACE.BASE_PATH
-export const getReposPath = () => path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.REPOS_DIR)
-export const getConfigPath = () => path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.CONFIG_DIR)
-export const getOpenCodeConfigFilePath = () => path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.CONFIG_DIR, 'opencode.json')
+export const getWorkspacePath = () => ENV.WORKSPACE.BASE_PATH;
+export const getReposPath = () => path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.REPOS_DIR);
+export const getConfigPath = () => path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.CONFIG_DIR);
+export const getOpenCodeConfigFilePath = () =>
+  path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.CONFIG_DIR, "opencode.json");
 export const getPluginSourcePath = () => {
-  const envPath = process.env.OPENCODE_PLUGIN_PATH
-  if (envPath) return path.resolve(envPath)
-  return path.resolve('packages/memory/src/index.ts')
-}
-export const getAgentsMdPath = () => path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.CONFIG_DIR, 'AGENTS.md')
-export const getAuthPath = () => path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.AUTH_FILE)
-export const getDatabasePath = () => ENV.DATABASE.PATH
+  const envPath = process.env.OPENCODE_PLUGIN_PATH;
+  if (envPath) return path.resolve(envPath);
+  return path.resolve("packages/memory/src/index.ts");
+};
+export const getAgentsMdPath = () =>
+  path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.CONFIG_DIR, "AGENTS.md");
+export const getAuthPath = () => path.join(ENV.WORKSPACE.BASE_PATH, ENV.WORKSPACE.AUTH_FILE);
+export const getDatabasePath = () => ENV.DATABASE.PATH;
 
 export const getApiUrl = (port: number = ENV.SERVER.PORT): string => {
   const host = ENV.SERVER.HOST;

@@ -1,46 +1,32 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { useQueryClient, useQuery } from '@tanstack/react-query'
-import { OpenCodeClient } from '@/api/opencode'
-import { listRepos } from '@/api/repos'
-import type { PermissionRequest, PermissionResponse, QuestionRequest, SSEEvent, SSHHostKeyRequest, MessageWithParts } from '@/api/types'
-import { showToast } from '@/lib/toast'
-import { subscribeToSSE, addSSEDirectory, ensureSSEConnected } from '@/lib/sseManager'
-import { OPENCODE_API_ENDPOINT } from '@/config'
-import { addToSessionKeyedState, removeFromSessionKeyedState } from '@/lib/sessionKeyedState'
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { OpenCodeClient } from "@/api/opencode";
-import { listRepos } from "@/api/repos";
-import type {
-  PermissionRequest,
-  PermissionResponse,
-  QuestionRequest,
-  SSEEvent,
-  SSHHostKeyRequest,
-} from "@/api/types";
-import { OPENCODE_API_ENDPOINT } from "@/config";
-import {
-  addToSessionKeyedState,
-  removeFromSessionKeyedState,
-} from "@/lib/sessionKeyedState";
-import {
-  addSSEDirectory,
-  ensureSSEConnected,
-  subscribeToSSE,
-} from "@/lib/sseManager";
-import { showToast } from "@/lib/toast";
+import { useQuery, useQuery, useQueryClient, useQueryClient } from '@tanstack/react-query';
+import { createContext, 
+  createContext,useCallback, 
+  useCallback,useContext, 
+  useContext,useEffect, 
+  useEffect,useMemo, 
+  useMemo,useRef, 
+  useRef,useState, 
+  useState,} from 'react';
+import { useLocation, useLocation, useNavigate, useNavigate } from 'react-router-dom';
+import { OpenCodeClient, OpenCodeClient } from '@/api/opencode';
+import { listRepos, listRepos } from '@/api/repos';
+import type { MessageWithParts, PermissionRequest, 
+  PermissionRequest,PermissionResponse, 
+  PermissionResponse,QuestionRequest, 
+  QuestionRequest,SSEEvent, 
+  SSEEvent,SSHHostKeyRequest, 
+  SSHHostKeyRequest,} from '@/api/types';
+import { OPENCODE_API_ENDPOINT, OPENCODE_API_ENDPOINT } from '@/config';
+import { addToSessionKeyedState, 
+  addToSessionKeyedState,removeFromSessionKeyedState, 
+  removeFromSessionKeyedState,} from '@/lib/sessionKeyedState';
+import { addSSEDirectory, 
+  addSSEDirectory,ensureSSEConnected, 
+  ensureSSEConnected,subscribeToSSE, 
+  subscribeToSSE,} from '@/lib/sseManager';
+import { showToast, showToast } from '@/lib/toast';
 
 type PermissionsBySession = Record<string, PermissionRequest[]>;
 type QuestionsBySession = Record<string, QuestionRequest[]>;

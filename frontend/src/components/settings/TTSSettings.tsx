@@ -29,15 +29,8 @@ import { SquareFill } from "@/components/ui/square-fill";
 import { Switch } from "@/components/ui/switch";
 import { useSettings } from "@/hooks/useSettings";
 import { useTTS } from "@/hooks/useTTS";
-import {
-  useTTSDiscovery,
-  useTTSModels,
-  useTTSVoices,
-} from "@/hooks/useTTSDiscovery";
-import {
-  getAvailableVoiceNames,
-  isWebSpeechSupported,
-} from "@/lib/webSpeechSynthesizer";
+import { useTTSDiscovery, useTTSModels, useTTSVoices } from "@/hooks/useTTSDiscovery";
+import { getAvailableVoiceNames, isWebSpeechSupported } from "@/lib/webSpeechSynthesizer";
 
 const TEST_PHRASE = "Text to speech is working correctly.";
 
@@ -98,22 +91,14 @@ type TTSFormValues = z.infer<typeof ttsFormSchema>;
 
 export function TTSSettings() {
   const { preferences, updateSettings } = useSettings();
-  const {
-    speakWithConfig,
-    stop,
-    isPlaying,
-    isLoading: isTTSLoading,
-    error: ttsError,
-  } = useTTS();
+  const { speakWithConfig, stop, isPlaying, isLoading: isTTSLoading, error: ttsError } = useTTS();
   const { refreshAll } = useTTSDiscovery();
   const [isRefreshingDiscovery, setIsRefreshingDiscovery] = useState(false);
   const [browserVoices, setBrowserVoices] = useState<string[]>([]);
   const [isCheckingBuiltin, setIsCheckingBuiltin] = useState(false);
 
   // Auto-save state
-  const [saveStatus, setSaveStatus] = useState<
-    "idle" | "saving" | "saved" | "error"
-  >("idle");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedDataRef = useRef<TTSFormValues | null>(null);
 
@@ -141,10 +126,8 @@ export function TTSSettings() {
     refetch: refetchVoices,
   } = useTTSVoices(undefined, true);
 
-  const availableModels =
-    modelsData?.models || preferences?.tts?.availableModels || [];
-  const availableVoices =
-    voicesData?.voices || preferences?.tts?.availableVoices || [];
+  const availableModels = modelsData?.models || preferences?.tts?.availableModels || [];
+  const availableVoices = voicesData?.voices || preferences?.tts?.availableVoices || [];
   const modelsCached = modelsData?.cached || false;
   const voicesCached = voicesData?.cached || false;
 
@@ -165,12 +148,7 @@ export function TTSSettings() {
     if (!watchEnabled) return false;
 
     if (watchProvider === "builtin") {
-      return (
-        hasWebSpeechSupport &&
-        browserVoices.length > 0 &&
-        !!watchVoice &&
-        !isCheckingBuiltin
-      );
+      return hasWebSpeechSupport && browserVoices.length > 0 && !!watchVoice && !isCheckingBuiltin;
     } else {
       return !!watchApiKey && !!watchVoice && !isLoadingVoices;
     }
@@ -286,9 +264,7 @@ export function TTSSettings() {
   return (
     <div className="bg-card border border-border rounded-lg p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-foreground">
-          Text-to-Speech
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground">Text-to-Speech</h2>
         {/* Show auto-save status instead of save button */}
         <div className="flex items-center gap-2 text-sm">
           {saveStatus === "saving" && (
@@ -321,15 +297,10 @@ export function TTSSettings() {
               <FormItem className="flex flex-row items-center justify-between rounded-lg border border-border p-4">
                 <div className="space-y-0.5">
                   <FormLabel className="text-base">Enable TTS</FormLabel>
-                  <FormDescription>
-                    Allow text-to-speech playback for messages
-                  </FormDescription>
+                  <FormDescription>Allow text-to-speech playback for messages</FormDescription>
                 </div>
                 <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
                 </FormControl>
               </FormItem>
             )}
@@ -390,8 +361,8 @@ export function TTSSettings() {
                 </button>
               </div>
               <div className="text-xs text-muted-foreground mt-1">
-                Choose how you want to generate speech. Built-in works offline
-                with no setup required.
+                Choose how you want to generate speech. Built-in works offline with no setup
+                required.
               </div>
 
               {/* External Provider Settings */}
@@ -415,8 +386,7 @@ export function TTSSettings() {
                           />
                         </FormControl>
                         <FormDescription>
-                          Base URL of your TTS service (e.g.,
-                          https://x.x.x.x:Port)
+                          Base URL of your TTS service (e.g., https://x.x.x.x:Port)
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -441,9 +411,7 @@ export function TTSSettings() {
                             }}
                           />
                         </FormControl>
-                        <FormDescription>
-                          API key for the TTS service
-                        </FormDescription>
+                        <FormDescription>API key for the TTS service</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -453,18 +421,13 @@ export function TTSSettings() {
                     control={form.control}
                     name="voice"
                     render={({ field }) => {
-                      const hasKokoroVoices =
-                        availableVoices.some(isKokoroStyleVoice);
+                      const hasKokoroVoices = availableVoices.some(isKokoroStyleVoice);
                       const voiceOptions = [
-                        ...availableVoices
-                          .slice(0, 10)
-                          .map((voice: string) => ({
-                            value: voice,
-                            label: voice,
-                          })),
-                        ...(hasKokoroVoices
-                          ? KOKORO_COMPOSITE_VOICE_SUGGESTIONS
-                          : []),
+                        ...availableVoices.slice(0, 10).map((voice: string) => ({
+                          value: voice,
+                          label: voice,
+                        })),
+                        ...(hasKokoroVoices ? KOKORO_COMPOSITE_VOICE_SUGGESTIONS : []),
                         ...availableVoices.slice(10).map((voice: string) => ({
                           value: voice,
                           label: voice,
@@ -542,12 +505,9 @@ export function TTSSettings() {
 
                   <div className="flex flex-row items-center justify-between rounded-lg border border-border p-4">
                     <div className="space-y-0.5">
-                      <div className="text-base font-medium">
-                        Refresh Discovery Data
-                      </div>
+                      <div className="text-base font-medium">Refresh Discovery Data</div>
                       <p className="text-sm text-muted-foreground">
-                        Force refresh available models and voices from the
-                        endpoint
+                        Force refresh available models and voices from the endpoint
                       </p>
                     </div>
                     <Button
@@ -555,9 +515,7 @@ export function TTSSettings() {
                       variant="outline"
                       size="sm"
                       onClick={handleRefreshDiscovery}
-                      disabled={
-                        !watchEnabled || !watchApiKey || isRefreshingDiscovery
-                      }
+                      disabled={!watchEnabled || !watchApiKey || isRefreshingDiscovery}
                     >
                       {isRefreshingDiscovery ? (
                         <>
@@ -582,12 +540,10 @@ export function TTSSettings() {
                     control={form.control}
                     name="voice"
                     render={({ field }) => {
-                      const voiceOptions = browserVoices.map(
-                        (voice: string) => ({
-                          value: voice,
-                          label: voice,
-                        }),
-                      );
+                      const voiceOptions = browserVoices.map((voice: string) => ({
+                        value: voice,
+                        label: voice,
+                      }));
 
                       return (
                         <FormItem>
@@ -598,14 +554,10 @@ export function TTSSettings() {
                               onChange={field.onChange}
                               options={voiceOptions}
                               placeholder={
-                                isCheckingBuiltin
-                                  ? "Loading voices..."
-                                  : "Select a voice..."
+                                isCheckingBuiltin ? "Loading voices..." : "Select a voice..."
                               }
                               disabled={
-                                !watchEnabled ||
-                                isCheckingBuiltin ||
-                                browserVoices.length === 0
+                                !watchEnabled || isCheckingBuiltin || browserVoices.length === 0
                               }
                               allowCustomValue={false}
                             />
@@ -635,10 +587,9 @@ export function TTSSettings() {
                   {!hasWebSpeechSupport && (
                     <div className="rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-4">
                       <div className="text-sm text-yellow-800 dark:text-yellow-200">
-                        <strong>Browser Not Supported</strong>: Your browser
-                        doesn't support Web Speech API. Please use Chrome,
-                        Safari, Firefox, or Edge, or switch to an external API
-                        provider.
+                        <strong>Browser Not Supported</strong>: Your browser doesn't support Web
+                        Speech API. Please use Chrome, Safari, Firefox, or Edge, or switch to an
+                        external API provider.
                       </div>
                     </div>
                   )}
@@ -646,9 +597,7 @@ export function TTSSettings() {
                   {hasWebSpeechSupport && browserVoices.length === 0 && (
                     <div className="flex flex-row items-center justify-between rounded-lg border border-border p-4">
                       <div className="space-y-0.5">
-                        <div className="text-base font-medium">
-                          Check for Voices
-                        </div>
+                        <div className="text-base font-medium">Check for Voices</div>
                         <p className="text-sm text-muted-foreground">
                           Your browser may need permission to access voices
                         </p>
@@ -700,8 +649,8 @@ export function TTSSettings() {
                       />
                     </FormControl>
                     <FormDescription>
-                      Playback speed (0.25x to 4.0x). Note: Web Speech API has
-                      limited speed control.
+                      Playback speed (0.25x to 4.0x). Note: Web Speech API has limited speed
+                      control.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -731,9 +680,7 @@ export function TTSSettings() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={
-                    isPlaying || isTTSLoading ? handleStopTest : handleTest
-                  }
+                  onClick={isPlaying || isTTSLoading ? handleStopTest : handleTest}
                   disabled={!canTest}
                 >
                   {isTTSLoading ? (

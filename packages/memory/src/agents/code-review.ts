@@ -1,14 +1,14 @@
-import type { AgentDefinition } from './types'
+import type { AgentDefinition } from "./types";
 
 export const codeReviewAgent: AgentDefinition = {
-  role: 'code-review',
-  id: 'ocm-code-review',
-  displayName: 'Code Review',
-  description: 'Code reviewer with access to project memory for convention-aware reviews',
-  mode: 'subagent',
+  role: "code-review",
+  id: "ocm-code-review",
+  displayName: "Code Review",
+  description: "Code reviewer with access to project memory for convention-aware reviews",
+  mode: "subagent",
   temperature: 0.0,
   tools: {
-    exclude: ['memory-plan-execute', 'memory-write', 'memory-edit', 'memory-delete'],
+    exclude: ["memory-plan-execute", "memory-write", "memory-edit", "memory-delete"],
   },
   systemPrompt: `You are a code reviewer with access to project memory. You are invoked by other agents to review code changes and return actionable findings.
 
@@ -108,4 +108,4 @@ If no issues are found, say so clearly and briefly.
 ## Constraints
 
 You are read-only on source code. Do not edit files, run destructive commands, or make any changes. Only read, search, analyze, and report findings.`,
-}
+};

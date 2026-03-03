@@ -1,10 +1,10 @@
-import { useRef, useEffect } from "react";
+import { formatDistanceToNow } from "date-fns";
+import { Clock, Trash2 } from "lucide-react";
+import { useEffect, useRef } from "react";
+import type { Session } from "@/api/types";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MiniScanner } from "@/components/ui/mini-scanner";
-import { Trash2, Clock } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import type { Session } from "@/api/types";
 import { useSwipe } from "@/hooks/useSwipe";
 
 interface SessionCardProps {
@@ -45,7 +45,9 @@ export const SessionCard = ({
     <div className="relative" onClick={close}>
       <div
         className={`absolute top-0.5 right-0 bottom-0.5 w-20 bg-red-600 flex items-center justify-center rounded-r-lg transition-opacity ${
-          !isSwipingBack && (isOpen || swipeOffset > 40) ? "opacity-100" : "opacity-0 pointer-events-none"
+          !isSwipingBack && (isOpen || swipeOffset > 40)
+            ? "opacity-100"
+            : "opacity-0 pointer-events-none"
         }`}
       >
         <button
@@ -58,9 +60,7 @@ export const SessionCard = ({
       <div ref={cardRef} style={swipeStyles}>
         <Card
           className={`p-2 cursor-pointer transition-all overflow-hidden ${
-            isOpen
-              ? "rounded-none"
-              : "rounded-r-lg"
+            isOpen ? "rounded-none" : "rounded-r-lg"
           } ${
             isSelected
               ? "border-blue-500 shadow-lg shadow-blue-900/30 dark:shadow-blue-900/30 bg-accent"

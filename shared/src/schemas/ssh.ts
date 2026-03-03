@@ -12,8 +12,8 @@ export const SSHHostKeyRequestSchema = z.object({
 
 export const SSHHostKeyResponseSchema = z.object({
   requestId: z.string(),
-  response: z.enum(['accept', 'reject'])
-})
+  response: z.enum(["accept", "reject"]),
+});
 
 export const TrustedSSHHostSchema = z.object({
   id: z.number(),

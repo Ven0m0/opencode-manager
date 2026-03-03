@@ -3,10 +3,7 @@ import { logger } from "../utils/logger";
 
 const OPENCODE_SERVER_URL = `http://${ENV.OPENCODE.HOST}:${ENV.OPENCODE.PORT}`;
 
-export async function setOpenCodeAuth(
-  providerId: string,
-  apiKey: string,
-): Promise<boolean> {
+export async function setOpenCodeAuth(providerId: string, apiKey: string): Promise<boolean> {
   try {
     const response = await fetch(`${OPENCODE_SERVER_URL}/auth/${providerId}`, {
       method: "PUT",
@@ -19,9 +16,7 @@ export async function setOpenCodeAuth(
       return true;
     }
 
-    logger.error(
-      `Failed to set OpenCode auth: ${response.status} ${response.statusText}`,
-    );
+    logger.error(`Failed to set OpenCode auth: ${response.status} ${response.statusText}`);
     return false;
   } catch (error) {
     logger.error("Failed to set OpenCode auth:", error);
@@ -40,9 +35,7 @@ export async function deleteOpenCodeAuth(providerId: string): Promise<boolean> {
       return true;
     }
 
-    logger.error(
-      `Failed to delete OpenCode auth: ${response.status} ${response.statusText}`,
-    );
+    logger.error(`Failed to delete OpenCode auth: ${response.status} ${response.statusText}`);
     return false;
   } catch (error) {
     logger.error("Failed to delete OpenCode auth:", error);
@@ -80,9 +73,7 @@ export async function patchOpenCodeConfig(
         if (data.issues) {
           const issues = data.issues
             .map((issue) =>
-              issue.path
-                ? `${issue.path.join(".")}: ${issue.message}`
-                : issue.message,
+              issue.path ? `${issue.path.join(".")}: ${issue.message}` : issue.message,
             )
             .join("; ");
           errorMessage = `Invalid config: ${issues}`;
@@ -99,8 +90,7 @@ export async function patchOpenCodeConfig(
     logger.error(`Failed to patch OpenCode config: ${errorMessage}`);
     return { success: false, error: errorMessage };
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     logger.error("Failed to patch OpenCode config:", error);
     return { success: false, error: errorMessage };
   }
@@ -114,9 +104,7 @@ export async function proxyRequest(request: Request) {
   const targetUrl = `${OPENCODE_SERVER_URL}${cleanPathname}${url.search}`;
 
   if (url.pathname.includes("/permissions/")) {
-    logger.info(
-      `Proxying permission request: ${url.pathname}${url.search} -> ${targetUrl}`,
-    );
+    logger.info(`Proxying permission request: ${url.pathname}${url.search} -> ${targetUrl}`);
   }
 
   try {
@@ -131,9 +119,7 @@ export async function proxyRequest(request: Request) {
       method: request.method,
       headers,
       body:
-        request.method !== "GET" && request.method !== "HEAD"
-          ? await request.text()
-          : undefined,
+        request.method !== "GET" && request.method !== "HEAD" ? await request.text() : undefined,
     });
 
     const responseHeaders: Record<string, string> = {};
@@ -149,10 +135,7 @@ export async function proxyRequest(request: Request) {
       headers: responseHeaders,
     });
   } catch (error) {
-    logger.error(
-      `Proxy request failed for ${url.pathname}${url.search}:`,
-      error,
-    );
+    logger.error(`Proxy request failed for ${url.pathname}${url.search}:`, error);
     return new Response(JSON.stringify({ error: "Proxy request failed" }), {
       status: 502,
       headers: { "Content-Type": "application/json" },
@@ -205,30 +188,30 @@ export async function proxyMcpAuthStart(
   serverName: string,
   directory: string | undefined,
 ): Promise<Response> {
-  const path = `/mcp/${encodeURIComponent(serverName)}/auth`
-  const url = new URL(`${OPENCODE_SERVER_URL}${path}`)
-  
+  const path = `/mcp/${encodeURIComponent(serverName)}/auth`;
+  const url = new URL(`${OPENCODE_SERVER_URL}${path}`);
+
   if (directory) {
-    url.searchParams.set('directory', directory)
+    url.searchParams.set("directory", directory);
   }
-  
+
   try {
     const response = await fetch(url.toString(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    })
-    
-    const responseBody = await response.text()
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const responseBody = await response.text();
     return new Response(responseBody, {
       status: response.status,
-      headers: { 'Content-Type': response.headers.get('Content-Type') || 'application/json' },
-    })
+      headers: { "Content-Type": response.headers.get("Content-Type") || "application/json" },
+    });
   } catch (error) {
-    logger.error(`MCP auth start failed for ${serverName}:`, error)
-    return new Response(JSON.stringify({ error: 'MCP auth start failed' }), {
+    logger.error(`MCP auth start failed for ${serverName}:`, error);
+    return new Response(JSON.stringify({ error: "MCP auth start failed" }), {
       status: 502,
-      headers: { 'Content-Type': 'application/json' },
-    })
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
 
@@ -236,30 +219,29 @@ export async function proxyMcpAuthAuthenticate(
   serverName: string,
   directory: string | undefined,
 ): Promise<Response> {
-  const path = `/mcp/${encodeURIComponent(serverName)}/auth/authenticate`
-  const url = new URL(`${OPENCODE_SERVER_URL}${path}`)
-  
+  const path = `/mcp/${encodeURIComponent(serverName)}/auth/authenticate`;
+  const url = new URL(`${OPENCODE_SERVER_URL}${path}`);
+
   if (directory) {
-    url.searchParams.set('directory', directory)
+    url.searchParams.set("directory", directory);
   }
-  
+
   try {
     const response = await fetch(url.toString(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    })
-    
-    const responseBody = await response.text()
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const responseBody = await response.text();
     return new Response(responseBody, {
       status: response.status,
-      headers: { 'Content-Type': response.headers.get('Content-Type') || 'application/json' },
-    })
+      headers: { "Content-Type": response.headers.get("Content-Type") || "application/json" },
+    });
   } catch (error) {
-    logger.error(`MCP auth authenticate failed for ${serverName}:`, error)
-    return new Response(JSON.stringify({ error: 'MCP auth authenticate failed' }), {
+    logger.error(`MCP auth authenticate failed for ${serverName}:`, error);
+    return new Response(JSON.stringify({ error: "MCP auth authenticate failed" }), {
       status: 502,
-      headers: { 'Content-Type': 'application/json' },
-    })
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
-

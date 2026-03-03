@@ -1,4 +1,4 @@
-import type { ContentPart, FileAttachmentInfo, ImageAttachment } from '@/api/types'
+import type { ContentPart, FileAttachmentInfo, ImageAttachment } from "@/api/types";
 
 export const MENTION_PATTERN = /@([A-Za-z0-9_\-./]+)/g;
 export const MENTION_TRIGGER_PATTERN = /(^|\s)@([A-Za-z0-9_\-./]*)$/;
@@ -14,10 +14,7 @@ export interface AgentInfo {
   description?: string;
 }
 
-export function detectMentionTrigger(
-  text: string,
-  cursorPosition: number,
-): MentionTrigger | null {
+export function detectMentionTrigger(text: string, cursorPosition: number): MentionTrigger | null {
   const textBeforeCursor = text.slice(0, cursorPosition);
   const match = textBeforeCursor.match(MENTION_TRIGGER_PATTERN);
 
@@ -31,20 +28,15 @@ export function detectMentionTrigger(
   };
 }
 
-export function filterAgentsByQuery(
-  agents: AgentInfo[],
-  query: string,
-): AgentInfo[] {
+export function filterAgentsByQuery(agents: AgentInfo[], query: string): AgentInfo[] {
   const lowerQuery = query.toLowerCase();
-  return agents.filter((agent) =>
-    agent.name.toLowerCase().includes(lowerQuery),
-  );
+  return agents.filter((agent) => agent.name.toLowerCase().includes(lowerQuery));
 }
 
 export function parsePromptToParts(
   rawInput: string,
   fileMap: Map<string, FileAttachmentInfo>,
-  imageAttachments?: ImageAttachment[]
+  imageAttachments?: ImageAttachment[],
 ): ContentPart[] {
   const parts: ContentPart[] = [];
   let lastIndex = 0;
