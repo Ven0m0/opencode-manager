@@ -90,13 +90,19 @@ describe("NotificationService Performance", () => {
       }
     };
 
-    const start = performance.now();
-    await service.handleSSEEvent(directory, event as any);
-    const end = performance.now();
+    const getRepoSpy = mock.method(
+      service as unknown as { getRepoByLocalPath: (directory: string) => Promise<unknown> },
+      "getRepoByLocalPath",
+      async () => {
+        return {
+          id: 1,
+          local_path: "dummy-repo"
+        } as unknown;
+      }
+    );
 
-    const duration = end - start;
-    console.log(`handleSSEEvent took ${duration.toFixed(2)}ms for 1000 users`);
+    await service.handleSSEEvent(directory, event);
 
-    expect(duration).toBeGreaterThan(0);
+    expect(getRepoSpy).toHaveBeenCalledTimes(1);
   });
 });
