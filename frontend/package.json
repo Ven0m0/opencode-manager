@@ -34,7 +34,7 @@
     "date-fns": "^4.1.0",
     "diff": "^8.0.2",
     "highlight.js": "^11.11.1",
-    "lucide-react": "^0.575.0",
+    "lucide-react": "^0.577.0",
     "mermaid": "^11.12.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
