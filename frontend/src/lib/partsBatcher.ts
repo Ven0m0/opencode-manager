@@ -41,24 +41,39 @@ export function createPartsBatcher(
       const sessionUpserts = pendingUpserts.get(sessionID);
       const sessionRemovals = pendingRemovals.get(sessionID);
 
-      updatedData = updatedData.map((msgWithParts) => {
-        let msgParts = [...msgWithParts.parts];
+      const upsertsByMessageID = new Map<string, Part[]>();
+      if (sessionUpserts) {
+        for (const part of sessionUpserts.values()) {
+          if (!upsertsByMessageID.has(part.messageID)) {
+            upsertsByMessageID.set(part.messageID, []);
+          }
+          upsertsByMessageID.get(part.messageID)!.push(part);
+        }
+      }
 
-        if (sessionRemovals?.has(msgWithParts.info.id)) {
-          const partIDsToRemove = sessionRemovals.get(msgWithParts.info.id)!;
-          msgParts = msgParts.filter((p) => !partIDsToRemove.has(p.id));
+      updatedData = updatedData.map((msgWithParts) => {
+        const partsToUpsert = upsertsByMessageID.get(msgWithParts.info.id);
+        const partsToRemove = sessionRemovals?.get(msgWithParts.info.id);
+
+        if (!partsToUpsert && !partsToRemove) {
+          return msgWithParts;
         }
 
-        if (sessionUpserts) {
-          const partsForMessage = Array.from(sessionUpserts.values()).filter(
-            (part) => part.messageID === msgWithParts.info.id,
-          );
-          for (const part of partsForMessage) {
-            const existingIdx = msgParts.findIndex((p) => p.id === part.id);
-            if (existingIdx >= 0) {
+        let msgParts = [...msgWithParts.parts];
+
+        if (partsToRemove) {
+          msgParts = msgParts.filter((p) => !partsToRemove.has(p.id));
+        }
+
+        if (partsToUpsert) {
+          const partMap = new Map(msgParts.map((p, i) => [p.id, i]));
+          for (const part of partsToUpsert) {
+            const existingIdx = partMap.get(part.id);
+            if (existingIdx !== undefined) {
               msgParts[existingIdx] = part;
             } else {
               msgParts.push(part);
+              partMap.set(part.id, msgParts.length - 1);
             }
           }
         }
