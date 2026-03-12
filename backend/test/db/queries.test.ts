@@ -210,6 +210,31 @@ describe("Database Queries", () => {
     });
   });
 
+  describe("updateRepoBranch", () => {
+    it("should update repo branch", () => {
+      const stmt = {
+        run: vi.fn().mockReturnValue({ changes: 1 }),
+      };
+      mockDb.prepare.mockReturnValue(stmt);
+
+      db.updateRepoBranch(mockDb, 1, "feature-branch");
+
+      expect(mockDb.prepare).toHaveBeenCalledWith("UPDATE repos SET branch = ? WHERE id = ?");
+      expect(stmt.run).toHaveBeenCalledWith("feature-branch", 1);
+    });
+
+    it("should throw error if repo not found", () => {
+      const stmt = {
+        run: vi.fn().mockReturnValue({ changes: 0 }),
+      };
+      mockDb.prepare.mockReturnValue(stmt);
+
+      expect(() => db.updateRepoBranch(mockDb, 999, "feature-branch")).toThrow(
+        "Repository with id 999 not found",
+      );
+    });
+  });
+
   describe("deleteRepo", () => {
     it("should delete repo by ID", () => {
       const stmt = {
