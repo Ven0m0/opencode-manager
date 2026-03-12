@@ -258,7 +258,10 @@ export const useSendPrompt = (opcodeUrl: string | null | undefined, directory?: 
         }
       }
     } catch (error) {
-      console.error("Failed to generate session title:", error);
+      const parsed = parseNetworkError(error);
+      showToast.error("Failed to generate session title", {
+        description: parsed.message,
+      });
     }
   };
 
